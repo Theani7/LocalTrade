@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/cloudinary_helper.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
@@ -74,7 +75,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           onPageChanged: (page) => setState(() => _currentPage = page),
                           itemBuilder: (context, index) {
                             return CachedNetworkImage(
-                              imageUrl: images[index],
+                              imageUrl: CloudinaryHelper.getOptimizedUrl(images[index], width: 800),
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(color: Colors.grey[100]),
                               errorWidget: (context, url, error) => const Icon(Icons.error),

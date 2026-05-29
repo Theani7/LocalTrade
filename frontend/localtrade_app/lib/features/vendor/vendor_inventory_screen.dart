@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/product_provider.dart';
@@ -88,16 +89,21 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: image.isNotEmpty
-                    ? Image.network(
-                        image,
+                    ? CachedNetworkImage(
+                        imageUrl: image,
                         width: 76,
                         height: 76,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+                        placeholder: (context, url) => Container(
                           width: 76,
                           height: 76,
                           color: Colors.grey[100],
-                          child: const Icon(Icons.image, color: Colors.grey),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: 76,
+                          height: 76,
+                          color: Colors.grey[100],
+                          child: const Icon(Icons.broken_image, color: Colors.grey),
                         ),
                       )
                     : Container(

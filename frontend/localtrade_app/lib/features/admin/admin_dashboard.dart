@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../core/utils/cloudinary_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -863,7 +865,14 @@ class _AdminProductsTabState extends AdminBaseTabState<AdminProductsTab> {
                       child: ListTile(
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: Image.network(product['images'][0], width: 50, height: 50, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.broken_image)),
+                          child: CachedNetworkImage(
+                            imageUrl: CloudinaryHelper.getOptimizedUrl(product['images'][0], width: 100),
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(color: Colors.grey[200]),
+                            errorWidget: (context, url, error) => const Icon(Icons.broken_image),
+                          ),
                         ),
                         title: Text(
                           product['title'],

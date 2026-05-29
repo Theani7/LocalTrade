@@ -202,7 +202,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Forgot Password? Please contact admin at support@localtrade.com'),
+                                    backgroundColor: AppTheme.primaryLight,
+                                  ),
+                                );
+                              },
                               style: TextButton.styleFrom(
                                 foregroundColor: AppTheme.primaryLight,
                               ),

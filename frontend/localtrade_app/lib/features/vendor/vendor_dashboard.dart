@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../core/utils/cloudinary_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../providers/vendor_provider.dart';
@@ -266,13 +268,12 @@ class VendorOverviewTab extends StatelessWidget {
   Widget _buildRevenueCard(double revenue) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
+        color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: AppTheme.primaryColor.withOpacity(0.3), blurRadius: 24, offset: const Offset(0, 10)),
-        ],
+        border: Border.all(color: AppTheme.borderSubtle, width: 1.5),
+        boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,19 +283,26 @@ class VendorOverviewTab extends StatelessWidget {
             children: [
               const Text(
                 'Total Revenue',
-                style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
-                child: const Text('ALL TIME', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                decoration: BoxDecoration(color: AppTheme.successColor.withOpacity(0.1), borderRadius: BorderRadius.circular(100)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.trending_up_rounded, color: AppTheme.successColor, size: 14),
+                    const SizedBox(width: 4),
+                    const Text('ALL TIME', style: TextStyle(color: AppTheme.successColor, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
             'Rs. ${revenue.toStringAsFixed(0)}',
-            style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 38, fontWeight: FontWeight.w900, letterSpacing: -1.0),
           ),
         ],
       ),
@@ -438,8 +446,13 @@ class _VendorProductsTabState extends State<VendorProductsTab> {
                            child: ClipRRect(
                              borderRadius: BorderRadius.circular(12),
                              child: product['images'] != null && product['images'].isNotEmpty 
-                              ? Image.network(product['images'][0], fit: BoxFit.cover)
-                              : const Icon(Icons.image, size: 30, color: Colors.grey),
+                             ? CachedNetworkImage(
+                                 imageUrl: CloudinaryHelper.getOptimizedUrl(product['images'][0], width: 200),
+                                 fit: BoxFit.cover,
+                                 placeholder: (context, url) => Container(color: Colors.grey[200]),
+                                 errorWidget: (context, url, error) => const Icon(Icons.broken_image),
+                               )
+                             : const Icon(Icons.image, size: 30, color: Colors.grey),
                            ),
                          ),
                          const SizedBox(width: 16),

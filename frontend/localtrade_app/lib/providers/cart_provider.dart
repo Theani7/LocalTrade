@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class CartItem {
   final String id;
@@ -16,10 +18,32 @@ class CartItem {
     required this.vendorId,
     this.quantity = 1,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'price': price,
+    'imageUrl': imageUrl,
+    'vendorId': vendorId,
+    'quantity': quantity,
+  };
+
+  factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
+    id: json['id'],
+    title: json['title'],
+    price: json['price'].toDouble(),
+    imageUrl: json['imageUrl'],
+    vendorId: json['vendorId'],
+    quantity: json['quantity'],
+  );
 }
 
 class CartProvider with ChangeNotifier {
-  final Map<String, CartItem> _items = {};
+  Map<String, CartItem> _items = {};
+
+  CartProvider() {
+    _loadCart();
+  }
 
   Map<String, CartItem> get items => {..._items};
 
@@ -31,6 +55,21 @@ class CartProvider with ChangeNotifier {
       total += cartItem.price * cartItem.quantity;
     });
     return total;
+  }
+
+  Future<void> _saveCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cartData = json.encode(_items.map((key, item) => MapEntry(key, item.toJson())));
+    await prefs.setString('shopping_cart', cartData);
+  }
+
+  Future<void> _loadCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('shopping_cart')) return;
+    
+    final cartData = json.decode(prefs.getString('shopping_cart')!) as Map<String, dynamic>;
+    _items = cartData.map((key, value) => MapEntry(key, CartItem.fromJson(value)));
+    notifyListeners();
   }
 
   void addItem(String productId, String title, double price, String imageUrl, String vendorId) {
@@ -58,6 +97,7 @@ class CartProvider with ChangeNotifier {
         ),
       );
     }
+    _saveCart();
     notifyListeners();
   }
 
@@ -67,17 +107,20 @@ class CartProvider with ChangeNotifier {
       removeItem(productId);
     } else {
       _items[productId]!.quantity = quantity;
+      _saveCart();
       notifyListeners();
     }
   }
 
   void removeItem(String productId) {
     _items.remove(productId);
+    _saveCart();
     notifyListeners();
   }
 
   void clear() {
     _items.clear();
+    _saveCart();
     notifyListeners();
   }
 
