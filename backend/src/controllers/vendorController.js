@@ -60,11 +60,11 @@ exports.getVendorAnalytics = catchAsync(async (req, res, next) => {
     data: {
       stats: {
         totalProducts,
-        totalOrders,
-        pendingOrders,
-        confirmedOrders,
-        deliveredOrders,
-        totalRevenue
+        totalOrders: stats.totalOrders,
+        pendingOrders: stats.pendingOrders,
+        confirmedOrders: stats.confirmedOrders,
+        deliveredOrders: stats.deliveredOrders,
+        totalRevenue: stats.totalRevenue
       },
       recentOrders
     }

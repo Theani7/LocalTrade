@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../auth/login_screen.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
@@ -216,7 +217,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               Provider.of<AuthProvider>(context, listen: false).logout();
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const LoginScreen(showRoleSelection: true)),
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
                 (route) => false,
               );
             },

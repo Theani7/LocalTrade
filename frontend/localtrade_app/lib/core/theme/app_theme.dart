@@ -2,76 +2,70 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Premium SaaS/Marketplace Palette (Stripe/Linear inspired)
-  static const Color primaryColor = Color(0xFF4338CA); // Deep Indigo 700 (Trust, Professionalism)
-  static const Color primaryLight = Color(0xFF6366F1); // Indigo 500
-  static const Color primaryDark = Color(0xFF312E81); // Indigo 900
+  // Refined Softer Azure Blue Palette (Investor Grade + Shadowish Blur feel)
+  static const Color primaryColor = Color(0xFF2563EB); // Vibrant Azure Blue (More "Blue" than Indigo)
+  static const Color primaryLight = Color(0xFF60A5FA); // Sky Blue Light
+  static const Color primaryDark = Color(0xFF1E40AF); // Deep Sea Blue
   
-  static const Color secondaryColor = Color(0xFF10B981); // Emerald 500 (Commerce, Success)
+  static const Color secondaryColor = Color(0xFF10B981); // Emerald 500
   static const Color secondaryLight = Color(0xFF34D399); // Emerald 400
   
-  static const Color backgroundColor = Color(0xFFF8FAFC); // Slate 50 (Ultra clean background)
+  static const Color backgroundColor = Color(0xFFF8FAFC); // Slate 50
   static const Color surfaceColor = Colors.white;
   static const Color errorColor = Color(0xFFEF4444); // Red 500
   static const Color successColor = Color(0xFF10B981); // Emerald 500
   static const Color warningColor = Color(0xFFF59E0B); // Amber 500
   
-  static const Color textPrimary = Color(0xFF0F172A); // Slate 900 (High contrast)
-  static const Color textSecondary = Color(0xFF475569); // Slate 600 (Readability)
-  static const Color textLight = Color(0xFF94A3B8); // Slate 400 (Subtle hints)
+  static const Color textPrimary = Color(0xFF0F172A); // Slate 900
+  static const Color textSecondary = Color(0xFF475569); // Slate 600
+  static const Color textLight = Color(0xFF94A3B8); // Slate 400
 
   static const Color borderSubtle = Color(0xFFF1F5F9); // Slate 100
   static const Color borderMedium = Color(0xFFE2E8F0); // Slate 200
 
-  // Modern SaaS Gradients
+  // Modern SaaS Gradients with Azure Blue
   static const Gradient primaryGradient = LinearGradient(
-    colors: [primaryDark, primaryColor],
+    colors: [primaryColor, primaryLight],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const Gradient accentGradient = LinearGradient(
-    colors: [primaryLight, primaryColor],
+    colors: [primaryLight, Color(0xFF93C5FD)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const Gradient darkGradient = LinearGradient(
-    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  // Premium Dashboard Card Shadows (Stripe style)
+  // Enhanced "Shadowish" Multi-Layered Shadows
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: const Color(0xFF0F172A).withOpacity(0.03),
-      blurRadius: 10,
-      offset: const Offset(0, 4),
+      color: const Color(0xFF2563EB).withOpacity(0.04), // Blue-tinted shadow
+      blurRadius: 15,
+      offset: const Offset(0, 5),
     ),
     BoxShadow(
-      color: const Color(0xFF0F172A).withOpacity(0.02),
-      blurRadius: 4,
+      color: const Color(0xFF0F172A).withOpacity(0.03),
+      blurRadius: 5,
       offset: const Offset(0, 2),
     ),
   ];
 
   static List<BoxShadow> get mediumShadow => [
     BoxShadow(
-      color: const Color(0xFF0F172A).withOpacity(0.06),
-      blurRadius: 20,
-      offset: const Offset(0, 10),
+      color: const Color(0xFF2563EB).withOpacity(0.08), // Blue-tinted deeper shadow
+      blurRadius: 30,
+      offset: const Offset(0, 15),
     ),
   ];
 
   static BoxDecoration glassDecoration({
     Color color = Colors.white,
-    double opacity = 0.90,
+    double opacity = 0.70,
     double borderRadius = 24,
   }) => BoxDecoration(
     color: color.withOpacity(opacity),
     borderRadius: BorderRadius.circular(borderRadius),
-    border: Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
+    border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
     boxShadow: softShadow,
   );
 
