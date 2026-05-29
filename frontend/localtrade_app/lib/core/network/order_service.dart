@@ -1,0 +1,97 @@
+import 'dart:convert';
+import '../network/api_service.dart';
+import '../network/auth_service.dart';
+
+class OrderService {
+  final ApiService _apiService = ApiService();
+  final AuthService _authService = AuthService();
+
+  Future<Map<String, dynamic>> placeOrder(Map<String, dynamic> orderData) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.post(
+      '/orders',
+      body: orderData,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 201) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to place order');
+    }
+  }
+
+  Future<Map<String, dynamic>> getMyOrders() async {
+    final token = await _authService.getToken();
+    final response = await _apiService.get('/orders/my-orders', headers: {
+      'Authorization': 'Bearer $token',
+    });
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to fetch orders');
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorOrders() async {
+    final token = await _authService.getToken();
+    final response = await _apiService.get('/orders/vendor-orders', headers: {
+      'Authorization': 'Bearer $token',
+    });
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to fetch vendor orders');
+    }
+  }
+
+  Future<Map<String, dynamic>> getOrder(String id) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.get('/orders/$id', headers: {
+      'Authorization': 'Bearer $token',
+    });
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to fetch order details');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateOrderStatus(String id, String status) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.patch(
+      '/orders/$id/status',
+      body: {'status': status},
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to update order status');
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelOrder(String id) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.patch(
+      '/orders/$id/cancel',
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to cancel order');
+    }
+  }
+}

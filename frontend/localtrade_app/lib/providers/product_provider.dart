@@ -1,0 +1,205 @@
+import 'package:flutter/material.dart';
+import 'dart:io';
+import '../core/network/product_service.dart';
+
+class ProductProvider with ChangeNotifier {
+  final ProductService _productService = ProductService();
+  
+  List<dynamic> _products = [];
+  List<dynamic> _myProducts = [];
+  bool _isLoading = false;
+  bool _isFetchingMore = false;
+  String? _error;
+
+  // Pagination & Filters State
+  int _currentPage = 1;
+  int _totalPages = 1;
+  int _totalCount = 0;
+  String? _search;
+  String? _category;
+  String? _location;
+  String? _sort;
+  bool _showAll = false;
+
+  // Getters
+  List<dynamic> get products => _products;
+  List<dynamic> get myProducts => _myProducts;
+  bool get isLoading => _isLoading;
+  bool get isFetchingMore => _isFetchingMore;
+  String? get error => _error;
+  
+  int get currentPage => _currentPage;
+  int get totalPages => _totalPages;
+  int get totalCount => _totalCount;
+  bool get hasMore => _currentPage <= _totalPages;
+  
+  String? get selectedCategory => _category;
+  String? get selectedSort => _sort;
+  String? get selectedLocation => _location;
+  bool get showAll => _showAll;
+
+  Future<void> fetchProducts({
+    String? search,
+    String? category,
+    String? location,
+    String? sort,
+    bool? showAll,
+    bool refresh = true,
+  }) async {
+    if (refresh) {
+      _setLoading(true);
+      _currentPage = 1;
+      _products = [];
+    } else {
+      if (_isFetchingMore || !hasMore) return;
+      _isFetchingMore = true;
+      notifyListeners();
+    }
+
+    _error = null;
+    
+    // Update local filter state if provided
+    if (search != null) _search = search;
+    if (category != null) _category = category;
+    if (location != null) _location = location;
+    if (sort != null) _sort = sort;
+    if (showAll != null) _showAll = showAll;
+
+    try {
+      final result = await _productService.getAllProducts(
+        search: _search,
+        category: _category,
+        location: _location,
+        sort: _sort,
+        showAll: _showAll,
+        page: _currentPage,
+      );
+
+      final List<dynamic> newProducts = result['data']['products'];
+      if (refresh) {
+        _products = newProducts;
+      } else {
+        _products.addAll(newProducts);
+      }
+
+      _totalPages = result['totalPages'] ?? 1;
+      _totalCount = result['totalCount'] ?? _products.length;
+      
+      if (!refresh && newProducts.isNotEmpty) {
+        _currentPage++;
+      } else if (refresh) {
+        _currentPage = 2; // Next page to fetch
+      }
+
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _setLoading(false);
+      _isFetchingMore = false;
+      notifyListeners();
+    }
+  }
+
+  void clearFilters() {
+    _search = null;
+    _category = 'All';
+    _location = null;
+    _sort = null;
+    _showAll = false;
+    fetchProducts();
+  }
+
+  Future<bool> updateProductStock(String id, int quantity, String status) async {
+    _error = null;
+    try {
+      final result = await _productService.updateProductStock(id, quantity, status);
+      final updatedProduct = result['data']['product'];
+      
+      // Update in both lists if present
+      int myIndex = _myProducts.indexWhere((p) => p['_id'] == id);
+      if (myIndex != -1) {
+        _myProducts[myIndex] = updatedProduct;
+      }
+
+      int pIndex = _products.indexWhere((p) => p['_id'] == id);
+      if (pIndex != -1) {
+        _products[pIndex] = updatedProduct;
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> fetchMyProducts() async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final result = await _productService.getMyProducts();
+      _myProducts = result['data']['products'];
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> addProduct(Map<String, dynamic> productData, List<File> images) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _productService.createProduct(productData, images);
+      await fetchMyProducts();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> updateProduct(String id, Map<String, dynamic> productData, {List<File>? images}) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _productService.updateProduct(id, productData, images: images);
+      await fetchMyProducts();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> deleteProduct(String id) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _productService.deleteProduct(id);
+      _myProducts.removeWhere((p) => p['_id'] == id);
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+}
