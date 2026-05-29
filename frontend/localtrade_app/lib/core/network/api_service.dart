@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
 
 class ApiService {
@@ -76,15 +77,15 @@ class ApiService {
     }
   }
 
-  Future<http.Response> multipartPost(String endpoint, {Map<String, String>? fields, List<File>? files, String fieldName = 'images'}) async {
+  Future<http.Response> multipartPost(String endpoint, {Map<String, String>? fields, List<dynamic>? files, String fieldName = 'images'}) async {
     return _handleResponse(await _multipartRequest('POST', endpoint, fields: fields, files: files, fieldName: fieldName));
   }
 
-  Future<http.Response> multipartPatch(String endpoint, {Map<String, String>? fields, List<File>? files, String fieldName = 'images'}) async {
+  Future<http.Response> multipartPatch(String endpoint, {Map<String, String>? fields, List<dynamic>? files, String fieldName = 'images'}) async {
     return _handleResponse(await _multipartRequest('PATCH', endpoint, fields: fields, files: files, fieldName: fieldName));
   }
 
-  Future<http.Response> _multipartRequest(String method, String endpoint, {Map<String, String>? fields, List<File>? files, String fieldName = 'images'}) async {
+  Future<http.Response> _multipartRequest(String method, String endpoint, {Map<String, String>? fields, List<dynamic>? files, String fieldName = 'images'}) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
       final token = await _storage.read(key: AppConstants.tokenKey);
@@ -99,15 +100,25 @@ class ApiService {
 
       if (files != null) {
         for (var file in files) {
-          String ext = file.path.split('.').last.toLowerCase();
-          String type = 'image';
-          String subtype = (ext == 'jpg' || ext == 'jpeg') ? 'jpeg' : ext;
-          
-          request.files.add(await http.MultipartFile.fromPath(
-            fieldName, 
-            file.path,
-            contentType: MediaType(type, subtype),
-          ));
+          if (file is File) {
+            String ext = file.path.split('.').last.toLowerCase();
+            String subtype = (ext == 'jpg' || ext == 'jpeg') ? 'jpeg' : ext;
+            request.files.add(await http.MultipartFile.fromPath(
+              fieldName, 
+              file.path,
+              contentType: MediaType('image', subtype),
+            ));
+          } else if (file is XFile) {
+            String ext = file.name.split('.').last.toLowerCase();
+            String subtype = (ext == 'jpg' || ext == 'jpeg') ? 'jpeg' : (ext.isEmpty ? 'jpeg' : ext);
+            final bytes = await file.readAsBytes();
+            request.files.add(http.MultipartFile.fromBytes(
+              fieldName,
+              bytes,
+              filename: file.name,
+              contentType: MediaType('image', subtype),
+            ));
+          }
         }
       }
 
@@ -140,13 +151,11 @@ class ApiService {
       return response;
     } 
     
-    // Attempt to parse error message from JSON body
     String message = 'An unexpected error occurred';
     try {
       final body = json.decode(response.body);
       message = body['message'] ?? message;
     } catch (_) {
-      // Body is not JSON or has no message
       if (response.statusCode == 404) message = 'Requested resource not found.';
       if (response.statusCode == 401) message = 'Session expired. Please login again.';
       if (response.statusCode == 403) message = 'You do not have permission to perform this action.';

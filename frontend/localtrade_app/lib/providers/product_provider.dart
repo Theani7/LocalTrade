@@ -148,7 +148,7 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> addProduct(Map<String, dynamic> productData, List<File> images) async {
+  Future<bool> addProduct(Map<String, dynamic> productData, List<dynamic> images) async {
     _setLoading(true);
     _error = null;
     try {
@@ -163,7 +163,7 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProduct(String id, Map<String, dynamic> productData, {List<File>? images}) async {
+  Future<bool> updateProduct(String id, Map<String, dynamic> productData, {List<dynamic>? images}) async {
     _setLoading(true);
     _error = null;
     try {

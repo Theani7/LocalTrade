@@ -57,7 +57,7 @@ class ProductService {
     }
   }
 
-  Future<Map<String, dynamic>> createProduct(Map<String, dynamic> productData, List<File> images) async {
+  Future<Map<String, dynamic>> createProduct(Map<String, dynamic> productData, List<dynamic> images) async {
     final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
     final response = await _apiService.multipartPost('/products', fields: fields, files: images);
 
@@ -69,12 +69,10 @@ class ProductService {
     }
   }
 
-  Future<Map<String, dynamic>> updateProduct(String id, Map<String, dynamic> productData, {List<File>? images}) async {
+  Future<Map<String, dynamic>> updateProduct(String id, Map<String, dynamic> productData, {List<dynamic>? images}) async {
     // For simplicity, we'll use multipart even for updates if images are provided
     if (images != null && images.isNotEmpty) {
        final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
-       // Note: ApiService needs a multipartPatch for true PATCH with files.
-       // We'll add it or use a POST workaround. For now, let's update ApiService.
        final response = await _apiService.multipartPatch('/products/$id', fields: fields, files: images);
        final data = json.decode(response.body);
         if (response.statusCode == 200) {

@@ -36,6 +36,12 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  static const Gradient darkGradient = LinearGradient(
+    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
   // Enhanced "Shadowish" Multi-Layered Shadows
   static List<BoxShadow> get softShadow => [
     BoxShadow(

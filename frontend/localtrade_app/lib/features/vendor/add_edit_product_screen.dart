@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -30,7 +31,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     'Others'
   ];
 
-  final List<File> _selectedImages = [];
+  final List<dynamic> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -59,7 +60,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final List<XFile> images = await _picker.pickMultiImage();
     if (images.isNotEmpty) {
       setState(() {
-        _selectedImages.addAll(images.map((image) => File(image.path)));
+        _selectedImages.addAll(images);
       });
     }
   }
@@ -147,7 +148,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             image: DecorationImage(
-                              image: FileImage(_selectedImages[index]),
+                              image: kIsWeb 
+                                  ? NetworkImage(_selectedImages[index].path) as ImageProvider
+                                  : FileImage(File(_selectedImages[index].path)),
                               fit: BoxFit.cover,
                             ),
                           ),
