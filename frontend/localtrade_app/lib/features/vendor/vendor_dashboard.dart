@@ -300,6 +300,24 @@ class VendorOverviewTab extends StatelessWidget {
     );
   }
 
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'Pending':
+        return const Color(0xFFF59E0B);
+      case 'Confirmed':
+      case 'Processing':
+        return AppTheme.primaryLight;
+      case 'Shipped':
+      case 'Delivered':
+        return AppTheme.successColor;
+      case 'Cancelled':
+      case 'Rejected':
+        return AppTheme.errorColor;
+      default:
+        return AppTheme.textSecondary;
+    }
+  }
+
   Widget _buildRevenueCard(double revenue) {
     return Container(
       width: double.infinity,
