@@ -161,8 +161,8 @@ class VendorOverviewTab extends StatelessWidget {
         }
         if (provider.analytics == null) return const Center(child: Text('No data available'));
 
-        final stats = provider.analytics!['stats'];
-        final recentOrders = provider.analytics!['recentOrders'] as List;
+        final stats = provider.analytics!['stats'] ?? {};
+        final recentOrders = provider.analytics!['recentOrders'] as List? ?? [];
 
         return RefreshIndicator(
           onRefresh: provider.fetchAnalytics,
@@ -173,7 +173,7 @@ class VendorOverviewTab extends StatelessWidget {
               children: [
                 const Text('Sales Performance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 const SizedBox(height: 16),
-                _buildRevenueCard(stats['totalRevenue'].toDouble()),
+                _buildRevenueCard((stats['totalRevenue'] ?? 0).toDouble()),
                 const SizedBox(height: 24),
                 const Text('Order Statistics', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 const SizedBox(height: 16),
@@ -189,10 +189,10 @@ class VendorOverviewTab extends StatelessWidget {
                       crossAxisSpacing: 16,
                       childAspectRatio: childAspectRatio,
                       children: [
-                        _buildStatCard('Pending', stats['pendingOrders'].toString(), const Color(0xFFE65100), Icons.hourglass_empty),
-                        _buildStatCard('Confirmed', stats['confirmedOrders'].toString(), const Color(0xFF1565C0), Icons.thumb_up_alt_outlined),
-                        _buildStatCard('Delivered', stats['deliveredOrders'].toString(), const Color(0xFF2E7D32), Icons.local_shipping_outlined),
-                        _buildStatCard('Total Products', stats['totalProducts'].toString(), AppTheme.primaryColor, Icons.inventory_2_outlined),
+                        _buildStatCard('Pending', (stats['pendingOrders'] ?? 0).toString(), const Color(0xFFE65100), Icons.hourglass_empty),
+                        _buildStatCard('Confirmed', (stats['confirmedOrders'] ?? 0).toString(), const Color(0xFF1565C0), Icons.thumb_up_alt_outlined),
+                        _buildStatCard('Delivered', (stats['deliveredOrders'] ?? 0).toString(), const Color(0xFF2E7D32), Icons.local_shipping_outlined),
+                        _buildStatCard('Total Products', (stats['totalProducts'] ?? 0).toString(), AppTheme.primaryColor, Icons.inventory_2_outlined),
                       ],
                     );
                   },
