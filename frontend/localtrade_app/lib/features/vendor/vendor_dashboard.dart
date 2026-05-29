@@ -161,8 +161,25 @@ class VendorOverviewTab extends StatelessWidget {
         }
         if (provider.analytics == null) return const Center(child: Text('No data available'));
 
-        final stats = provider.analytics!['stats'] ?? {};
-        final recentOrders = provider.analytics!['recentOrders'] as List? ?? [];
+        final stats = provider.analytics?['stats'] ?? {};
+        final recentOrders = provider.analytics?['recentOrders'] as List? ?? [];
+
+        // Safe parsing for revenue and stats
+        double totalRevenue = 0.0;
+        if (stats['totalRevenue'] != null) {
+          if (stats['totalRevenue'] is int) {
+            totalRevenue = (stats['totalRevenue'] as int).toDouble();
+          } else if (stats['totalRevenue'] is double) {
+            totalRevenue = stats['totalRevenue'] as double;
+          } else {
+            totalRevenue = double.tryParse(stats['totalRevenue'].toString()) ?? 0.0;
+          }
+        }
+
+        String pending = (stats['pendingOrders'] ?? 0).toString();
+        String confirmed = (stats['confirmedOrders'] ?? 0).toString();
+        String delivered = (stats['deliveredOrders'] ?? 0).toString();
+        String products = (stats['totalProducts'] ?? 0).toString();
 
         return RefreshIndicator(
           onRefresh: provider.fetchAnalytics,
@@ -173,14 +190,15 @@ class VendorOverviewTab extends StatelessWidget {
               children: [
                 const Text('Sales Performance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 const SizedBox(height: 16),
-                _buildRevenueCard((stats['totalRevenue'] ?? 0).toDouble()),
+                _buildRevenueCard(totalRevenue),
                 const SizedBox(height: 24),
                 const Text('Order Statistics', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 const SizedBox(height: 16),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     int crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-                    double childAspectRatio = constraints.maxWidth > 600 ? 1.8 : 1.4;
+                    // Lower aspect ratio to give cards more height on small phones, preventing text overlap
+                    double childAspectRatio = constraints.maxWidth > 600 ? 1.6 : 1.15;
                     return GridView.count(
                       crossAxisCount: crossAxisCount,
                       shrinkWrap: true,
@@ -189,10 +207,10 @@ class VendorOverviewTab extends StatelessWidget {
                       crossAxisSpacing: 16,
                       childAspectRatio: childAspectRatio,
                       children: [
-                        _buildStatCard('Pending', (stats['pendingOrders'] ?? 0).toString(), const Color(0xFFE65100), Icons.hourglass_empty),
-                        _buildStatCard('Confirmed', (stats['confirmedOrders'] ?? 0).toString(), const Color(0xFF1565C0), Icons.thumb_up_alt_outlined),
-                        _buildStatCard('Delivered', (stats['deliveredOrders'] ?? 0).toString(), const Color(0xFF2E7D32), Icons.local_shipping_outlined),
-                        _buildStatCard('Total Products', (stats['totalProducts'] ?? 0).toString(), AppTheme.primaryColor, Icons.inventory_2_outlined),
+                        _buildStatCard('Pending', pending, const Color(0xFFF59E0B), Icons.hourglass_empty), // Using AppTheme Warning Color
+                        _buildStatCard('Confirmed', confirmed, AppTheme.primaryLight, Icons.thumb_up_alt_outlined),
+                        _buildStatCard('Delivered', delivered, AppTheme.successColor, Icons.local_shipping_outlined),
+                        _buildStatCard('Total Products', products, AppTheme.primaryColor, Icons.inventory_2_outlined),
                       ],
                     );
                   },
@@ -202,16 +220,15 @@ class VendorOverviewTab extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                    TextButton(onPressed: () {}, child: const Text('View All')),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 if (recentOrders.isEmpty)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: AppTheme.surfaceColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.black.withOpacity(0.05))),
-                    child: const Center(child: Text('No recent orders', style: TextStyle(color: AppTheme.textSecondary))),
+                    decoration: BoxDecoration(color: AppTheme.surfaceColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppTheme.borderMedium)),
+                    child: const Center(child: Text('No recent orders yet', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600))),
                   )
                 else
                   Container(
@@ -219,7 +236,7 @@ class VendorOverviewTab extends StatelessWidget {
                       color: AppTheme.surfaceColor,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: AppTheme.softShadow,
-                      border: Border.all(color: Colors.black.withOpacity(0.05)),
+                      border: Border.all(color: AppTheme.borderSubtle, width: 1.5),
                     ),
                     child: Column(
                       children: recentOrders.map((order) {
@@ -227,30 +244,48 @@ class VendorOverviewTab extends StatelessWidget {
                         return Column(
                           children: [
                             ListTile(
-                              contentPadding: const EdgeInsets.all(16),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               leading: Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
                                 child: const Icon(Icons.receipt_long, color: AppTheme.primaryColor, size: 20),
                               ),
                               title: Text(
                                 'Order #${order['_id'].toString().substring(18).toUpperCase()}', 
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: -0.2),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              subtitle: Text(
-                                order['customerId']['fullName'], 
-                                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text(
+                                  order['customerId']['fullName'] ?? 'Customer', 
+                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              trailing: Text(
-                                'Rs. ${order['totalAmount']}', 
-                                style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 14),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Rs. ${order['totalAmount']}', 
+                                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    order['orderStatus'] ?? 'Pending',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: _getStatusColor(order['orderStatus']),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            if (!isLast) const Divider(height: 1, indent: 70, endIndent: 16),
+                            if (!isLast) const Divider(height: 1, indent: 70, endIndent: 16, color: AppTheme.borderSubtle),
                           ],
                         );
                       }).toList(),
