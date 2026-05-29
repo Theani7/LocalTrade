@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/product_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
+import 'add_edit_product_screen.dart';
 
 class VendorInventoryScreen extends StatefulWidget {
   const VendorInventoryScreen({super.key});
@@ -33,6 +34,17 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
             icon: const Icon(Icons.refresh),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddEditProductScreen()),
+          );
+        },
+        backgroundColor: AppTheme.primaryColor,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Add Product', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: Consumer<ProductProvider>(
         builder: (context, provider, _) {
