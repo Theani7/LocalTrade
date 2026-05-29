@@ -197,17 +197,17 @@ class VendorOverviewTab extends StatelessWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     int crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-                    // Lower aspect ratio to give cards more height on small phones, preventing text overlap
-                    double childAspectRatio = constraints.maxWidth > 600 ? 1.6 : 1.15;
+                    // Lower aspect ratio (0.95 - 1.0) makes the boxes taller to fit the content comfortably
+                    double childAspectRatio = constraints.maxWidth > 600 ? 1.6 : 1.0;
                     return GridView.count(
                       crossAxisCount: crossAxisCount,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
                       childAspectRatio: childAspectRatio,
                       children: [
-                        _buildStatCard('Pending', pending, const Color(0xFFF59E0B), Icons.hourglass_empty), // Using AppTheme Warning Color
+                        _buildStatCard('Pending', pending, const Color(0xFFF59E0B), Icons.hourglass_empty),
                         _buildStatCard('Confirmed', confirmed, AppTheme.primaryLight, Icons.thumb_up_alt_outlined),
                         _buildStatCard('Delivered', delivered, AppTheme.successColor, Icons.local_shipping_outlined),
                         _buildStatCard('Total Products', products, AppTheme.primaryColor, Icons.inventory_2_outlined),
@@ -321,10 +321,10 @@ class VendorOverviewTab extends StatelessWidget {
   Widget _buildRevenueCard(double revenue) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppTheme.borderSubtle, width: 1.5),
         boxShadow: AppTheme.softShadow,
       ),
@@ -334,28 +334,39 @@ class VendorOverviewTab extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total Revenue',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                    child: const Icon(Icons.account_balance_wallet_outlined, color: AppTheme.primaryColor, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Total Revenue',
+                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                  ),
+                ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(color: AppTheme.successColor.withOpacity(0.1), borderRadius: BorderRadius.circular(100)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.trending_up_rounded, color: AppTheme.successColor, size: 14),
-                    const SizedBox(width: 4),
-                    const Text('ALL TIME', style: TextStyle(color: AppTheme.successColor, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                  ],
-                ),
+                child: const Text('ALL TIME', style: TextStyle(color: AppTheme.successColor, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Rs. ${revenue.toStringAsFixed(0)}',
-            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 38, fontWeight: FontWeight.w900, letterSpacing: -1.0),
+          const SizedBox(height: 20),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Rs. ${revenue.toStringAsFixed(0)}',
+              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1.0),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Successfully processed revenue',
+            style: TextStyle(color: AppTheme.textLight, fontSize: 11, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -368,32 +379,29 @@ class VendorOverviewTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withOpacity(0.03)),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, color: color, size: 20),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: color, size: 18),
           ),
-          const SizedBox(height: 12),
+          const Spacer(),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+            child: Text(
+              value, 
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary, height: 1),
+            ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             label, 
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w700, letterSpacing: 0.2),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
