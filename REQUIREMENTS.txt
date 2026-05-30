@@ -1,0 +1,74 @@
+# ==============================================================================
+# LocalTrade: System & Project Requirements
+# ==============================================================================
+# This file provides a consolidated list of prerequisites and dependencies 
+# required to run the LocalTrade project (Backend & Frontend).
+
+# --- 1. System Prerequisites ---
+# Ensure these are installed on your machine before proceeding.
+- Node.js (v18.x or higher)
+- npm (v9.x or higher)
+- Flutter SDK (v3.0.0 or higher)
+- Dart SDK (v3.0.0 or higher)
+- Git (for cloning the repository)
+- Android Studio / VS Code (with Flutter & Dart extensions)
+
+# --- 2. External Services ---
+# You will need active accounts/projects for the following:
+- MongoDB Atlas (Cloud Database)
+- Cloudinary (Image Hosting)
+- Firebase Project (Push Notifications & Auth)
+
+# --- 3. Backend Requirements (Node.js) ---
+# Location: /backend
+# Primary Dependencies:
+- express (v5.x) - Web Framework
+- mongoose (v9.x) - MongoDB ODM
+- jsonwebtoken (v9.x) - Authentication
+- bcryptjs (v3.x) - Password Hashing
+- cloudinary (v2.x) - Image Uploads
+- firebase-admin (v13.x) - Notifications
+- dotenv (v17.x) - Environment Management
+
+# To install backend dependencies:
+$ cd backend
+$ npm install
+
+# --- 4. Frontend Requirements (Flutter) ---
+# Location: /frontend/localtrade_app
+# Primary Dependencies:
+- provider (v6.x) - State Management
+- http (v1.x) - API Requests
+- firebase_core & firebase_messaging - Notifications
+- flutter_secure_storage - Secure Token Storage
+- google_fonts - Typography
+- cached_network_image - Image Caching
+
+# To install frontend dependencies:
+$ cd frontend/localtrade_app
+$ flutter pub get
+
+# --- 5. Environment Variables (.env) ---
+# Create a .env file in the /backend directory with the following keys:
+# (Refer to /backend/.env.example for more details)
+
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=30d
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+FIREBASE_PRIVATE_KEY="your_firebase_private_key"
+
+# ==============================================================================
+# SETUP SUMMARY
+# ==============================================================================
+# 1. Install Node.js & Flutter.
+# 2. Clone the repo and navigate to /backend, run 'npm install'.
+# 3. Create /backend/.env and fill in your credentials.
+# 4. Navigate to /frontend/localtrade_app, run 'flutter pub get'.
+# 5. Connect your mobile device/emulator and run 'flutter run'.

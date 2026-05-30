@@ -3,6 +3,7 @@ const Product = require('../models/productModel');
 const Order = require('../models/orderModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { sendNotification } = require('../utils/notificationUtils');
 
 // @desc    Get full system analytics
 // @route   GET /api/v1/admin/analytics
@@ -286,6 +287,20 @@ exports.updateVendorStatus = catchAsync(async (req, res, next) => {
 
   user.vendorApprovalStatus = status;
   await user.save();
+
+  // Notify Vendor of the status change
+  let title = 'Account Status Updated';
+  let message = `Your vendor account status has been updated to ${status}.`;
+  
+  if (status === 'approved') {
+    title = 'Vendor Account Approved!';
+    message = 'Congratulations! Your vendor account has been approved. You can now start listing products.';
+  } else if (status === 'suspended') {
+    title = 'Account Suspended';
+    message = 'Your vendor account has been suspended. Please contact support for more details.';
+  }
+
+  await sendNotification(user._id, title, message, { status }, 'Account');
 
   res.status(200).json({
     success: true,

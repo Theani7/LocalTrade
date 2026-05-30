@@ -11,6 +11,11 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   // 1) Initialize filter object
   const filter = {};
 
+  // Vendor Filter
+  if (req.query.vendorId) {
+    filter.vendorId = req.query.vendorId;
+  }
+
   // 2) Category Filter
   if (req.query.category && req.query.category !== 'All') {
     filter.category = req.query.category;

@@ -45,126 +45,132 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(24),
-            itemCount: orderProvider.orders.length,
-            itemBuilder: (context, index) {
-              final order = orderProvider.orders[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: AppTheme.softShadow,
-                  border: Border.all(color: Colors.black.withOpacity(0.05)),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
+          return RefreshIndicator(
+            onRefresh: () async => orderProvider.fetchMyOrders(),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(24),
+              itemCount: orderProvider.orders.length,
+              itemBuilder: (context, index) {
+                final order = orderProvider.orders[index];
+                final orderId = order['_id']?.toString() ?? 'unknown';
+                final displayId = orderId.length > 18 ? orderId.substring(18).toUpperCase() : orderId.toUpperCase();
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
                     borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => OrderTrackingScreen(orderId: order['_id'])),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(8),
+                    boxShadow: AppTheme.softShadow,
+                    border: Border.all(color: Colors.black.withOpacity(0.05)),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => OrderTrackingScreen(orderId: orderId)),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '#$displayId',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textSecondary),
+                                  ),
                                 ),
-                                child: Text(
-                                  '#${order['_id'].toString().substring(18).toUpperCase()}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textSecondary),
+                                _buildStatusBadge(order['orderStatus'] ?? 'Pending'),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.secondaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.storefront, color: AppTheme.secondaryColor),
                                 ),
-                              ),
-                              _buildStatusBadge(order['orderStatus']),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.secondaryColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(Icons.storefront, color: AppTheme.secondaryColor),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      order['vendorId']['fullName'],
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${order['products'].length} items • Rs. ${order['totalAmount']}',
-                                      style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Divider(color: Color(0xFFEEEEEE), thickness: 1),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Flexible(
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.calendar_today, size: 14, color: AppTheme.textSecondary),
-                                    const SizedBox(width: 6),
-                                    Flexible(
-                                      child: Text(
-                                        DateFormat('MMM dd, yyyy').format(DateTime.parse(order['createdAt']).toLocal()),
-                                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        order['vendorId']?['shopName'] ?? order['vendorId']?['fullName'] ?? 'Local Vendor',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${(order['products'] as List?)?.length ?? 0} items • Rs. ${order['totalAmount'] ?? 0}',
+                                        style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Divider(color: Color(0xFFEEEEEE), thickness: 1),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today, size: 14, color: AppTheme.textSecondary),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          DateFormat('MMM dd, yyyy').format(DateTime.parse(order['createdAt'] ?? DateTime.now().toString()).toLocal()),
+                                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('Track Order', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                                    SizedBox(width: 4),
+                                    Icon(Icons.arrow_forward, size: 16, color: AppTheme.primaryColor),
                                   ],
                                 ),
-                              ),
-                              const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text('Track Order', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                                  SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward, size: 16, color: AppTheme.primaryColor),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

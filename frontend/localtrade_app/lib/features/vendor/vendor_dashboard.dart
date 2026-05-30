@@ -197,8 +197,8 @@ class VendorOverviewTab extends StatelessWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     int crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-                    // Lower aspect ratio (0.95 - 1.0) makes the boxes taller to fit the content comfortably
-                    double childAspectRatio = constraints.maxWidth > 600 ? 1.6 : 1.0;
+                    // Lower aspect ratio (0.85 - 0.9) makes the boxes taller to fit the content comfortably
+                    double childAspectRatio = constraints.maxWidth > 600 ? 1.6 : 0.85;
                     return GridView.count(
                       crossAxisCount: crossAxisCount,
                       shrinkWrap: true,
@@ -375,7 +375,7 @@ class VendorOverviewTab extends StatelessWidget {
 
   Widget _buildStatCard(String label, String value, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(24),

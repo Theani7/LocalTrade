@@ -2,95 +2,102 @@
 
 LocalTrade is a modern, elegant, full-stack mobile marketplace platform designed to empower micro and small businesses in Nepal. It connects local producers, such as vegetable sellers, handicraft makers, dairy farmers, and tailors, directly with their community through a simple and intuitive reservation-based ordering system.
 
-## ✨ Key Features
+---
 
-### 🛍️ For Customers
-- **Product Discovery:** Browse and search local goods with advanced filtering by category (Vegetables, Dairy, Handicrafts, etc.).
-- **Smart Shopping:** Seamless cart management and reservation-based checkout (no complex online payment required).
-- **Order Tracking:** Real-time order monitoring with a professional timeline UI.
-- **Notifications:** Instant alerts for order updates and system announcements.
+## 🏗️ Project Architecture
 
-### 🏪 For Vendors
-- **Business Dashboard:** Comprehensive analytics showing total revenue, order statuses, and inventory counts.
-- **Inventory Management:** Easy-to-use tools to list, edit, and manage products with multiple image support.
-- **Order Fulfillment:** Direct queue for managing customer orders and updating fulfillment status.
-- **Visual Storytelling:** High-quality image hosting powered by Cloudinary.
+### Backend (Node.js/Express)
+- **Architecture:** Model-View-Controller (MVC).
+- **Database:** MongoDB Atlas with Mongoose ODM.
+- **Security:** JWT-based Authentication, Role-Based Access Control (RBAC), Password Hashing (bcrypt), and Middleware for rate-limiting & security headers (Helmet).
+- **Storage:** Cloudinary for high-performance image hosting.
+- **Notifications:** Firebase Admin SDK for real-time push notifications.
 
-### 🛡️ For Administrators
-- **Platform Oversight:** Full control over user management and vendor moderation.
-- **Vendor Approval:** Secure onboarding process ensuring only verified local businesses participate.
-- **System Analytics:** High-level insights into platform growth, marketplace activity, and revenue.
+### Frontend (Flutter)
+- **Framework:** Flutter (Material 3).
+- **State Management:** Provider pattern for scalable state handling.
+- **Networking:** HTTP package with interceptors for JWT handling.
+- **Local Storage:** Flutter Secure Storage for tokens and Shared Preferences for user settings.
 
-## 🚀 Tech Stack
+---
 
-- **Frontend:** Flutter (Dart) with Material 3 UI and Provider state management.
-- **Backend:** Node.js (Express.js) following MVC architecture.
-- **Database:** MongoDB Atlas (Mongoose ODM).
-- **Image Storage:** Cloudinary.
-- **Push Notifications:** Firebase Cloud Messaging (FCM).
-- **Authentication:** JWT-based secure auth with bcrypt password hashing and Role-Based Access Control (RBAC).
+## 🛠️ Technical Setup & Operations
 
-## 🛠️ Installation & Setup
+### 1. Database Setup (MongoDB Atlas)
+1.  **Create Cluster:** Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a free shared cluster.
+2.  **Network Access:** In the Atlas dashboard, go to "Network Access" and click **Add IP Address**. For development, you can "Allow Access from Anywhere" (`0.0.0.0/0`).
+3.  **Database Access:** Create a database user with **Read and Write** permissions. Remember the password.
+4.  **Connection String:** Click **Connect** > **Drivers** and copy the URI. Replace `<password>` with your user's password.
+5.  **Environment Variable:** Add this URI to your backend `.env` file as `MONGODB_URI`.
 
-### Prerequisites
-- Flutter SDK (latest stable)
-- Node.js (v18+)
-- MongoDB Atlas account
-- Firebase project
-- Cloudinary account
+### 2. Image Storage (Cloudinary)
+1.  Sign up for a free account at [Cloudinary](https://cloudinary.com).
+2.  From your Dashboard, copy the **Cloud Name**, **API Key**, and **API Secret**.
+3.  Add these to your backend `.env` file.
 
-### Backend Setup
-1. Navigate to `/backend`:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file from `.env.example` and fill in your credentials.
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### 3. Push Notifications (Firebase)
+1.  Create a project in the [Firebase Console](https://console.firebase.google.com).
+2.  **Service Account:** Go to **Project Settings** > **Service Accounts** and click **Generate New Private Key**.
+3.  **Backend Config:** Open the downloaded JSON and map the values to your backend `.env` (Project ID, Client Email, Private Key).
+4.  **Frontend Config:** Use the [FlutterFire CLI](https://firebase.flutter.dev/docs/cli/) to configure the Flutter app:
+    ```bash
+    flutterfire configure
+    ```
 
-### Frontend Setup
-1. Navigate to `/frontend/localtrade_app`:
-   ```bash
-   cd frontend/localtrade_app
-   ```
-2. Fetch Flutter packages:
-   ```bash
-   flutter pub get
-   ```
-3. Configure Firebase using FlutterFire CLI:
-   ```bash
-   flutterfire configure
-   ```
-4. Run the application:
-   ```bash
-   flutter run
-   ```
+### 4. Backend Operations
+Navigate to the `/backend` directory:
+```bash
+cd backend
+npm install
+```
 
-## 🧪 Testing & Reliability
+#### Seeding Data
+To quickly populate your database with 10 vendors and 50+ Nepali products:
+```bash
+# Set up initial admin (Optional)
+node seed-admin.js
 
-LocalTrade features a robust testing suite and standardized error-handling to ensure a stable production-grade experience.
+# Populate mock vendors and products
+node seed-data.js
+```
 
-### Backend Testing
-We use **Jest** and **Supertest** with an in-memory MongoDB server for isolated API testing.
+#### Running Tests
+```bash
+npm test
+```
 
-- **Run all tests:** `cd backend && npm test`
-- **Run specific test:** `npx jest tests/auth.test.js`
+---
 
-**Test Coverage:**
-- [x] **Authentication:** Registration, Login, JWT verification, and RBAC.
-- [x] **Products:** Full CRUD lifecycle and vendor approval validation.
-- [x] **Orders:** Stock management, total calculation, and status updates.
+## 🚀 Installation & Running
 
-## 📄 Documentation
+### Backend
+1. Create `.env` from `.env.example`.
+2. `npm install`
+3. `npm run dev` (Runs on `http://localhost:5000`)
 
-- [API Documentation](API_DOCUMENTATION.md)
-- [Deployment Guide](DEPLOYMENT_GUIDE.md)
+### Frontend
+1. Navigate to `/frontend/localtrade_app`.
+2. `flutter pub get`
+3. Ensure the backend URL is correctly set in `lib/core/constants/app_constants.dart`.
+4. `flutter run`
+
+---
+
+## 📄 Documentation & Guides
+
+- **[REQUIREMENTS.txt](REQUIREMENTS.txt):** Consolidated system requirements and environment keys.
+- **[API Documentation](API_DOCUMENTATION.md):** Detailed endpoint list, request formats, and auth logic.
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md):** Steps for production hosting (Render/Railway).
+- **[Testing Checklist](TESTING_CHECKLIST.md):** QA procedures for new features.
+
+---
+
+## 🤝 Contributing
+1. Fork the Project.
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the Branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
 
 ## 🎓 Academic Project
 This project was developed for a final year university submission, demonstrating a production-grade implementation of a community-focused marketplace.

@@ -15,6 +15,7 @@ class ProductService {
     bool? showAll,
     int? page,
     int limit = 10,
+    String? vendorId,
   }) async {
     String query = '?limit=$limit';
     if (search != null && search.isNotEmpty) query += '&search=${Uri.encodeComponent(search)}';
@@ -23,6 +24,7 @@ class ProductService {
     if (sort != null) query += '&sort=$sort';
     if (showAll != null) query += '&showAll=$showAll';
     if (page != null) query += '&page=$page';
+    if (vendorId != null) query += '&vendorId=$vendorId';
 
     final response = await _apiService.get('/products$query');
     final data = json.decode(response.body);

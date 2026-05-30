@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/auth_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/review_provider.dart';
+import 'vendor_shop_screen.dart';
 import 'package:intl/intl.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -39,6 +41,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final int stock = widget.product['stockQuantity'] ?? 0;
     final String status = widget.product['productStatus'] ?? 'Available';
     final bool isOutOfStock = status == 'OutOfStock' || stock <= 0;
+    
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final isAdmin = user?['role'] == 'admin';
 
     return Scaffold(
       backgroundColor: AppTheme.surfaceColor,
@@ -313,11 +318,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           'Customer Reviews',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary, letterSpacing: -0.3),
                         ),
-                        TextButton.icon(
-                          onPressed: () => _showReviewModal(context),
-                          icon: const Icon(Icons.rate_review_outlined, size: 18),
-                          label: const Text('Write a Review'),
-                        ),
+                        if (!isAdmin)
+                          TextButton.icon(
+                            onPressed: () => _showReviewModal(context),
+                            icon: const Icon(Icons.rate_review_outlined, size: 18),
+                            label: const Text('Write a Review'),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -331,7 +337,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
         ],
       ),
-      bottomSheet: Container(
+      bottomSheet: isAdmin ? null : Container(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         decoration: BoxDecoration(
           color: Colors.white,

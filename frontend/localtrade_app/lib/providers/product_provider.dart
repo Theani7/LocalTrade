@@ -44,6 +44,7 @@ class ProductProvider with ChangeNotifier {
     String? location,
     String? sort,
     bool? showAll,
+    String? vendorId,
     bool refresh = true,
   }) async {
     if (refresh) {
@@ -73,6 +74,7 @@ class ProductProvider with ChangeNotifier {
         sort: _sort,
         showAll: _showAll,
         page: _currentPage,
+        vendorId: vendorId,
       );
 
       final List<dynamic> newProducts = result['data']['products'];

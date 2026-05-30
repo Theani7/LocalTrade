@@ -6,10 +6,14 @@ import 'package:shimmer/shimmer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
 import 'admin_feedback_results_screen.dart';
 import '../customer/customer_profile_screen.dart';
+import '../customer/notification_screen.dart';
+import '../customer/product_details_screen.dart';
+import '../customer/vendor_shop_screen.dart';
 import '../auth/login_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -32,12 +36,14 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
 
   Future<void> _refreshData() async {
     final admin = Provider.of<AdminProvider>(context, listen: false);
+    final notification = Provider.of<NotificationProvider>(context, listen: false);
     await Future.wait([
       admin.fetchAnalytics(),
       admin.fetchUsers(),
       admin.fetchVendors(),
       admin.fetchProducts(),
       admin.fetchOrders(),
+      notification.fetchNotifications(),
     ]);
   }
 
@@ -57,6 +63,31 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
         title: const Text('Admin Console', style: TextStyle(fontWeight: FontWeight.bold)),
         elevation: 2,
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+                icon: const Icon(Icons.notifications_none_rounded),
+                tooltip: 'Notifications',
+              ),
+              Consumer<NotificationProvider>(
+                builder: (context, provider, _) => provider.unreadCount > 0 ? Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(color: AppTheme.errorColor, shape: BoxShape.circle),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      '${provider.unreadCount}',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ) : const SizedBox(),
+              ),
+            ],
+          ),
           IconButton(
             onPressed: _refreshData,
             icon: const Icon(Icons.refresh_rounded),
@@ -71,11 +102,6 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerProfileScreen())),
             icon: const Icon(Icons.person_outline_rounded),
             tooltip: 'My Profile',
-          ),
-          IconButton(
-            onPressed: () => _showLogoutDialog(context),
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Logout',
           ),
           const SizedBox(width: 8),
         ],
@@ -242,10 +268,10 @@ class AdminAnalyticsTab extends StatelessWidget {
           itemCount: 4,
           itemBuilder: (context, index) {
             switch (index) {
-              case 0: return _buildStatCard('Revenue', 'Rs. ${NumberFormat('#,##,###').format(stats['totalRevenue'])}', Colors.green.shade700, Icons.payments_rounded);
-              case 1: return _buildStatCard('Orders', '${stats['totalOrders']}', Colors.blue.shade700, Icons.shopping_cart_rounded);
-              case 2: return _buildStatCard('Users', '${stats['totalUsers']}', Colors.purple.shade700, Icons.group_rounded);
-              case 3: return _buildStatCard('Products', '${stats['totalProducts']}', Colors.orange.shade700, Icons.category_rounded);
+              case 0: return _buildStatCard('Revenue', 'Rs. ${NumberFormat('#,##,###').format(stats['totalRevenue'] ?? 0)}', Colors.green.shade700, Icons.payments_rounded);
+              case 1: return _buildStatCard('Orders', '${stats['totalOrders'] ?? 0}', Colors.blue.shade700, Icons.shopping_cart_rounded);
+              case 2: return _buildStatCard('Users', '${stats['totalUsers'] ?? 0}', Colors.purple.shade700, Icons.group_rounded);
+              case 3: return _buildStatCard('Products', '${stats['totalProducts'] ?? 0}', Colors.orange.shade700, Icons.category_rounded);
               default: return const SizedBox();
             }
           },
@@ -377,36 +403,76 @@ class AdminAnalyticsTab extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: recent.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, indent: 70),
+            separatorBuilder: (_, __) => const Divider(height: 1, indent: 70, color: AppTheme.borderSubtle),
             itemBuilder: (context, index) {
               final order = recent[index];
+              final orderId = order['_id'].toString();
+              final displayId = orderId.length > 18 ? orderId.substring(18).toUpperCase() : orderId.toUpperCase();
+              
               return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                   child: const Icon(Icons.receipt_rounded, color: AppTheme.primaryColor, size: 20),
                 ),
                 title: Text(
-                  'Order #${order['_id'].toString().substring(18).toUpperCase()}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  'Order #$displayId',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: -0.2),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                subtitle: Text(
-                  '${order['customerId']['fullName']} ➔ ${order['vendorId']['fullName']}',
-                  style: const TextStyle(fontSize: 12),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    '${order['customerId']?['fullName'] ?? 'User'} ➔ ${order['vendorId']?['shopName'] ?? order['vendorId']?['fullName'] ?? 'Vendor'}',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                trailing: Text(
-                  'Rs. ${order['totalAmount']}',
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Rs. ${order['totalAmount']}',
+                      style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.textPrimary, fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      (order['orderStatus'] ?? 'Pending').toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: _getStatusColor(order['orderStatus']),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
           ),
     );
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'Pending':
+        return const Color(0xFFF59E0B);
+      case 'Confirmed':
+      case 'Processing':
+        return AppTheme.primaryLight;
+      case 'Shipped':
+      case 'Delivered':
+        return AppTheme.successColor;
+      case 'Cancelled':
+      case 'Rejected':
+        return AppTheme.errorColor;
+      default:
+        return AppTheme.textSecondary;
+    }
   }
 
   Widget _buildSkeletonLoader() {
@@ -525,6 +591,7 @@ class _AdminUsersTabState extends AdminBaseTabState<AdminUsersTab> {
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       child: ListTile(
+                        onTap: () => _showUserDetails(context, user),
                         leading: CircleAvatar(
                           backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                           child: Text(user['fullName'][0], style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
@@ -545,6 +612,66 @@ class _AdminUsersTabState extends AdminBaseTabState<AdminUsersTab> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showUserDetails(BuildContext context, dynamic user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+              child: Text(user['fullName'][0], style: const TextStyle(color: AppTheme.primaryColor)),
+            ),
+            const SizedBox(width: 12),
+            const Text('User Details', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _detailRow(Icons.person_outline, 'Full Name', user['fullName']),
+            _detailRow(Icons.email_outlined, 'Email', user['email']),
+            _detailRow(Icons.phone_outlined, 'Phone', user['phone'] ?? 'N/A'),
+            _detailRow(Icons.location_on_outlined, 'Address', user['address']),
+            _detailRow(Icons.badge_outlined, 'Role', user['role'].toString().toUpperCase()),
+            _detailRow(Icons.calendar_today_outlined, 'Joined', DateFormat('MMM d, yyyy').format(DateTime.parse(user['createdAt']))),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: AppTheme.primaryColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -650,82 +777,85 @@ class _AdminVendorsTabState extends AdminBaseTabState<AdminVendorsTab> {
                     if (status == 'approved') statusColor = Colors.green;
                     if (status == 'suspended') statusColor = Colors.red;
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: AppTheme.surfaceColor, borderRadius: BorderRadius.circular(24), boxShadow: AppTheme.softShadow),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(color: AppTheme.secondaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(14)),
-                                child: const Icon(Icons.storefront_rounded, color: AppTheme.secondaryColor),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      vendor['shopName'] ?? vendor['fullName'],
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      vendor['fullName'],
-                                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                    return GestureDetector(
+                      onTap: () => _showVendorDetails(context, vendor),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: AppTheme.surfaceColor, borderRadius: BorderRadius.circular(24), boxShadow: AppTheme.softShadow),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: AppTheme.secondaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(14)),
+                                  child: const Icon(Icons.storefront_rounded, color: AppTheme.secondaryColor),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              _buildStatusBadge(status, statusColor),
-                            ],
-                          ),
-                          const Divider(height: 32),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  vendor['address'],
-                                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        vendor['shopName'] ?? vendor['fullName'],
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        vendor['fullName'],
+                                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            alignment: WrapAlignment.end,
-                            children: [
-                              if (status != 'approved')
-                                ElevatedButton.icon(
-                                  icon: const Icon(Icons.check_rounded, size: 18),
-                                  label: const Text('Approve'),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                  onPressed: () => _confirmAction(context, admin, vendor, 'approved'),
+                                const SizedBox(width: 8),
+                                _buildStatusBadge(status, statusColor),
+                              ],
+                            ),
+                            const Divider(height: 32),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    vendor['address'],
+                                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              if (status == 'approved')
-                                OutlinedButton.icon(
-                                  icon: const Icon(Icons.block_rounded, size: 18),
-                                  label: const Text('Suspend'),
-                                  style: OutlinedButton.styleFrom(foregroundColor: AppTheme.errorColor, side: const BorderSide(color: AppTheme.errorColor)),
-                                  onPressed: () => _confirmAction(context, admin, vendor, 'suspended'),
-                                ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.end,
+                              children: [
+                                if (status != 'approved')
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.check_rounded, size: 18),
+                                    label: const Text('Approve'),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                    onPressed: () => _confirmAction(context, admin, vendor, 'approved'),
+                                  ),
+                                if (status == 'approved')
+                                  OutlinedButton.icon(
+                                    icon: const Icon(Icons.block_rounded, size: 18),
+                                    label: const Text('Suspend'),
+                                    style: OutlinedButton.styleFrom(foregroundColor: AppTheme.errorColor, side: const BorderSide(color: AppTheme.errorColor)),
+                                    onPressed: () => _confirmAction(context, admin, vendor, 'suspended'),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -735,6 +865,79 @@ class _AdminVendorsTabState extends AdminBaseTabState<AdminVendorsTab> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showVendorDetails(BuildContext context, dynamic vendor) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: AppTheme.secondaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.storefront_rounded, color: AppTheme.secondaryColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            const Text('Vendor Details', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _detailRow(Icons.store_outlined, 'Shop Name', vendor['shopName'] ?? 'N/A'),
+              _detailRow(Icons.person_outline, 'Owner', vendor['fullName']),
+              _detailRow(Icons.email_outlined, 'Email', vendor['email']),
+              _detailRow(Icons.phone_outlined, 'Phone', vendor['phone'] ?? 'N/A'),
+              _detailRow(Icons.location_on_outlined, 'Address', vendor['address']),
+              _detailRow(Icons.access_time_outlined, 'Business Hours', vendor['openingHours'] ?? 'N/A'),
+              _detailRow(Icons.description_outlined, 'Description', vendor['businessDescription'] ?? 'No description provided.'),
+              _detailRow(Icons.info_outline, 'Status', vendor['vendorApprovalStatus'].toString().toUpperCase()),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.inventory_2_outlined, size: 16),
+            label: const Text('View Products'),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => VendorShopScreen(vendor: vendor)));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: AppTheme.secondaryColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -865,6 +1068,7 @@ class _AdminProductsTabState extends AdminBaseTabState<AdminProductsTab> {
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       child: ListTile(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product))),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: CachedNetworkImage(
@@ -942,22 +1146,25 @@ class _AdminOrdersTabState extends AdminBaseTabState<AdminOrdersTab> {
                   itemCount: admin.orders.length,
                   itemBuilder: (context, index) {
                     final order = admin.orders[index];
+                    final orderId = order['_id'].toString();
+                    final displayId = orderId.length > 18 ? orderId.substring(18).toUpperCase() : orderId.toUpperCase();
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       child: ListTile(
                         title: Text(
-                          'Order #${order['_id'].toString().substring(18).toUpperCase()}',
+                          'Order #$displayId',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
-                          'To: ${order['customerId']['fullName']}\nStatus: ${order['orderStatus']}',
+                          'To: ${order['customerId']?['fullName'] ?? 'Deleted User'}\nStatus: ${order['orderStatus'] ?? 'Pending'}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        trailing: Text('Rs. ${order['totalAmount']}', style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
+                        trailing: Text('Rs. ${order['totalAmount'] ?? 0}', style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.textPrimary)),
                       ),
                     );
                   },

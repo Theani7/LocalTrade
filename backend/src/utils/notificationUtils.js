@@ -52,3 +52,27 @@ exports.sendNotification = async (userId, title, message, data = {}, type = 'Sys
     console.error('Send Notification Error:', error.message);
   }
 };
+
+/**
+ * Send a notification to all admin users
+ * @param {string} title - Notification title
+ * @param {string} message - Notification body
+ * @param {Object} data - Additional data
+ */
+exports.notifyAdmins = async (title, message, data = {}) => {
+  try {
+    const admins = await User.find({ role: 'admin' }).select('_id');
+    console.log(`DEBUG: Found ${admins.length} admins to notify.`);
+    if (admins.length === 0) {
+      console.log('DEBUG: No admins found in database!');
+    }
+    
+    const notificationPromises = admins.map(adminUser => 
+      exports.sendNotification(adminUser._id, title, message, data, 'Account')
+    );
+    await Promise.all(notificationPromises);
+    console.log(`Admin notification sent to ${admins.length} admins: ${title}`);
+  } catch (error) {
+    console.error('Notify Admins Error:', error.message);
+  }
+};

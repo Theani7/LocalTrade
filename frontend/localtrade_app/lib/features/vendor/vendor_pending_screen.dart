@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../auth/login_screen.dart';
 
 class VendorPendingScreen extends StatelessWidget {
   const VendorPendingScreen({super.key});
@@ -11,12 +12,21 @@ class VendorPendingScreen extends StatelessWidget {
     final user = Provider.of<AuthProvider>(context).user;
     final status = user?['vendorApprovalStatus'] ?? 'pending';
 
+    void _handleLogout(BuildContext context) {
+      Provider.of<AuthProvider>(context, listen: false).logout();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Vendor Status'),
         actions: [
           IconButton(
-            onPressed: () => Provider.of<AuthProvider>(context, listen: false).logout(),
+            onPressed: () => _handleLogout(context),
             icon: const Icon(Icons.logout),
           ),
         ],
@@ -52,7 +62,7 @@ class VendorPendingScreen extends StatelessWidget {
                   width: 200,
                   height: 45,
                   child: ElevatedButton(
-                    onPressed: () => Provider.of<AuthProvider>(context, listen: false).logout(),
+                    onPressed: () => _handleLogout(context),
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),

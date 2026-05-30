@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const { sendToken } = require('../utils/authUtils');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { notifyAdmins } = require('../utils/notificationUtils');
 
 exports.register = catchAsync(async (req, res, next) => {
   const { fullName, email, phone, password, address, role } = req.body;
@@ -25,6 +26,15 @@ exports.register = catchAsync(async (req, res, next) => {
     address,
     role,
   });
+
+  // Notify Admins if a new vendor registers
+  if (role === 'vendor') {
+    await notifyAdmins(
+      'New Vendor Registration',
+      `${fullName} has registered as a vendor and is awaiting approval.`,
+      { userId: newUser._id.toString(), type: 'vendor_approval' }
+    );
+  }
 
   sendToken(newUser, 201, res);
 });
