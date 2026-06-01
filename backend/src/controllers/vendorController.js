@@ -125,7 +125,7 @@ exports.updateVendorProfile = catchAsync(async (req, res, next) => {
 
   if (req.file) {
     const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
-    updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'sajhabazar/profiles');
+    updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'localtrade/profiles');
   }
 
   const vendor = await User.findByIdAndUpdate(
