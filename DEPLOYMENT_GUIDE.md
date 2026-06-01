@@ -1,6 +1,6 @@
-# Deployment Guide - LocalTrade
+# Deployment Guide - SajhaBazar
 
-This guide outlines the steps to deploy the LocalTrade full-stack application to a production environment.
+This guide outlines the steps to deploy the SajhaBazar full-stack application to a production environment.
 
 ## 1. Backend Deployment (Render / Railway)
 

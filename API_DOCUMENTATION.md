@@ -1,4 +1,4 @@
-# API Documentation - LocalTrade v1
+# API Documentation - SajhaBazar v1
 
 Base URL: `http://localhost:5000/api/v1`
 

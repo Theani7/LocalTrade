@@ -7,7 +7,7 @@ const connectDB = async () => {
     }
 
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: 'localtrade',
+      dbName: 'sajhabazar',
     });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);

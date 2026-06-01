@@ -128,7 +128,7 @@ exports.createProduct = catchAsync(async (req, res, next) => {
   // Handle Image Uploads
   if (req.files && req.files.length > 0) {
     const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
-    const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, 'localtrade/products'));
+    const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, 'sajhabazar/products'));
     productData.images = await Promise.all(uploadPromises);
   } else if (req.body.images) {
     productData.images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
@@ -175,7 +175,7 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
 
   if (req.files && req.files.length > 0) {
     const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
-    const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, 'localtrade/products'));
+    const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, 'sajhabazar/products'));
     updateData.images = await Promise.all(uploadPromises);
   }
 

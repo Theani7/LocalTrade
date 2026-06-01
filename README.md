@@ -1,6 +1,6 @@
-# LocalTrade: Nepal's Community Marketplace 🇳🇵
+# SajhaBazar: Nepal's Community Marketplace 🇳🇵
 
-LocalTrade is a modern, elegant, full-stack mobile marketplace platform designed to empower micro and small businesses in Nepal. It connects local producers, such as vegetable sellers, handicraft makers, dairy farmers, and tailors, directly with their community through a simple and intuitive reservation-based ordering system.
+SajhaBazar is a modern, elegant, full-stack mobile marketplace platform designed to empower micro and small businesses in Nepal. It connects local producers, such as vegetable sellers, handicraft makers, dairy farmers, and tailors, directly with their community through a simple and intuitive reservation-based ordering system.
 
 ---
 
@@ -76,7 +76,7 @@ npm test
 3. `npm run dev` (Runs on `http://localhost:5000`)
 
 ### Frontend
-1. Navigate to `/frontend/localtrade_app`.
+1. Navigate to `/frontend/sajhabazar_app`.
 2. `flutter pub get`
 3. Ensure the backend URL is correctly set in `lib/core/constants/app_constants.dart`.
 4. `flutter run`

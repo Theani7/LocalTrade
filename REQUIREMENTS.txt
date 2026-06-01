@@ -1,8 +1,8 @@
 # ==============================================================================
-# LocalTrade: System & Project Requirements
+# SajhaBazar: System & Project Requirements
 # ==============================================================================
 # This file provides a consolidated list of prerequisites and dependencies 
-# required to run the LocalTrade project (Backend & Frontend).
+# required to run the SajhaBazar project (Backend & Frontend).
 
 # --- 1. System Prerequisites ---
 # Ensure these are installed on your machine before proceeding.
@@ -35,7 +35,7 @@ $ cd backend
 $ npm install
 
 # --- 4. Frontend Requirements (Flutter) ---
-# Location: /frontend/localtrade_app
+# Location: /frontend/sajhabazar_app
 # Primary Dependencies:
 - provider (v6.x) - State Management
 - http (v1.x) - API Requests
@@ -45,7 +45,7 @@ $ npm install
 - cached_network_image - Image Caching
 
 # To install frontend dependencies:
-$ cd frontend/localtrade_app
+$ cd frontend/sajhabazar_app
 $ flutter pub get
 
 # --- 5. Environment Variables (.env) ---
@@ -70,5 +70,5 @@ FIREBASE_PRIVATE_KEY="your_firebase_private_key"
 # 1. Install Node.js & Flutter.
 # 2. Clone the repo and navigate to /backend, run 'npm install'.
 # 3. Create /backend/.env and fill in your credentials.
-# 4. Navigate to /frontend/localtrade_app, run 'flutter pub get'.
+# 4. Navigate to /frontend/sajhabazar_app, run 'flutter pub get'.
 # 5. Connect your mobile device/emulator and run 'flutter run'.

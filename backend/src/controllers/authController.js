@@ -108,7 +108,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   
   if (req.file) {
     const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
-    updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'localtrade/profiles');
+    updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'sajhabazar/profiles');
   }
 
   // Remove undefined fields
