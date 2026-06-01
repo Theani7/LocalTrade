@@ -111,19 +111,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Simple Logo Icon
                     Center(
                       child: Container(
-                        padding: const EdgeInsets.all(16),
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withOpacity(0.2),
                             width: 1.5,
                           ),
                         ),
-                        child: Image.asset(
-                          'assets/images/round.png',
-                          height: 56,
-                          width: 56,
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/round.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
