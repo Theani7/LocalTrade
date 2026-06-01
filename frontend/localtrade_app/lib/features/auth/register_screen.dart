@@ -59,210 +59,134 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Create Account', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.transparent,
+        title: const Text('Create Account'),
+        backgroundColor: AppTheme.backgroundColor,
+        foregroundColor: AppTheme.textPrimary,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: AppTheme.darkGradient,
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: AppTheme.glassDecoration(
-                      color: Colors.white.withOpacity(0.08),
-                      opacity: 0.08,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildInputField(
-                          controller: _nameController,
-                          label: 'Full Name',
-                          icon: Icons.person_outline,
-                          validator: (value) => value!.isEmpty ? 'Enter full name' : null,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildInputField(
-                          controller: _emailController,
-                          label: 'Email Address',
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) => value!.isEmpty ? 'Enter email' : null,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildInputField(
-                          controller: _phoneController,
-                          label: 'Phone Number',
-                          icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                          validator: (value) => value!.isEmpty ? 'Enter phone' : null,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildInputField(
-                          controller: _addressController,
-                          label: 'Address',
-                          icon: Icons.location_on_outlined,
-                          validator: (value) => value!.isEmpty ? 'Enter address' : null,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: !_isPasswordVisible,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            labelStyle: const TextStyle(color: Colors.white70),
-                            prefixIcon: const Icon(Icons.lock_outlined, color: AppTheme.primaryLight),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                                color: Colors.white70,
-                              ),
-                              onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.05),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(color: AppTheme.primaryLight, width: 2),
-                            ),
-                          ),
-                          validator: (value) => value!.length < 6 ? 'Min 6 characters' : null,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Register as:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _selectedRole = 'customer'),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: _selectedRole == 'customer' ? AppTheme.primaryColor : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Customer',
-                                        style: TextStyle(
-                                          color: _selectedRole == 'customer' ? Colors.white : Colors.white70,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _selectedRole = 'vendor'),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: _selectedRole == 'vendor' ? AppTheme.primaryColor : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Vendor',
-                                        style: TextStyle(
-                                          color: _selectedRole == 'vendor' ? Colors.white : Colors.white70,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Consumer<AuthProvider>(
-                          builder: (context, auth, _) {
-                            return Container(
-                              height: 56,
-                              decoration: BoxDecoration(
-                                gradient: AppTheme.primaryGradient,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.primaryColor.withOpacity(0.3),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: ElevatedButton(
-                                onPressed: auth.isLoading ? null : _handleRegister,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: auth.isLoading
-                                    ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Register',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                const Text(
+                  'Join LocalTrade',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Start connecting with your community today.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                _buildInputField(
+                  controller: _nameController,
+                  label: 'Full Name',
+                  icon: Icons.person_outline,
+                  validator: (value) => value!.isEmpty ? 'Enter full name' : null,
+                ),
+                const SizedBox(height: 16),
+                _buildInputField(
+                  controller: _emailController,
+                  label: 'Email Address',
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) => !value!.contains('@') ? 'Enter valid email' : null,
+                ),
+                const SizedBox(height: 16),
+                _buildInputField(
+                  controller: _phoneController,
+                  label: 'Phone Number',
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                  validator: (value) => value!.length < 10 ? 'Enter valid phone' : null,
+                ),
+                const SizedBox(height: 16),
+                _buildInputField(
+                  controller: _addressController,
+                  label: 'Address',
+                  icon: Icons.location_on_outlined,
+                  validator: (value) => value!.isEmpty ? 'Enter address' : null,
+                ),
+                const SizedBox(height: 16),
+                
+                // Password Input
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: !_isPasswordVisible,
+                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        size: 20,
+                      ),
+                      onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                ],
-              ),
+                  validator: (value) => value!.length < 6 ? 'Min 6 characters' : null,
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // Role Selection
+                const Text(
+                  'I want to join as a:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildRoleCard('customer', 'Customer', Icons.shopping_bag_outlined)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildRoleCard('vendor', 'Vendor', Icons.storefront_outlined)),
+                  ],
+                ),
+                
+                const SizedBox(height: 40),
+                
+                // Register Button
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return ElevatedButton(
+                      onPressed: auth.isLoading ? null : _handleRegister,
+                      child: auth.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text('Create Account'),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
         ),
@@ -275,28 +199,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String label,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
-    required String? Function(String?) validator,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
       keyboardType: keyboardType,
       decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: Icon(icon, color: AppTheme.primaryLight),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppTheme.primaryLight, width: 2),
-        ),
+        hintText: label,
+        prefixIcon: Icon(icon, size: 20),
       ),
       validator: validator,
+    );
+  }
+
+  Widget _buildRoleCard(String role, String title, IconData icon) {
+    bool isSelected = _selectedRole == role;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryColor : AppTheme.borderMedium,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : AppTheme.textSecondary,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

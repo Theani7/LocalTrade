@@ -252,7 +252,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
-                              gradient: AppTheme.accentGradient,
+                              gradient: AppTheme.primaryGradient,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(Icons.storefront_rounded, color: Colors.white, size: 28),
