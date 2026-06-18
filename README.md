@@ -23,7 +23,18 @@ LocalTrade is a modern, elegant, full-stack mobile marketplace platform designed
 
 ## 🛠️ Technical Setup & Operations
 
-### 1. Database Setup (MongoDB Atlas)
+Before you begin, please review the **[REQUIREMENTS.txt](REQUIREMENTS.txt)** for a full list of system prerequisites (Node.js, Flutter, etc.) and external service requirements (MongoDB, Cloudinary, Firebase).
+
+### 1. Environment Configuration
+LocalTrade requires several environment variables to function.
+1. Navigate to the `backend` directory.
+2. Create a `.env` file based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+3. Open the `.env` file and fill in your credentials. Detailed descriptions of each key can be found in **[REQUIREMENTS.txt](REQUIREMENTS.txt)** and **[backend/.env.example](backend/.env.example)**.
+
+### 2. Database Setup (MongoDB Atlas)
 1.  **Create Cluster:** Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a free shared cluster.
 2.  **Network Access:** In the Atlas dashboard, go to "Network Access" and click **Add IP Address**. For development, you can "Allow Access from Anywhere" (`0.0.0.0/0`).
 3.  **Database Access:** Create a database user with **Read and Write** permissions. Remember the password.
