@@ -78,7 +78,7 @@ class _FeedbackSubmissionScreenState extends State<FeedbackSubmissionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Help us improve SajhaBazar',
+              'Help us improve LocalTrade',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),

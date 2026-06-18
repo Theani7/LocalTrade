@@ -1,6 +1,6 @@
 {
-    "name": "sajhabazar_app",
-    "short_name": "sajhabazar_app",
+    "name": "LocalTrade_app",
+    "short_name": "LocalTrade_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

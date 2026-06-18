@@ -7,8 +7,8 @@ const seedAdmin = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    const adminEmail = 'admin@localtrade.com';
-    const adminPassword = 'Admin@123';
+    const adminEmail = 'admin@gmail.com';
+    const adminPassword = 'admin123';
 
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: adminEmail });
@@ -24,7 +24,8 @@ const seedAdmin = async () => {
         password: adminPassword,
         address: 'Kathmandu, Nepal',
         role: 'admin',
-        isActive: true
+        isActive: true,
+        vendorApprovalStatus: 'approved'
       });
       console.log('✅ Default Admin created successfully!');
       console.log(`Email: ${adminEmail}`);

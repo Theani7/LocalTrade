@@ -53,13 +53,13 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FeedbackProvider()),
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
       ],
-      child: const SajhaBazarApp(),
+      child: const LocalTradeApp(),
     ),
   );
 }
 
-class SajhaBazarApp extends StatelessWidget {
-  const SajhaBazarApp({super.key});
+class LocalTradeApp extends StatelessWidget {
+  const LocalTradeApp({super.key});
 
   @override
   Widget build(BuildContext context) {

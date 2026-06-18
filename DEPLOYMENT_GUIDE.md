@@ -1,6 +1,6 @@
-# Deployment Guide - SajhaBazar
+# Deployment Guide - LocalTrade
 
-This guide outlines the steps to deploy the SajhaBazar full-stack application to a production environment.
+This guide outlines the steps to deploy the LocalTrade full-stack application to a production environment.
 
 ## 1. Backend Deployment (Render / Railway)
 
@@ -52,3 +52,4 @@ Ensure the following variables are configured in your hosting dashboard:
    flutter build apk --release
    ```
 3. Distribute the APK for testing or upload to the Play Store.
+

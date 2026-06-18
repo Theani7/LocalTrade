@@ -144,7 +144,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       backgroundColor: AppTheme.surfaceColor,
       surfaceTintColor: AppTheme.surfaceColor,
       title: const Text(
-        'SajhaBazar',
+        'LocalTrade',
         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary, letterSpacing: -0.5),
       ),
       flexibleSpace: FlexibleSpaceBar(

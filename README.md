@@ -1,6 +1,6 @@
-# SajhaBazar: Nepal's Community Marketplace 🇳🇵
+# LocalTrade: Nepal's Community Marketplace 🇳🇵
 
-SajhaBazar is a modern, elegant, full-stack mobile marketplace platform designed to empower micro and small businesses in Nepal. It connects local producers, such as vegetable sellers, handicraft makers, dairy farmers, and tailors, directly with their community through a simple and intuitive reservation-based ordering system.
+LocalTrade is a modern, elegant, full-stack mobile marketplace platform designed to empower micro and small businesses in Nepal. It connects local producers, such as vegetable sellers, handicraft makers, dairy farmers, and tailors, directly with their community through a simple and intuitive reservation-based ordering system.
 
 ---
 
@@ -51,15 +51,19 @@ cd backend
 npm install
 ```
 
-#### Seeding Data
-To quickly populate your database with 10 vendors and 50+ Nepali products:
+#### Seeding & Resetting Data
+To quickly populate or reset your database:
 ```bash
-# Set up initial admin (Optional)
-node seed-admin.js
-
 # Populate mock vendors and products
 node seed-data.js
+
+# Reset database (Deletes all vendors/products/orders and resets Admin)
+npm run clear:data
 ```
+
+> **Default Admin Credentials:**
+> - **Email:** `admin@gmail.com`
+> - **Password:** `admin123`
 
 #### Running Tests
 ```bash
@@ -76,7 +80,7 @@ npm test
 3. `npm run dev` (Runs on `http://localhost:5000`)
 
 ### Frontend
-1. Navigate to `/frontend/sajhabazar_app`.
+1. Navigate to `/frontend/LocalTrade_app`.
 2. `flutter pub get`
 3. Ensure the backend URL is correctly set in `lib/core/constants/app_constants.dart`.
 4. `flutter run`
@@ -104,3 +108,4 @@ This project was developed for a final year university submission, demonstrating
 
 ## ⚖️ License
 Distributed under the MIT License. See `LICENSE` for more information.
+

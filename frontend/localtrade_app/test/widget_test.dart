@@ -92,13 +92,13 @@ void main() {
           ChangeNotifierProvider(create: (_) => FeedbackProvider()),
           ChangeNotifierProvider(create: (_) => ReviewProvider()),
         ],
-        child: const SajhaBazarApp(),
+        child: const LocalTradeApp(),
       ),
     );
 
     // Verify that the splash screen shows the app logo and branding.
     expect(find.byType(Image), findsOneWidget);
-    expect(find.text('SajhaBazar'), findsOneWidget);
+    expect(find.text('LocalTrade'), findsOneWidget);
 
     // Advance the virtual clock by 3 seconds to let the splash timer complete
     // and avoid the pending timer assertion failure.

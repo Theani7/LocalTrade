@@ -1,4 +1,4 @@
-# API Documentation - SajhaBazar v1
+# API Documentation - LocalTrade v1
 
 Base URL: `http://localhost:5000/api/v1`
 
@@ -76,3 +76,4 @@ Query Parameters:
 | :--- | :--- | :--- | :--- |
 | `/feedback` | `POST` | Submit UAT feedback | Yes |
 | `/feedback` | `GET` | View all feedback analytics | Yes (Admin) |
+

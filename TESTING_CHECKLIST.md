@@ -1,6 +1,6 @@
-# Testing Checklist - SajhaBazar
+# Testing Checklist - LocalTrade
 
-Use this checklist to verify the functionality of the SajhaBazar platform before demonstration.
+Use this checklist to verify the functionality of the LocalTrade platform before demonstration.
 
 ## 🔑 Authentication
 - [ ] User registration (Customer/Vendor).
@@ -52,3 +52,4 @@ Use this checklist to verify the functionality of the SajhaBazar platform before
 - [ ] Error messages for failed requests.
 - [ ] Responsive layout on different screen sizes.
 - [ ] Smooth image loading (cached).
+

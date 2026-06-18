@@ -65,8 +65,8 @@ class NotificationService {
   Future<void> showLocalNotification(RemoteMessage message) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'sajhabazar_channel',
-      'SajhaBazar Notifications',
+      'LocalTrade_channel',
+      'LocalTrade Notifications',
       importance: Importance.max,
       priority: Priority.high,
     );

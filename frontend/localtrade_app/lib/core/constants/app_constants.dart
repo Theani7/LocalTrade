@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'SajhaBazar';
+  static const String appName = 'LocalTrade';
   
   // Choose the correct URL based on your environment
   // Original Production URL (Use this if you haven't renamed your Render service)

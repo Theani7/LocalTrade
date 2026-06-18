@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // App Name
                     const Center(
                       child: Text(
-                        'SajhaBazar',
+                        'LocalTrade',
                         style: TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
@@ -273,7 +273,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   onPressed: () {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: const Text('Forgot Password? Please contact admin at support@sajhabazar.com'),
+                                        content: const Text('Forgot Password? Please contact admin at support@LocalTrade.com'),
                                         backgroundColor: AppTheme.primaryColor,
                                         behavior: SnackBarBehavior.floating,
                                         shape: RoundedRectangleBorder(

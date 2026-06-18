@@ -92,7 +92,7 @@ if (process.env.NODE_ENV === 'development') {
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
-    message: 'SajhaBazar API is healthy and running',
+    message: 'LocalTrade API is healthy and running',
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV,
   });
@@ -173,3 +173,4 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+
