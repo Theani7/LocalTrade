@@ -92,17 +92,17 @@ flutter analyze            # Lint check
 - [x] Create spacing constants (gaps 10-14px, padding 12-18px, touch targets 44/52px)
 - [x] Verify `flutter analyze` passes
 
-#### Sprint 2: Shared Components (CURRENT)
-- [ ] Build `AppButton` (primary, secondary, destructive, outline variants)
-- [ ] Build `StatusBadge` (pending, confirmed, delivered with icon+label+color)
-- [ ] Build `ProductCard` (image, name, vendor, price, reserve button)
-- [ ] Build `VendorCard` (photo/initials, name, category chip, location)
-- [ ] Build `StatCard` (tinted icon circle, value, label)
-- [ ] Build `SectionHeader` (role-aware tone)
-- [ ] Build `EmptyState` widget
-- [ ] Build `LoadingSpinner` / skeleton loaders
+#### Sprint 2: Shared Components ✅
+- [x] Build `AppButton` (primary, secondary, destructive, outline variants)
+- [x] Build `StatusBadge` (pending, confirmed, delivered with icon+label+color)
+- [x] Build `ProductCard` (image, name, vendor, price, reserve button)
+- [x] Build `VendorCard` (photo/initials, name, category chip, location)
+- [x] Build `StatCard` (tinted icon circle, value, label)
+- [x] Build `SectionHeader` (role-aware tone)
+- [x] Build `EmptyState` widget
+- [x] Build `LoadingSpinner` / skeleton loaders
 
-#### Sprint 3: Auth & Common Screens
+#### Sprint 3: Auth & Common Screens (CURRENT)
 - [ ] Redesign `SplashScreen`
 - [ ] Redesign `LoginScreen` (warm tone, proper overflow handling)
 - [ ] Redesign `RegisterScreen`
