@@ -27,8 +27,17 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     address: {
-      type: String,
-      required: [true, 'Please provide your address'],
+      type: {
+        fullName: { type: String },
+        phone: { type: String },
+        flatHouse: { type: String },
+        street: { type: String },
+        landmark: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zipCode: { type: String },
+      },
+      default: null,
     },
     // --- Vendor Specific Fields ---
     shopName: {

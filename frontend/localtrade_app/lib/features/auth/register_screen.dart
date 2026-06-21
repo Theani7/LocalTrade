@@ -17,7 +17,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
   final _passwordController = TextEditingController();
   String _selectedRole = 'customer';
   bool _isPasswordVisible = false;
@@ -27,7 +26,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -39,7 +37,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'fullName': _nameController.text.trim(),
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
-        'address': _addressController.text.trim(),
         'password': _passwordController.text,
         'role': _selectedRole,
       });
@@ -121,13 +118,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         icon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
                         validator: (v) => v!.isEmpty ? 'Enter your phone' : null,
-                      ),
-                      const SizedBox(height: 14),
-                      _buildInput(
-                        controller: _addressController,
-                        label: 'Address',
-                        icon: Icons.location_on_outlined,
-                        validator: (v) => v!.isEmpty ? 'Enter your address' : null,
                       ),
                       const SizedBox(height: 14),
                       TextFormField(

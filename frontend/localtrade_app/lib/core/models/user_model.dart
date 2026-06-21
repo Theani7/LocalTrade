@@ -1,9 +1,11 @@
+import 'address.dart';
+
 class User {
   final String id;
   final String fullName;
   final String email;
   final String phone;
-  final String address;
+  final Address? address;
   final String role;
   final String vendorApprovalStatus;
   final bool isActive;
@@ -19,7 +21,7 @@ class User {
     required this.fullName,
     required this.email,
     required this.phone,
-    required this.address,
+    this.address,
     required this.role,
     this.vendorApprovalStatus = 'approved',
     this.isActive = true,
@@ -36,9 +38,16 @@ class User {
   bool get isCustomer => role == 'customer';
   bool get isApprovedVendor => isVendor && vendorApprovalStatus == 'approved';
   bool get isPendingVendor => isVendor && vendorApprovalStatus == 'pending';
+  bool get hasAddress => address != null && address!.city.isNotEmpty;
 
   String get displayName => shopName ?? fullName;
   String get initials => fullName.split(' ').map((n) => n.isNotEmpty ? n[0] : '').join().toUpperCase();
+
+  /// Short address string for compact displays (e.g. settings tiles).
+  String get addressSummary {
+    if (address == null || address!.city.isEmpty) return 'No address set';
+    return address!.shortAddress;
+  }
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -46,7 +55,7 @@ class User {
       fullName: json['fullName'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
-      address: json['address'] ?? '',
+      address: Address.fromJson(json['address']),
       role: json['role'] ?? 'customer',
       vendorApprovalStatus: json['vendorApprovalStatus'] ?? 'approved',
       isActive: json['isActive'] ?? true,
@@ -65,7 +74,7 @@ class User {
       'fullName': fullName,
       'email': email,
       'phone': phone,
-      'address': address,
+      'address': address?.toJson(),
       'role': role,
       'vendorApprovalStatus': vendorApprovalStatus,
       'isActive': isActive,
@@ -81,7 +90,7 @@ class User {
   User copyWith({
     String? fullName,
     String? phone,
-    String? address,
+    Address? address,
     String? profileImage,
     String? shopName,
     String? businessDescription,

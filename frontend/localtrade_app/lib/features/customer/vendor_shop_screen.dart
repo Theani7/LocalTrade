@@ -33,7 +33,19 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
   Widget build(BuildContext context) {
     final vendorName =
         widget.vendor['shopName'] ?? widget.vendor['fullName'] ?? 'Vendor shop';
-    final location = widget.vendor['address'] ?? '';
+    final rawAddress = widget.vendor['address'];
+    String location = '';
+    if (rawAddress is Map) {
+      final parts = <String>[
+        if ((rawAddress['flatHouse'] ?? '').isNotEmpty) rawAddress['flatHouse'],
+        if ((rawAddress['street'] ?? '').isNotEmpty) rawAddress['street'],
+        if ((rawAddress['city'] ?? '').isNotEmpty) rawAddress['city'],
+        if ((rawAddress['state'] ?? '').isNotEmpty) rawAddress['state'],
+      ];
+      location = parts.join(', ');
+    } else {
+      location = rawAddress?.toString() ?? '';
+    }
     final logoUrl = widget.vendor['shopLogo'] ?? '';
 
     return Scaffold(

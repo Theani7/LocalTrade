@@ -42,7 +42,20 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     _fullNameController = TextEditingController(text: profile?['fullName'] ?? '');
     _shopNameController = TextEditingController(text: profile?['shopName'] ?? '');
     _phoneController = TextEditingController(text: profile?['phone'] ?? '');
-    _addressController = TextEditingController(text: profile?['address'] ?? '');
+    final rawAddr = profile?['address'];
+    String addrText = '';
+    if (rawAddr is Map) {
+      final parts = <String>[
+        if ((rawAddr['flatHouse'] ?? '').isNotEmpty) rawAddr['flatHouse'],
+        if ((rawAddr['street'] ?? '').isNotEmpty) rawAddr['street'],
+        if ((rawAddr['city'] ?? '').isNotEmpty) rawAddr['city'],
+        if ((rawAddr['state'] ?? '').isNotEmpty) rawAddr['state'],
+      ];
+      addrText = parts.join(', ');
+    } else {
+      addrText = rawAddr?.toString() ?? '';
+    }
+    _addressController = TextEditingController(text: addrText);
     _descriptionController = TextEditingController(text: profile?['businessDescription'] ?? '');
     _hoursController = TextEditingController(text: profile?['openingHours'] ?? '9:00 AM - 6:00 PM');
 
@@ -82,7 +95,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       'fullName': _fullNameController.text.trim(),
       'shopName': _shopNameController.text.trim(),
       'phone': _phoneController.text.trim(),
-      'address': _addressController.text.trim(),
+      'address': jsonEncode({'city': _addressController.text.trim()}),
       'businessDescription': _descriptionController.text.trim(),
       'openingHours': _hoursController.text.trim(),
       'categories': json.encode(_selectedCategories),

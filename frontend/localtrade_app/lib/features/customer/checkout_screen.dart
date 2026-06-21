@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import 'customer_orders_screen.dart';
+import 'customer_profile_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -16,6 +17,9 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
+  final _notesController = TextEditingController();
+
+  // Editable address fields (used when editing)
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _flatController = TextEditingController();
@@ -24,25 +28,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _zipController = TextEditingController();
-  final _notesController = TextEditingController();
+
+  bool _isEditingAddress = false;
+  bool _hasAddress = false;
 
   @override
   void initState() {
     super.initState();
+    _loadAddress();
+  }
+
+  void _loadAddress() {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
-    if (user != null) {
-      _nameController.text = user['fullName'] ?? '';
-      _phoneController.text = user['phone'] ?? '';
-      // Try to pre-fill city/state from legacy address string
-      final addr = user['address'] ?? '';
-      if (addr.isNotEmpty && _cityController.text.isEmpty) {
-        // Best-effort: just leave blank for now
-      }
+    if (user == null) return;
+
+    _nameController.text = user['fullName'] ?? '';
+    _phoneController.text = user['phone'] ?? '';
+
+    final addr = user['address'];
+    if (addr is Map && (addr['city'] ?? '').toString().isNotEmpty) {
+      _hasAddress = true;
+      _flatController.text = addr['flatHouse'] ?? '';
+      _streetController.text = addr['street'] ?? '';
+      _landmarkController.text = addr['landmark'] ?? '';
+      _cityController.text = addr['city'] ?? '';
+      _stateController.text = addr['state'] ?? '';
+      _zipController.text = addr['zipCode'] ?? '';
+    } else {
+      _hasAddress = false;
+      _isEditingAddress = true;
     }
   }
 
   @override
   void dispose() {
+    _notesController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     _flatController.dispose();
@@ -51,7 +71,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _cityController.dispose();
     _stateController.dispose();
     _zipController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
@@ -64,6 +83,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _showError('Please enter your phone number');
       return;
     }
+    if (!RegExp(r'^\d+$').hasMatch(_phoneController.text.trim())) {
+      _showError('Phone number must contain only digits');
+      return;
+    }
     if (_cityController.text.trim().isEmpty) {
       _showError('Please enter your city');
       return;
@@ -74,6 +97,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     if (_zipController.text.trim().isEmpty) {
       _showError('Please enter your zip code');
+      return;
+    }
+    if (!RegExp(r'^\d{4,6}$').hasMatch(_zipController.text.trim())) {
+      _showError('Zip code must be 4-6 digits');
       return;
     }
 
@@ -159,11 +186,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         title: const Text(
           'Checkout',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.ink,
-          ),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.ink),
         ),
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -182,44 +205,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   const SizedBox(height: AppSpacing.gapLg),
 
-                  // ── Recipient Info ──
-                  _SectionHeader(icon: Icons.person_outline, title: 'Recipient'),
-                  const SizedBox(height: AppSpacing.gapMd),
-                  _field(controller: _nameController, label: 'Full name', icon: Icons.person_outline),
-                  const SizedBox(height: 10),
-                  _field(
-                    controller: _phoneController,
-                    label: 'Phone number',
-                    icon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                    prefix: '+977 ',
-                  ),
-
-                  const SizedBox(height: AppSpacing.gapXl + 2),
-
                   // ── Delivery Address ──
-                  _SectionHeader(icon: Icons.location_on_outlined, title: 'Delivery address'),
-                  const SizedBox(height: AppSpacing.gapMd),
-                  _field(controller: _flatController, label: 'Flat / House number', icon: Icons.home_outlined),
-                  const SizedBox(height: 10),
-                  _field(controller: _streetController, label: 'Street / Area', icon: Icons.route_outlined),
-                  const SizedBox(height: 10),
-                  _field(controller: _landmarkController, label: 'Landmark (optional)', icon: Icons.flag_outlined),
-                  const SizedBox(height: 10),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: _field(controller: _cityController, label: 'City', icon: Icons.location_city_outlined)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _field(controller: _stateController, label: 'State', icon: Icons.map_outlined)),
+                      _SectionHeader(icon: Icons.location_on_outlined, title: 'Delivery address'),
+                      if (_hasAddress && !_isEditingAddress)
+                        TextButton.icon(
+                          onPressed: () => setState(() => _isEditingAddress = true),
+                          icon: const Icon(Icons.edit_outlined, size: 16, color: AppColors.coral),
+                          label: const Text('Edit', style: TextStyle(fontSize: 13, color: AppColors.coral)),
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  _field(
-                    controller: _zipController,
-                    label: 'Zip code',
-                    icon: Icons.pin_drop_outlined,
-                    keyboardType: TextInputType.number,
-                  ),
+                  const SizedBox(height: AppSpacing.gapMd),
+
+                  if (!_hasAddress && !_isEditingAddress)
+                    _buildNoAddressCard()
+                  else if (_isEditingAddress)
+                    _buildAddressForm()
+                  else
+                    _buildAddressDisplay(),
 
                   const SizedBox(height: AppSpacing.gapXl + 2),
 
@@ -266,11 +272,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
-                        BoxShadow(
-                          color: AppColors.ink.withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
+                        BoxShadow(color: AppColors.ink.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 2)),
                       ],
                     ),
                     child: Column(
@@ -287,20 +289,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   height: 48,
                                   color: AppColors.mutedLight,
                                   child: item.imageUrl.isNotEmpty
-                                      ? Image.network(
-                                          item.imageUrl,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(
-                                            Icons.shopping_bag_outlined,
-                                            color: AppColors.muted,
-                                            size: 22,
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.shopping_bag_outlined,
-                                          color: AppColors.muted,
-                                          size: 22,
-                                        ),
+                                      ? Image.network(item.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, color: AppColors.muted, size: 22))
+                                      : const Icon(Icons.shopping_bag_outlined, color: AppColors.muted, size: 22),
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.gapLg),
@@ -308,82 +298,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      item.title,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.ink,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                    Text(item.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink), maxLines: 1, overflow: TextOverflow.ellipsis),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      '${item.quantity} x Rs. ${item.price.toStringAsFixed(0)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
+                                    Text('${item.quantity} x Rs. ${item.price.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                                   ],
                                 ),
                               ),
-                              Text(
-                                'Rs. ${(item.price * item.quantity).toStringAsFixed(0)}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.ink,
-                                ),
-                              ),
+                              Text('Rs. ${(item.price * item.quantity).toStringAsFixed(0)}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink)),
                             ],
                           ),
                         )),
-
                         const SizedBox(height: AppSpacing.gapSm),
-
                         Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.gapSm),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Subtotal',
-                                style: TextStyle(fontSize: 13, color: AppColors.muted),
-                              ),
-                              Text(
-                                'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
-                                style: const TextStyle(fontSize: 13, color: AppColors.muted),
-                              ),
+                              const Text('Subtotal', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+                              Text('Rs. ${cart.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13, color: AppColors.muted)),
                             ],
                           ),
                         ),
-
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: AppSpacing.gapMd),
                           child: Divider(color: AppColors.divider, height: 1),
                         ),
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Total',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.ink,
-                              ),
-                            ),
-                            Text(
-                              'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.coral,
-                              ),
-                            ),
+                            const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                            Text('Rs. ${cart.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.coral)),
                           ],
                         ),
                       ],
@@ -398,18 +342,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
           // ── Bottom bar ──
           Container(
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              border: Border(top: BorderSide(color: AppColors.divider)),
-            ),
+            decoration: const BoxDecoration(color: AppColors.surface, border: Border(top: BorderSide(color: AppColors.divider))),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPaddingH,
-                  AppSpacing.gapMd,
-                  AppSpacing.screenPaddingH,
-                  AppSpacing.gapLg,
-                ),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenPaddingH, AppSpacing.gapMd, AppSpacing.screenPaddingH, AppSpacing.gapLg),
                 child: Consumer<OrderProvider>(
                   builder: (context, order, _) {
                     return Column(
@@ -420,21 +356,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Order total',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                              Text(
-                                'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.ink,
-                                ),
-                              ),
+                              const Text('Order total', style: TextStyle(fontSize: 14, color: AppColors.muted)),
+                              Text('Rs. ${cart.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.ink)),
                             ],
                           ),
                         ),
@@ -442,31 +365,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           width: double.infinity,
                           height: AppSpacing.buttonHeightPrimary,
                           child: ElevatedButton(
-                            onPressed: order.isLoading ? null : _handlePlaceOrder,
+                            onPressed: (order.isLoading || _isEditingAddress) ? null : _handlePlaceOrder,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.coral,
                               foregroundColor: AppColors.ink,
                               disabledBackgroundColor: AppColors.coral.withValues(alpha: 0.5),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
                               elevation: 0,
                             ),
                             child: order.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.ink,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Place order',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))
+                                : Text(
+                                    _isEditingAddress ? 'Save address first' : 'Place order',
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                   ),
                           ),
                         ),
@@ -482,12 +393,170 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Widget _buildNoAddressCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.location_off_outlined, size: 40, color: AppColors.muted.withValues(alpha: 0.5)),
+          const SizedBox(height: 12),
+          const Text('No delivery address saved', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.ink)),
+          const SizedBox(height: 6),
+          Text(
+            'Add a delivery address in your profile before placing an order.',
+            style: TextStyle(fontSize: 13, color: AppColors.muted.withValues(alpha: 0.8)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerProfileScreen()));
+            },
+            icon: const Icon(Icons.add_location_alt_outlined, size: 18, color: AppColors.coral),
+            label: const Text('Add address in profile', style: TextStyle(fontSize: 13, color: AppColors.coral)),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.coral),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressDisplay() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.person_outline, size: 16, color: AppColors.muted),
+              const SizedBox(width: 8),
+              Text(_nameController.text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.phone_outlined, size: 16, color: AppColors.muted),
+              const SizedBox(width: 8),
+              Text('+977 ${_phoneController.text}', style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+            ],
+          ),
+          const Divider(height: 20),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.location_on_outlined, size: 16, color: AppColors.coral),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _formatAddress(),
+                  style: const TextStyle(fontSize: 13, color: AppColors.muted, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatAddress() {
+    final parts = <String>[
+      if (_flatController.text.isNotEmpty) _flatController.text,
+      if (_streetController.text.isNotEmpty) _streetController.text,
+      if (_landmarkController.text.isNotEmpty) 'Landmark: ${_landmarkController.text}',
+      if (_cityController.text.isNotEmpty) _cityController.text,
+      if (_stateController.text.isNotEmpty) _stateController.text,
+      if (_zipController.text.isNotEmpty) _zipController.text,
+    ];
+    return parts.join(', ');
+  }
+
+  Widget _buildAddressForm() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.coral.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Edit delivery address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink)),
+              if (_hasAddress)
+                TextButton(
+                  onPressed: () => setState(() => _isEditingAddress = false),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 12, color: AppColors.muted)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _field(controller: _flatController, label: 'Flat / House number', icon: Icons.home_outlined),
+          const SizedBox(height: 10),
+          _field(controller: _streetController, label: 'Street / Area', icon: Icons.route_outlined),
+          const SizedBox(height: 10),
+          _field(controller: _landmarkController, label: 'Landmark (optional)', icon: Icons.flag_outlined),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: _field(controller: _cityController, label: 'City', icon: Icons.location_city_outlined)),
+              const SizedBox(width: 10),
+              Expanded(child: _field(controller: _stateController, label: 'State', icon: Icons.map_outlined)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _field(
+            controller: _zipController,
+            label: 'Zip code',
+            icon: Icons.pin_drop_outlined,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 12),
+          if (_hasAddress)
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton(
+                onPressed: () => setState(() => _isEditingAddress = false),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.coral,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                child: const Text('Save address', style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w600, fontSize: 14)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _field({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     TextInputType? keyboardType,
-    String? prefix,
     int maxLines = 1,
   }) {
     return Container(
@@ -501,23 +570,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         keyboardType: keyboardType,
         maxLines: maxLines,
         style: const TextStyle(color: AppColors.ink, fontSize: 14),
-        inputFormatters: prefix != null ? [FilteringTextInputFormatter.digitsOnly] : null,
+        inputFormatters: keyboardType == TextInputType.number ? [FilteringTextInputFormatter.digitsOnly] : null,
         decoration: InputDecoration(
           hintText: label,
           hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.6)),
           prefixIcon: Icon(icon, color: AppColors.muted, size: 20),
-          prefixText: prefix,
-          prefixStyle: const TextStyle(color: AppColors.ink, fontSize: 14),
           filled: true,
           fillColor: AppColors.surface,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.cardPaddingMd,
-            vertical: AppSpacing.cardPaddingMd,
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd), borderSide: BorderSide.none),
+          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.cardPaddingMd, vertical: AppSpacing.cardPaddingMd),
         ),
       ),
     );
@@ -536,14 +597,7 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: AppColors.coral),
         const SizedBox(width: AppSpacing.gapSm),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: AppColors.ink,
-          ),
-        ),
+        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
       ],
     );
   }

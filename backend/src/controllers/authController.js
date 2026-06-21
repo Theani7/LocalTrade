@@ -102,9 +102,18 @@ exports.updateFcmToken = catchAsync(async (req, res, next) => {
 // @route   PATCH /api/v1/auth/profile
 // @access  Private
 exports.updateProfile = catchAsync(async (req, res, next) => {
-  const { fullName, address, phone } = req.body;
+  const { fullName, phone, address } = req.body;
   
-  const updateData = { fullName, address, phone };
+  const updateData = { fullName, phone };
+  
+  // Parse address if it comes as a JSON string (multipart form)
+  if (address) {
+    try {
+      updateData.address = typeof address === 'string' ? JSON.parse(address) : address;
+    } catch (_) {
+      updateData.address = address;
+    }
+  }
   
   if (req.file) {
     const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
