@@ -1,3 +1,5 @@
+import 'address.dart';
+
 class OrderItem {
   final String productId;
   final String? productTitle;
@@ -75,7 +77,7 @@ class Order {
   final List<OrderItem> items;
   final double totalAmount;
   final OrderStatus status;
-  final String shippingAddress;
+  final Address shippingAddress;
   final String? notes;
   final DateTime? createdAt;
 
@@ -119,7 +121,7 @@ class Order {
           .toList(),
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
       status: OrderStatus.fromString(json['orderStatus'] ?? 'Pending'),
-      shippingAddress: json['shippingAddress'] ?? '',
+      shippingAddress: Address.fromJson(json['shippingAddress']),
       notes: json['notes'],
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
     );
@@ -132,7 +134,7 @@ class Order {
     'products': items.map((item) => item.toJson()).toList(),
     'totalAmount': totalAmount,
     'orderStatus': status.label,
-    'shippingAddress': shippingAddress,
+    'shippingAddress': shippingAddress.toJson(),
     'notes': notes,
     'createdAt': createdAt?.toIso8601String(),
   };

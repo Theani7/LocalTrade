@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
@@ -15,35 +16,81 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _addressController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _flatController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _landmarkController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _zipController = TextEditingController();
   final _notesController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     final user = Provider.of<AuthProvider>(context, listen: false).user;
-    _addressController.text = user?['address'] ?? '';
+    if (user != null) {
+      _nameController.text = user['fullName'] ?? '';
+      _phoneController.text = user['phone'] ?? '';
+      // Try to pre-fill city/state from legacy address string
+      final addr = user['address'] ?? '';
+      if (addr.isNotEmpty && _cityController.text.isEmpty) {
+        // Best-effort: just leave blank for now
+      }
+    }
   }
 
   @override
   void dispose() {
-    _addressController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _flatController.dispose();
+    _streetController.dispose();
+    _landmarkController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _zipController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
   void _handlePlaceOrder() async {
-    if (_addressController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter delivery address'), backgroundColor: AppColors.danger),
-      );
+    if (_nameController.text.trim().isEmpty) {
+      _showError('Please enter your full name');
+      return;
+    }
+    if (_phoneController.text.trim().isEmpty) {
+      _showError('Please enter your phone number');
+      return;
+    }
+    if (_cityController.text.trim().isEmpty) {
+      _showError('Please enter your city');
+      return;
+    }
+    if (_stateController.text.trim().isEmpty) {
+      _showError('Please enter your state');
+      return;
+    }
+    if (_zipController.text.trim().isEmpty) {
+      _showError('Please enter your zip code');
       return;
     }
 
     final cart = Provider.of<CartProvider>(context, listen: false);
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
     final itemsByVendor = cart.itemsByVendor;
+
+    final shippingAddress = {
+      'fullName': _nameController.text.trim(),
+      'phone': _phoneController.text.trim(),
+      'flatHouse': _flatController.text.trim(),
+      'street': _streetController.text.trim(),
+      'landmark': _landmarkController.text.trim(),
+      'city': _cityController.text.trim(),
+      'state': _stateController.text.trim(),
+      'zipCode': _zipController.text.trim(),
+    };
 
     bool allSuccess = true;
 
@@ -60,9 +107,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'price': i.price,
         }).toList(),
         'totalAmount': total,
-        'shippingAddress': _addressController.text,
-        'phone': user?['phone'],
-        'notes': _notesController.text,
+        'shippingAddress': shippingAddress,
+        'phone': _phoneController.text.trim(),
+        'notes': _notesController.text.trim(),
       });
 
       if (!success) allSuccess = false;
@@ -90,6 +137,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
     }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
+    );
   }
 
   @override
@@ -129,35 +182,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   const SizedBox(height: AppSpacing.gapLg),
 
+                  // ── Recipient Info ──
+                  _SectionHeader(icon: Icons.person_outline, title: 'Recipient'),
+                  const SizedBox(height: AppSpacing.gapMd),
+                  _field(controller: _nameController, label: 'Full name', icon: Icons.person_outline),
+                  const SizedBox(height: 10),
+                  _field(
+                    controller: _phoneController,
+                    label: 'Phone number',
+                    icon: Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
+                    prefix: '+977 ',
+                  ),
+
+                  const SizedBox(height: AppSpacing.gapXl + 2),
+
                   // ── Delivery Address ──
                   _SectionHeader(icon: Icons.location_on_outlined, title: 'Delivery address'),
                   const SizedBox(height: AppSpacing.gapMd),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      border: Border.all(color: AppColors.divider),
-                    ),
-                    child: TextField(
-                      controller: _addressController,
-                      maxLines: 2,
-                      style: const TextStyle(color: AppColors.ink, fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: 'Enter your full delivery address',
-                        hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.6)),
-                        prefixIcon: const Icon(Icons.location_on_outlined, color: AppColors.muted, size: 20),
-                        filled: true,
-                        fillColor: AppColors.surface,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.cardPaddingMd,
-                          vertical: AppSpacing.cardPaddingMd,
-                        ),
-                      ),
-                    ),
+                  _field(controller: _flatController, label: 'Flat / House number', icon: Icons.home_outlined),
+                  const SizedBox(height: 10),
+                  _field(controller: _streetController, label: 'Street / Area', icon: Icons.route_outlined),
+                  const SizedBox(height: 10),
+                  _field(controller: _landmarkController, label: 'Landmark (optional)', icon: Icons.flag_outlined),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(child: _field(controller: _cityController, label: 'City', icon: Icons.location_city_outlined)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _field(controller: _stateController, label: 'State', icon: Icons.map_outlined)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _field(
+                    controller: _zipController,
+                    label: 'Zip code',
+                    icon: Icons.pin_drop_outlined,
+                    keyboardType: TextInputType.number,
                   ),
 
                   const SizedBox(height: AppSpacing.gapXl + 2),
@@ -176,7 +237,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       maxLines: 2,
                       style: const TextStyle(color: AppColors.ink, fontSize: 14),
                       decoration: InputDecoration(
-                        hintText: 'e.g. call before delivery, landmarks...',
+                        hintText: 'e.g. call before delivery...',
                         hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.6)),
                         prefixIcon: const Icon(Icons.notes_rounded, color: AppColors.muted, size: 20),
                         filled: true,
@@ -215,12 +276,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Item rows ──
                         ...items.values.map((item) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: AppSpacing.gapSm),
                           child: Row(
                             children: [
-                              // Thumbnail
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                                 child: Container(
@@ -245,8 +304,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.gapLg),
-
-                              // Title + qty x price
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,8 +329,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ],
                                 ),
                               ),
-
-                              // Line total
                               Text(
                                 'Rs. ${(item.price * item.quantity).toStringAsFixed(0)}',
                                 style: const TextStyle(
@@ -288,7 +343,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                         const SizedBox(height: AppSpacing.gapSm),
 
-                        // ── Subtotal row ──
                         Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.gapSm),
                           child: Row(
@@ -311,7 +365,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           child: Divider(color: AppColors.divider, height: 1),
                         ),
 
-                        // ── Total row ──
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -337,7 +390,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
 
-                  // Extra bottom padding so content isn't hidden behind bottom bar
                   const SizedBox(height: 100),
                 ],
               ),
@@ -363,31 +415,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Price display above button
                         Padding(
                           padding: const EdgeInsets.only(bottom: AppSpacing.gapMd),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                            const Text(
-                              'Order total',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.muted,
+                              const Text(
+                                'Order total',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.muted,
+                                ),
                               ),
-                            ),
-                            Text(
-                              'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.ink,
+                              Text(
+                                'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.ink,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
                           ),
                         ),
-                        // Place order button
                         SizedBox(
                           width: double.infinity,
                           height: AppSpacing.buttonHeightPrimary,
@@ -428,6 +478,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    String? prefix,
+    int maxLines = 1,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        style: const TextStyle(color: AppColors.ink, fontSize: 14),
+        inputFormatters: prefix != null ? [FilteringTextInputFormatter.digitsOnly] : null,
+        decoration: InputDecoration(
+          hintText: label,
+          hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.6)),
+          prefixIcon: Icon(icon, color: AppColors.muted, size: 20),
+          prefixText: prefix,
+          prefixStyle: const TextStyle(color: AppColors.ink, fontSize: 14),
+          filled: true,
+          fillColor: AppColors.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.cardPaddingMd,
+            vertical: AppSpacing.cardPaddingMd,
+          ),
+        ),
       ),
     );
   }

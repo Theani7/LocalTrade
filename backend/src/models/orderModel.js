@@ -40,7 +40,16 @@ const orderSchema = new mongoose.Schema(
       default: 'Pending',
     },
     shippingAddress: {
-      type: String,
+      type: {
+        fullName: { type: String, required: true },
+        phone: { type: String, required: true },
+        flatHouse: { type: String },
+        street: { type: String },
+        landmark: { type: String },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        zipCode: { type: String, required: true },
+      },
       required: [true, 'Order must have a shipping address'],
     },
     notes: String,

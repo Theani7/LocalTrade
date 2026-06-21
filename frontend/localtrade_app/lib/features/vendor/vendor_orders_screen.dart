@@ -108,7 +108,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              order['shippingAddress'] ?? '',
+                              _formatAddress(order['shippingAddress']),
                               style: const TextStyle(fontSize: 13, color: AppColors.muted),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -207,5 +207,19 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
       default:
         return AppColors.muted;
     }
+  }
+
+  String _formatAddress(dynamic raw) {
+    if (raw is Map) {
+      final parts = <String>[
+        if ((raw['flatHouse'] ?? '').isNotEmpty) raw['flatHouse'],
+        if ((raw['street'] ?? '').isNotEmpty) raw['street'],
+        if ((raw['city'] ?? '').isNotEmpty) raw['city'],
+        if ((raw['state'] ?? '').isNotEmpty) raw['state'],
+        if ((raw['zipCode'] ?? '').isNotEmpty) raw['zipCode'],
+      ];
+      return parts.join(', ');
+    }
+    return raw?.toString() ?? '';
   }
 }

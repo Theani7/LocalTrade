@@ -386,8 +386,27 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Widget _buildDeliveryCard() {
-    final address = _order['shippingAddress'] ?? '';
+    final rawAddress = _order['shippingAddress'] ?? '';
     final notes = _order['notes'];
+
+    // Parse structured address (new format) or legacy string
+    String displayName = '';
+    String displayAddress = '';
+
+    if (rawAddress is Map) {
+      displayName = rawAddress['fullName'] ?? '';
+      final parts = <String>[
+        if ((rawAddress['flatHouse'] ?? '').isNotEmpty) rawAddress['flatHouse'],
+        if ((rawAddress['street'] ?? '').isNotEmpty) rawAddress['street'],
+        if ((rawAddress['landmark'] ?? '').isNotEmpty) 'Landmark: ${rawAddress['landmark']}',
+        if ((rawAddress['city'] ?? '').isNotEmpty) rawAddress['city'],
+        if ((rawAddress['state'] ?? '').isNotEmpty) rawAddress['state'],
+        if ((rawAddress['zipCode'] ?? '').isNotEmpty) rawAddress['zipCode'],
+      ];
+      displayAddress = parts.join(', ');
+    } else {
+      displayAddress = rawAddress.toString();
+    }
 
     return _Card(
       child: Column(
@@ -412,13 +431,29 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ),
               const SizedBox(width: AppSpacing.gapLg),
               Expanded(
-                child: Text(
-                  address,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.ink,
-                    height: 1.4,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (displayName.isNotEmpty)
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.ink,
+                          height: 1.4,
+                        ),
+                      ),
+                    if (displayAddress.isNotEmpty)
+                      Text(
+                        displayAddress,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.muted,
+                          height: 1.4,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
