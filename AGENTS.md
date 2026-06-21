@@ -73,6 +73,7 @@ flutter analyze            # Lint check
 **Design system file**: `/Users/theani7/Downloads/PROJ_CT/localtrade-design-system-revised.md` — always read this before building any screen.
 
 ### Key Design Rules
+- **No emojis anywhere.** Use Material Icons, SVG assets (`flutter_svg`), or Unicode symbols instead. Never use emoji characters in UI text, labels, buttons, or empty states.
 - **Color palette**: Cream background `#FBF5EA`, Coral `#FF6F52` (fills only, ink text — never white on coral), Ink `#2B2620`, Muted `#6E6557`
 - **Status badges**: Light-fill + dark-text pattern, never saturated fill with white text
 - **Danger red `#D32F2F`**: Only for permanent delete. Reversible negative actions use outline buttons
