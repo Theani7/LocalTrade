@@ -103,17 +103,17 @@ flutter analyze            # Lint check
 - [x] Build `EmptyState` widget
 - [x] Build `LoadingSpinner` / skeleton loaders
 
-#### Sprint 3: Auth & Common Screens (CURRENT)
-- [ ] Redesign `SplashScreen`
-- [ ] Redesign `LoginScreen` (warm tone, proper overflow handling)
-- [ ] Redesign `RegisterScreen`
-- [ ] Redesign `ForgotPasswordScreen`
+#### Sprint 3: Auth & Common Screens ✅
+- [x] Redesign `SplashScreen`
+- [x] Redesign `LoginScreen` (warm tone, proper overflow handling)
+- [x] Redesign `RegisterScreen`
+- [x] Redesign `ForgotPasswordScreen`
 - [ ] Redesign `RoleSelectionScreen`
 - [ ] Redesign `CustomerProfileScreen` (new theme, no dart:io)
 - [ ] Redesign `VendorProfileScreen` (new theme, no dart:io)
-- [ ] Build shared `AppBottomNav` / `AppDrawer`
+- [x] Build shared `AppBottomNav` / `AppDrawer`
 
-#### Sprint 4: Customer Screens
+#### Sprint 4: Customer Screens (CURRENT)
 - [ ] Redesign `HomeScreen` (warm, community tone, bottom tabs)
 - [ ] Redesign `CustomerDashboard`
 - [ ] Redesign `ProductListScreen` / `ProductDetailScreen` (new cards)
