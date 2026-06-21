@@ -237,10 +237,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
                       ),
                       child: product.isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: AppColors.ink, strokeWidth: 2))
                           : Text(
                               widget.product == null ? 'Add product' : 'Update product',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 15),
+                              style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w500, fontSize: 15),
                             ),
                     ),
                   );

@@ -535,7 +535,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   }
                                 },
                           child: provider.isLoading
-                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))
                               : const Text('Submit review'),
                         ),
                       );

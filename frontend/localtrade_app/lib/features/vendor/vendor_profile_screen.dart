@@ -143,7 +143,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: const BoxDecoration(color: AppColors.coral, shape: BoxShape.circle),
-                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
+                          child: const Icon(Icons.camera_alt_rounded, color: AppColors.ink, size: 16),
                         ),
                       ),
                     ),
@@ -209,8 +209,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
                       ),
                       child: provider.isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Save changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 15)),
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: AppColors.ink, strokeWidth: 2))
+                          : const Text('Save changes', style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w500, fontSize: 15)),
                     ),
                   );
                 },

@@ -46,8 +46,8 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
           MaterialPageRoute(builder: (context) => const AddEditProductScreen()),
         ),
         backgroundColor: AppColors.coral,
-        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-        label: const Text('Add product', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14)),
+        icon: const Icon(Icons.add_rounded, color: AppColors.ink, size: 20),
+        label: const Text('Add product', style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w500, fontSize: 14)),
       ),
       body: Consumer<ProductProvider>(
         builder: (context, provider, _) {
@@ -239,7 +239,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
         child: Icon(
           icon,
           size: 18,
-          color: isPrimary ? Colors.white : (enabled ? AppColors.muted : AppColors.divider),
+          color: isPrimary ? AppColors.ink : (enabled ? AppColors.muted : AppColors.divider),
         ),
       ),
     );

@@ -66,7 +66,7 @@ class LocalTradeApp extends StatelessWidget {
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.light,
       home: const SplashScreen(),
     );
   }
