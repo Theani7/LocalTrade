@@ -5,7 +5,7 @@ const AppError = require('../utils/appError');
 const { notifyAdmins } = require('../utils/notificationUtils');
 
 exports.register = catchAsync(async (req, res, next) => {
-  const { fullName, email, phone, password, address, role } = req.body;
+  const { fullName, email, phone, password, role } = req.body;
 
   // Security: Allow registering only as customer or vendor
   if (role && !['customer', 'vendor'].includes(role)) {
@@ -23,7 +23,6 @@ exports.register = catchAsync(async (req, res, next) => {
     email,
     phone,
     password,
-    address,
     role,
   });
 
@@ -104,14 +103,28 @@ exports.updateFcmToken = catchAsync(async (req, res, next) => {
 exports.updateProfile = catchAsync(async (req, res, next) => {
   const { fullName, phone, address } = req.body;
   
-  const updateData = { fullName, phone };
+  const updateData = {};
+  if (fullName !== undefined) updateData.fullName = fullName;
+  if (phone !== undefined) updateData.phone = phone;
   
   // Parse address if it comes as a JSON string (multipart form)
-  if (address) {
+  if (address !== undefined && address !== null && address !== '') {
     try {
-      updateData.address = typeof address === 'string' ? JSON.parse(address) : address;
-    } catch (_) {
-      updateData.address = address;
+      const parsed = typeof address === 'string' ? JSON.parse(address) : address;
+      if (typeof parsed === 'object' && parsed !== null) {
+        updateData.address = {
+          fullName: parsed.fullName || '',
+          phone: parsed.phone || '',
+          flatHouse: parsed.flatHouse || '',
+          street: parsed.street || '',
+          landmark: parsed.landmark || '',
+          city: parsed.city || '',
+          state: parsed.state || '',
+          zipCode: parsed.zipCode || '',
+        };
+      }
+    } catch (e) {
+      // If parse fails, skip address update
     }
   }
   

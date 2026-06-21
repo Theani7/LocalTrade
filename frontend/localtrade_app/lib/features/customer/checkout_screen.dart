@@ -19,7 +19,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _notesController = TextEditingController();
 
-  // Editable address fields (used when editing)
+  // Editable address fields
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _flatController = TextEditingController();
@@ -30,16 +30,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _zipController = TextEditingController();
 
   bool _isEditingAddress = false;
-  bool _hasAddress = false;
+  bool _addressLoaded = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadAddress();
-  }
-
-  void _loadAddress() {
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
+  void _loadAddressFromUser(Map<String, dynamic>? user) {
     if (user == null) return;
 
     _nameController.text = user['fullName'] ?? '';
@@ -47,17 +40,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     final addr = user['address'];
     if (addr is Map && (addr['city'] ?? '').toString().isNotEmpty) {
-      _hasAddress = true;
       _flatController.text = addr['flatHouse'] ?? '';
       _streetController.text = addr['street'] ?? '';
       _landmarkController.text = addr['landmark'] ?? '';
       _cityController.text = addr['city'] ?? '';
       _stateController.text = addr['state'] ?? '';
       _zipController.text = addr['zipCode'] ?? '';
-    } else {
-      _hasAddress = false;
-      _isEditingAddress = true;
     }
+
+    _addressLoaded = true;
+  }
+
+  bool _hasSavedAddress(Map<String, dynamic>? user) {
+    if (user == null) return false;
+    final addr = user['address'];
+    if (addr is Map && (addr['city'] ?? '').toString().isNotEmpty) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -176,6 +176,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
     final items = cart.items;
+    final user = Provider.of<AuthProvider>(context).user;
+    final hasAddress = _hasSavedAddress(user);
+
+    // Load address controllers from user data (once or when user changes)
+    if (!_addressLoaded || !_isEditingAddress) {
+      _loadAddressFromUser(user);
+    }
+
+    // If address exists and we're not editing, show read-only
+    final bool showAddressForm = _isEditingAddress || !hasAddress;
+    final bool showNoAddressCard = !hasAddress && !_isEditingAddress;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -210,7 +221,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _SectionHeader(icon: Icons.location_on_outlined, title: 'Delivery address'),
-                      if (_hasAddress && !_isEditingAddress)
+                      if (hasAddress && !_isEditingAddress)
                         TextButton.icon(
                           onPressed: () => setState(() => _isEditingAddress = true),
                           icon: const Icon(Icons.edit_outlined, size: 16, color: AppColors.coral),
@@ -220,9 +231,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   const SizedBox(height: AppSpacing.gapMd),
 
-                  if (!_hasAddress && !_isEditingAddress)
+                  if (showNoAddressCard)
                     _buildNoAddressCard()
-                  else if (_isEditingAddress)
+                  else if (showAddressForm)
                     _buildAddressForm()
                   else
                     _buildAddressDisplay(),
@@ -365,7 +376,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           width: double.infinity,
                           height: AppSpacing.buttonHeightPrimary,
                           child: ElevatedButton(
-                            onPressed: (order.isLoading || _isEditingAddress) ? null : _handlePlaceOrder,
+                            onPressed: (order.isLoading || _isEditingAddress || !hasAddress) ? null : _handlePlaceOrder,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.coral,
                               foregroundColor: AppColors.ink,
@@ -376,7 +387,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             child: order.isLoading
                                 ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))
                                 : Text(
-                                    _isEditingAddress ? 'Save address first' : 'Place order',
+                                    !hasAddress ? 'Add address first' : (_isEditingAddress ? 'Save address first' : 'Place order'),
                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                   ),
                           ),
@@ -415,8 +426,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerProfileScreen()));
+            onPressed: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerProfileScreen()));
+              // After returning from profile, re-read user data
+              setState(() {
+                _addressLoaded = false;
+              });
             },
             icon: const Icon(Icons.add_location_alt_outlined, size: 18, color: AppColors.coral),
             label: const Text('Add address in profile', style: TextStyle(fontSize: 13, color: AppColors.coral)),
@@ -503,8 +518,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Edit delivery address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink)),
-              if (_hasAddress)
+              const Text('Delivery address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink)),
+              if (_hasSavedAddress(Provider.of<AuthProvider>(context, listen: false).user))
                 TextButton(
                   onPressed: () => setState(() => _isEditingAddress = false),
                   child: const Text('Cancel', style: TextStyle(fontSize: 12, color: AppColors.muted)),
@@ -532,21 +547,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             icon: Icons.pin_drop_outlined,
             keyboardType: TextInputType.number,
           ),
-          const SizedBox(height: 12),
-          if (_hasAddress)
-            SizedBox(
-              width: double.infinity,
-              height: 40,
-              child: ElevatedButton(
-                onPressed: () => setState(() => _isEditingAddress = false),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.coral,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  elevation: 0,
-                ),
-                child: const Text('Save address', style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w600, fontSize: 14)),
-              ),
-            ),
         ],
       ),
     );

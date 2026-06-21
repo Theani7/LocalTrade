@@ -124,6 +124,11 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       'address': jsonEncode(address),
     });
 
+    if (success) {
+      // Force re-fetch user from backend to ensure address is persisted
+      await provider.validateToken();
+    }
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
