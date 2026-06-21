@@ -34,6 +34,7 @@ class ProductCard extends StatelessWidget {
         '';
     final String category = (product['category'] ?? '').toString();
     final String title = product['title'] ?? '';
+    final String description = product['description'] ?? '';
     final double price = (product['price'] ?? 0).toDouble();
     final double? originalPrice = product['originalPrice'] != null &&
             product['originalPrice'] > price
@@ -64,51 +65,46 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Image area with uniform padding ──
+            // ── Image area — edge to edge ──
             Expanded(
               flex: 5,
               child: Stack(
                 children: [
-                  // White backdrop + padded image
-                  Padding(
-                    padding: const EdgeInsets.all(8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: double.infinity,
-                        child: image.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: CloudinaryHelper.getOptimizedUrl(
-                                  image,
-                                  width: 400,
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12)),
+                      child: image.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: CloudinaryHelper.getOptimizedUrl(
+                                image,
+                                width: 400,
+                              ),
+                              fit: BoxFit.cover,
+                              memCacheWidth: 400,
+                              placeholder: (_, __) => Container(
+                                color: AppColors.surface,
+                                child: const Center(
+                                  child: Icon(Icons.inventory_2_outlined,
+                                      size: 32, color: AppColors.divider),
                                 ),
-                                fit: BoxFit.contain,
-                                memCacheWidth: 400,
-                                placeholder: (_, __) => Container(
-                                  color: AppColors.surface,
-                                  child: const Center(
-                                    child: Icon(Icons.inventory_2_outlined,
-                                        size: 32, color: AppColors.divider),
-                                  ),
-                                ),
-                                errorWidget: (_, __, ___) => Container(
-                                  color: AppColors.surface,
-                                  child: const Icon(
-                                      Icons.inventory_2_outlined,
-                                      size: 32,
-                                      color: AppColors.divider),
-                                ),
-                              )
-                            : Container(
+                              ),
+                              errorWidget: (_, __, ___) => Container(
                                 color: AppColors.surface,
                                 child: const Icon(Icons.inventory_2_outlined,
                                     size: 32, color: AppColors.divider),
                               ),
-                      ),
+                            )
+                          : Container(
+                              color: AppColors.surface,
+                              child: const Icon(Icons.inventory_2_outlined,
+                                  size: 32, color: AppColors.divider),
+                            ),
                     ),
                   ),
-                  // Category badge with backdrop blur + shadow
+                  // Category badge
                   if (category.isNotEmpty)
                     Positioned(
                       top: 8,
@@ -177,44 +173,44 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // ── Info area ──
-            Expanded(
-              flex: 5,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Vendor name
-                    if (vendorName.isNotEmpty)
-                      Text(
-                        vendorName,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.muted,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    if (vendorName.isNotEmpty) const SizedBox(height: 2),
-
-                    // Product title
+            // ── Info area — sized to content ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Vendor name
+                  if (vendorName.isNotEmpty)
                     Text(
-                      title,
+                      vendorName,
                       style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.ink,
-                        height: 1.3,
+                        fontSize: 11,
+                        color: AppColors.muted,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                  if (vendorName.isNotEmpty) const SizedBox(height: 2),
 
-                    // Trust signal: rating + review count
-                    if (hasRating)
-                      Row(
+                  // Product title
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.ink,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Trust signal: rating + review count
+                  if (hasRating)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
                         children: [
                           Text(
                             rating.toStringAsFixed(1),
@@ -237,59 +233,75 @@ class ProductCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
 
-                    const Spacer(),
+                  // Short description snippet
+                  if (description.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.muted,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
 
-                    // Price + Add to cart
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (originalPrice != null)
-                                Text(
-                                  'Rs.${_priceFormat.format(originalPrice.toInt())}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.muted,
-                                    decoration: TextDecoration.lineThrough,
-                                    decorationColor: AppColors.muted,
-                                  ),
-                                ),
+                  // Price + Add to cart
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (originalPrice != null)
                               Text(
-                                'Rs.${_priceFormat.format(price.toInt())}',
+                                'Rs. ${_priceFormat.format(originalPrice.toInt())}',
                                 style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.ink,
-                                  height: 1.1,
+                                  fontSize: 11,
+                                  color: AppColors.muted,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: AppColors.muted,
                                 ),
                               ),
-                            ],
+                            Text(
+                              'Rs. ${_priceFormat.format(price.toInt())}',
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.ink,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (showCartButton &&
+                          !isOutOfStock &&
+                          onAddToCart != null)
+                        GestureDetector(
+                          onTap: onAddToCart,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.coral,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                                Icons.add_shopping_cart_rounded,
+                                size: 18,
+                                color: AppColors.ink),
                           ),
                         ),
-                        if (showCartButton && !isOutOfStock && onAddToCart != null)
-                          GestureDetector(
-                            onTap: onAddToCart,
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.coral,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                  Icons.add_shopping_cart_rounded,
-                                  size: 18,
-                                  color: AppColors.ink),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
