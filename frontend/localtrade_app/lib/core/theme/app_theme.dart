@@ -44,7 +44,7 @@ class AppTheme {
   // ── Shadows ───────────────────────────────────────────────────
   static List<BoxShadow> get softShadow => [
         BoxShadow(
-          color: AppColors.ink.withOpacity(0.05),
+          color: AppColors.ink.withValues(alpha: 0.05),
           blurRadius: 10,
           offset: const Offset(0, 2),
         ),
@@ -52,7 +52,7 @@ class AppTheme {
 
   static List<BoxShadow> get mediumShadow => [
         BoxShadow(
-          color: AppColors.ink.withOpacity(0.08),
+          color: AppColors.ink.withValues(alpha: 0.08),
           blurRadius: 20,
           offset: const Offset(0, 4),
         ),
@@ -67,9 +67,9 @@ class AppTheme {
     double borderRadius = 24,
   }) =>
       BoxDecoration(
-        color: color.withOpacity(opacity),
+        color: color.withValues(alpha: opacity),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
         boxShadow: softShadow,
       );
 
@@ -160,8 +160,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.coral,
           foregroundColor: AppColors.ink,
-          disabledBackgroundColor: AppColors.coral.withOpacity(0.4),
-          disabledForegroundColor: AppColors.ink.withOpacity(0.4),
+          disabledBackgroundColor: AppColors.coral.withValues(alpha: 0.4),
+          disabledForegroundColor: AppColors.ink.withValues(alpha: 0.4),
           elevation: 0,
           minimumSize: const Size(double.infinity, AppSpacing.buttonHeightPrimary),
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -211,7 +211,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
-        hintStyle: GoogleFonts.inter(color: AppColors.muted.withOpacity(0.6), fontSize: 14),
+        hintStyle: GoogleFonts.inter(color: AppColors.muted.withValues(alpha: 0.6), fontSize: 14),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),

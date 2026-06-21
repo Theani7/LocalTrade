@@ -205,7 +205,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
               // Category dropdown
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: _inputDecoration('Category'),
                 items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 14)))).toList(),
                 onChanged: (v) => setState(() => _selectedCategory = v!),

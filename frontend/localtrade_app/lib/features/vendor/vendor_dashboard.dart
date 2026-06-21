@@ -32,7 +32,7 @@ class _VendorDashboardState extends State<VendorDashboard> with SingleTickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<VendorProvider>(context, listen: false).fetchAnalytics();
       Provider.of<VendorProvider>(context, listen: false).fetchProfile();
       Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
@@ -180,7 +180,7 @@ class VendorOverviewTab extends StatelessWidget {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     boxShadow: [
-                      BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                     ],
                   ),
                   child: Column(
@@ -245,7 +245,7 @@ class VendorOverviewTab extends StatelessWidget {
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
-                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                        BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                       ],
                     ),
                     child: Column(
@@ -352,7 +352,9 @@ class _VendorProductsTabState extends State<VendorProductsTab> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<ProductProvider>(context, listen: false).fetchMyProducts());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ProductProvider>(context, listen: false).fetchMyProducts();
+    });
   }
 
   @override
@@ -390,7 +392,7 @@ class _VendorProductsTabState extends State<VendorProductsTab> {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     boxShadow: [
-                      BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                     ],
                   ),
                   child: Row(

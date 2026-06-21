@@ -17,7 +17,9 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<OrderProvider>(context, listen: false).fetchVendorOrders());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<OrderProvider>(context, listen: false).fetchVendorOrders();
+    });
   }
 
   @override
@@ -53,7 +55,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     boxShadow: [
-                      BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                     ],
                   ),
                   child: Column(
@@ -128,7 +130,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
-                            '${title} x ${p['quantity']}',
+                            '$title x ${p['quantity']}',
                             style: const TextStyle(fontSize: 13, color: AppColors.ink),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

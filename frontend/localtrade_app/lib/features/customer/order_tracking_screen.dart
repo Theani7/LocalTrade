@@ -3,7 +3,6 @@ import '../../core/network/order_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../widgets/skeleton_loaders.dart';
-import '../../widgets/status_badge.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String orderId;
@@ -64,7 +63,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
-                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                        BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                       ],
                     ),
                     child: Column(
@@ -95,7 +94,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
-                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                        BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                       ],
                     ),
                     child: Column(
@@ -168,7 +167,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
-                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                        BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                       ],
                     ),
                     child: Column(
@@ -284,7 +283,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   const SizedBox(height: 2),
                   Text(
                     _getStatusSubtitle(name),
-                    style: TextStyle(fontSize: 12, color: isCurrent ? AppColors.muted : AppColors.muted.withOpacity(0.5)),
+                    style: TextStyle(fontSize: 12, color: isCurrent ? AppColors.muted : AppColors.muted.withValues(alpha: 0.5)),
                   ),
                 ],
               ),

@@ -8,7 +8,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/review_provider.dart';
-import 'vendor_shop_screen.dart';
 import 'package:intl/intl.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -26,7 +25,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ReviewProvider>(context, listen: false).fetchProductReviews(widget.product['_id']);
     });
   }
@@ -108,7 +107,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             height: 6,
                             width: isSelected ? 18 : 6,
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.coral : AppColors.muted.withOpacity(0.3),
+                              color: isSelected ? AppColors.coral : AppColors.muted.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(3),
                             ),
                           );
@@ -223,7 +222,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                         boxShadow: [
-                          BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                          BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                         ],
                       ),
                       child: Row(
@@ -256,7 +255,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               ],
                             ),
                           ),
-                          Icon(Icons.chevron_right_rounded, color: AppColors.muted.withOpacity(0.5)),
+                          Icon(Icons.chevron_right_rounded, color: AppColors.muted.withValues(alpha: 0.5)),
                         ],
                       ),
                     ),

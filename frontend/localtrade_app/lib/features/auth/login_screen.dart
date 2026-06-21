@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.ink.withOpacity(0.05),
+                          color: AppColors.ink.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -272,7 +272,7 @@ class _QuickFillSection extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.muted.withOpacity(0.6),
+                  color: AppColors.muted.withValues(alpha: 0.6),
                   letterSpacing: 0.5,
                 ),
               ),

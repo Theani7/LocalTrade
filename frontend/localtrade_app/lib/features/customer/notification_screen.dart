@@ -18,7 +18,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<NotificationProvider>(context, listen: false).fetchNotifications());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+    });
   }
 
   @override
@@ -40,9 +42,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 onPressed: provider.isLoading
                     ? null
                     : () async {
+                        final messenger = ScaffoldMessenger.of(context);
                         await provider.markAllAsRead();
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(content: Text('All marked as read'), behavior: SnackBarBehavior.floating),
                           );
                         }
@@ -96,7 +99,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: _iconColor(notification['type']).withOpacity(0.1),
+                            color: _iconColor(notification['type']).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(_icon(notification['type']), size: 18, color: _iconColor(notification['type'])),

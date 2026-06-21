@@ -20,7 +20,9 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<OrderProvider>(context, listen: false).fetchMyOrders());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<OrderProvider>(context, listen: false).fetchMyOrders();
+    });
   }
 
   @override
@@ -69,7 +71,7 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
-                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                        BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                       ],
                     ),
                     child: Column(

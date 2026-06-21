@@ -47,8 +47,8 @@ class AppButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.coral,
             foregroundColor: AppColors.ink,
-            disabledBackgroundColor: AppColors.coral.withOpacity(0.4),
-            disabledForegroundColor: AppColors.ink.withOpacity(0.4),
+            disabledBackgroundColor: AppColors.coral.withValues(alpha: 0.4),
+            disabledForegroundColor: AppColors.ink.withValues(alpha: 0.4),
             elevation: 0,
             minimumSize: const Size(double.infinity, AppSpacing.buttonHeightPrimary),
             padding: const EdgeInsets.symmetric(horizontal: 24),

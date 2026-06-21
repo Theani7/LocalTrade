@@ -19,9 +19,9 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-      Provider.of<ProductProvider>(context, listen: false).fetchMyProducts()
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ProductProvider>(context, listen: false).fetchMyProducts();
+    });
   }
 
   @override
@@ -86,7 +86,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     boxShadow: [
-                      BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
                     ],
                   ),
                   child: Column(

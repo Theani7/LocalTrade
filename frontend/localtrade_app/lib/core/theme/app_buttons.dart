@@ -10,8 +10,8 @@ class AppButtons {
   static ButtonStyle get primary => ElevatedButton.styleFrom(
         backgroundColor: AppColors.coral,
         foregroundColor: AppColors.ink,
-        disabledBackgroundColor: AppColors.coral.withOpacity(0.4),
-        disabledForegroundColor: AppColors.ink.withOpacity(0.4),
+        disabledBackgroundColor: AppColors.coral.withValues(alpha: 0.4),
+        disabledForegroundColor: AppColors.ink.withValues(alpha: 0.4),
         elevation: 0,
         minimumSize: const Size(double.infinity, AppSpacing.buttonHeightPrimary),
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -28,7 +28,7 @@ class AppButtons {
   static ButtonStyle get secondary => OutlinedButton.styleFrom(
         foregroundColor: AppColors.ink,
         backgroundColor: AppColors.surface,
-        disabledForegroundColor: AppColors.ink.withOpacity(0.4),
+        disabledForegroundColor: AppColors.ink.withValues(alpha: 0.4),
         minimumSize: const Size(double.infinity, AppSpacing.buttonHeight),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         side: const BorderSide(color: AppColors.ink, width: 1.5),

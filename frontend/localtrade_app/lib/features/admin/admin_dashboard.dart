@@ -176,7 +176,6 @@ class AdminAnalyticsTab extends StatelessWidget {
         }
 
         final stats = admin.analytics!['stats'];
-        final dailyStats = admin.analytics!['dailyStats'] as List? ?? [];
         final revenueByCategory = admin.analytics!['revenueByCategory'] as List? ?? [];
         final recent = admin.analytics!['recentOrders'] as List? ?? [];
 

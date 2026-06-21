@@ -9,14 +9,12 @@ import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../widgets/empty_state.dart';
-import '../../widgets/product_card.dart' as widgets;
 import '../../widgets/skeleton_loaders.dart';
 import 'product_details_screen.dart';
 import 'cart_screen.dart';
 import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
 import 'customer_profile_screen.dart';
-import '../auth/login_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -57,7 +55,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchProducts();
       Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
     });
@@ -202,7 +200,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 style: const TextStyle(color: AppColors.ink, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search products, categories...',
-                  hintStyle: TextStyle(color: AppColors.muted.withOpacity(0.5)),
+                  hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.5)),
                   prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted, size: 22),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
@@ -644,7 +642,7 @@ class _HomeProductCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           boxShadow: [
             BoxShadow(
-              color: AppColors.ink.withOpacity(0.05),
+              color: AppColors.ink.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -695,7 +693,7 @@ class _HomeProductCard extends StatelessWidget {
                   if (isOutOfStock)
                     Container(
                       decoration: BoxDecoration(
-                        color: AppColors.ink.withOpacity(0.6),
+                        color: AppColors.ink.withValues(alpha: 0.6),
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusLg)),
                       ),
                       child: Center(

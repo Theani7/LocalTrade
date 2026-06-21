@@ -18,7 +18,9 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => Provider.of<FeedbackProvider>(context, listen: false).fetchAllFeedback());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<FeedbackProvider>(context, listen: false).fetchAllFeedback();
+    });
   }
 
   @override
