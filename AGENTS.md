@@ -67,3 +67,8 @@ flutter analyze            # Lint check
 - Setup file: `tests/setup.js` — handles in-memory Mongo lifecycle
 - Test timeout: 30s (configured in `jest.config.js`)
 - Tests run sequentially (`--runInBand`)
+
+## Workflow Rules
+
+- **Always push to GitHub after major changes.** Commit and push before moving to the next task.
+- Remote: `git@github.com:Theani7/Flutter_apk.git` (main branch)
