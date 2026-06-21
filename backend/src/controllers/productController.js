@@ -112,13 +112,14 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 // @route   POST /api/v1/products
 // @access  Private/Vendor
 exports.createProduct = catchAsync(async (req, res, next) => {
-  const { title, description, category, price, stock, stockQuantity } = req.body;
+  const { title, description, category, price, originalPrice, stock, stockQuantity } = req.body;
   
   const productData = {
     title,
     description,
     category,
     price: Number(price),
+    originalPrice: originalPrice ? Number(originalPrice) : null,
     stockQuantity: stockQuantity !== undefined ? Number(stockQuantity) : (stock !== undefined ? Number(stock) : 0),
     vendorId: req.user.id,
     vendorName: req.user.shopName || req.user.fullName,
@@ -158,13 +159,14 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('You are not authorized to update this product', 403));
   }
 
-  const { title, description, category, price, stock, stockQuantity, productStatus } = req.body;
+  const { title, description, category, price, originalPrice, stock, stockQuantity, productStatus } = req.body;
   const updateData = {};
   
   if (title !== undefined) updateData.title = title;
   if (description !== undefined) updateData.description = description;
   if (category !== undefined) updateData.category = category;
   if (price !== undefined) updateData.price = Number(price);
+  if (originalPrice !== undefined) updateData.originalPrice = originalPrice ? Number(originalPrice) : null;
   if (productStatus !== undefined) updateData.productStatus = productStatus;
   
   if (stockQuantity !== undefined) {

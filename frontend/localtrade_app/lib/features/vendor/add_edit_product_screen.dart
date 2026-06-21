@@ -19,6 +19,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descController;
   late TextEditingController _priceController;
+  late TextEditingController _originalPriceController;
   late TextEditingController _stockController;
 
   String _selectedCategory = 'Vegetables';
@@ -36,6 +37,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _titleController = TextEditingController(text: widget.product?['title'] ?? '');
     _descController = TextEditingController(text: widget.product?['description'] ?? '');
     _priceController = TextEditingController(text: widget.product?['price']?.toString() ?? '');
+    _originalPriceController = TextEditingController(text: widget.product?['originalPrice']?.toString() ?? '');
     _stockController = TextEditingController(text: widget.product?['stock']?.toString() ?? '0');
 
     if (widget.product != null) {
@@ -48,6 +50,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _titleController.dispose();
     _descController.dispose();
     _priceController.dispose();
+    _originalPriceController.dispose();
     _stockController.dispose();
     super.dispose();
   }
@@ -79,6 +82,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         'title': _titleController.text.trim(),
         'description': _descController.text.trim(),
         'price': _priceController.text,
+        'originalPrice': _originalPriceController.text.isEmpty ? null : _originalPriceController.text,
         'stock': _stockController.text,
         'category': _selectedCategory,
       };
@@ -212,14 +216,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Price and stock row
+              // Price row
               Row(
                 children: [
                   Expanded(child: _buildField(controller: _priceController, label: 'Price (Rs.)', keyboardType: TextInputType.number)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildField(controller: _stockController, label: 'Stock', keyboardType: TextInputType.number)),
+                  Expanded(child: _buildField(controller: _originalPriceController, label: 'Original price (Rs.)', keyboardType: TextInputType.number)),
                 ],
               ),
+              const SizedBox(height: 14),
+              _buildField(controller: _stockController, label: 'Stock', keyboardType: TextInputType.number),
               const SizedBox(height: 14),
               _buildField(controller: _descController, label: 'Description', maxLines: 4),
               const SizedBox(height: 24),

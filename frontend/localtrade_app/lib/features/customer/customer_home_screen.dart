@@ -789,18 +789,16 @@ class _AmazonProductCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    // Rating
+                    // Rating + review count (Amazon style: "4.5 (123)")
                     if (hasRating)
                       Row(
                         children: [
-                          ...List.generate(5, (i) {
-                            final rating = (product['ratingsAverage'] ?? 0).toDouble();
-                            return Icon(
-                              i < rating.round() ? Icons.star_rounded : (i < rating ? Icons.star_half_rounded : Icons.star_border_rounded),
-                              size: 12,
-                              color: AppColors.warning,
-                            );
-                          }),
+                          Text(
+                            '${product['ratingsAverage'] ?? 0}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.ink),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.star_rounded, size: 13, color: AppColors.warning),
                           const SizedBox(width: 4),
                           Text(
                             '(${product['ratingsQuantity']})',
@@ -809,7 +807,7 @@ class _AmazonProductCard extends StatelessWidget {
                         ],
                       ),
                     const Spacer(),
-                    // Price + cart button
+                    // Price (Amazon style: strikethrough original + sale price)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -817,18 +815,33 @@ class _AmazonProductCard extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Rs.',
-                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink),
-                              ),
-                              Text(
-                                '${product['price']}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.ink,
-                                  height: 1.1,
+                              if (product['originalPrice'] != null && product['originalPrice'] > product['price'])
+                                Text(
+                                  'Rs. ${product['originalPrice']}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.muted,
+                                    decoration: TextDecoration.lineThrough,
+                                    decorationColor: AppColors.muted,
+                                  ),
                                 ),
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Rs.',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${product['price']}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.ink,
+                                      height: 1.1,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

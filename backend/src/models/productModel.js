@@ -33,6 +33,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'A product must have a price'],
     },
+    originalPrice: {
+      type: Number,
+      default: null,
+    },
     images: {
       type: [String],
       required: [true, 'A product must have at least one image'],

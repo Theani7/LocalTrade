@@ -191,13 +191,32 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
-                          'Rs. ',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
-                        ),
-                        Text(
-                          '${widget.product['price']}',
-                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500, color: AppColors.ink, height: 1.1),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (widget.product['originalPrice'] != null && widget.product['originalPrice'] > widget.product['price'])
+                              Text(
+                                'Rs. ${widget.product['originalPrice']}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.muted,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: AppColors.muted,
+                                ),
+                              ),
+                            Row(
+                              children: [
+                                const Text(
+                                  'Rs. ',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
+                                ),
+                                Text(
+                                  '${widget.product['price']}',
+                                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500, color: AppColors.ink, height: 1.1),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                         const Spacer(),
                         if (!isOutOfStock)
