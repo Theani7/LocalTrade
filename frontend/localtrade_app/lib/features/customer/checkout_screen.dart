@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import 'customer_orders_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -24,15 +25,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _addressController.text = user?['address'] ?? '';
   }
 
+  @override
+  void dispose() {
+    _addressController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
   void _handlePlaceOrder() async {
     if (_addressController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter delivery address'),
-          backgroundColor: AppTheme.errorColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+        const SnackBar(content: Text('Please enter delivery address'), backgroundColor: AppColors.danger),
       );
       return;
     }
@@ -49,7 +52,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final items = entry.value;
       final total = items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
 
-      // Construct payload with 'items' key as primary expectation
       final success = await orderProvider.placeOrder({
         'vendorId': vendorId,
         'items': items.map((i) => {
@@ -74,27 +76,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         (route) => route.isFirst,
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: const Duration(seconds: 2),
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text('Order placed successfully!', style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          backgroundColor: AppTheme.primaryColor,
+        const SnackBar(
+          content: Text('Order placed successfully'),
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(orderProvider.error ?? 'Failed to place orders'),
-          backgroundColor: AppTheme.errorColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          backgroundColor: AppColors.danger,
         ),
       );
     }
@@ -103,135 +95,111 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
-    
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(title: const Text('Checkout')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Delivery Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                boxShadow: AppTheme.softShadow,
-                borderRadius: BorderRadius.circular(16),
+            // Delivery details
+            const Text('Delivery address', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _addressController,
+              maxLines: 2,
+              style: const TextStyle(color: AppColors.ink, fontSize: 14),
+              decoration: const InputDecoration(
+                hintText: 'Enter your full delivery address',
+                prefixIcon: Icon(Icons.location_on_outlined, color: AppColors.muted),
               ),
-              child: TextField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter your full delivery address',
-                  prefixIcon: Icon(Icons.location_on_outlined, color: AppTheme.primaryColor),
-                ),
-                maxLines: 2,
+            ),
+            const SizedBox(height: 20),
+
+            // Notes
+            const Text('Additional notes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _notesController,
+              maxLines: 2,
+              style: const TextStyle(color: AppColors.ink, fontSize: 14),
+              decoration: const InputDecoration(
+                hintText: 'e.g. call before delivery, landmarks...',
+                prefixIcon: Icon(Icons.note_outlined, color: AppColors.muted),
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Additional Notes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-            const SizedBox(height: 16),
+
+            // Summary
+            const Text('Order summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+            const SizedBox(height: 10),
             Container(
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                boxShadow: AppTheme.softShadow,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: TextField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  hintText: 'E.g. Call before delivery, Landmark etc.',
-                  prefixIcon: Icon(Icons.note_alt_outlined, color: AppTheme.secondaryColor),
-                ),
-                maxLines: 2,
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Text('Order Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: AppTheme.softShadow,
-                border: Border.all(color: Colors.black.withOpacity(0.05)),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                boxShadow: [
+                  BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                ],
               ),
               child: Column(
                 children: [
                   ...cart.items.values.map((item) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${item.quantity}x', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
-                        const SizedBox(width: 12),
+                        Text('${item.quantity}x', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.coral)),
+                        const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            item.title,
-                            style: const TextStyle(color: AppTheme.textPrimary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(item.title, style: const TextStyle(fontSize: 14, color: AppColors.ink), maxLines: 1, overflow: TextOverflow.ellipsis),
                         ),
-                        const SizedBox(width: 8),
-                        Text('Rs. ${item.price * item.quantity}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text('Rs. ${item.price * item.quantity}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink)),
                       ],
                     ),
                   )),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Divider(color: Color(0xFFEEEEEE), thickness: 1),
-                  ),
+                  const SizedBox(height: 10),
+                  const Divider(color: AppColors.divider),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total Payable', style: TextStyle(fontSize: 16, color: AppTheme.textSecondary)),
-                      Flexible(
-                        child: Text(
-                          'Rs. ${cart.totalAmount}',
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      const Text('Total', style: TextStyle(fontSize: 14, color: AppColors.muted)),
+                      Text(
+                        'Rs. ${cart.totalAmount}',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 32),
           ],
         ),
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.divider)),
         ),
         child: SafeArea(
           child: Consumer<OrderProvider>(
             builder: (context, order, _) {
               return SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   onPressed: order.isLoading ? null : _handlePlaceOrder,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  icon: order.isLoading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.check_circle_outline),
-                  label: Text(
-                    order.isLoading ? 'Processing...' : 'Confirm & Place Order',
-                    style: const TextStyle(fontSize: 18),
-                  ),
+                  child: order.isLoading
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))
+                      : const Text('Place order'),
                 ),
               );
             },

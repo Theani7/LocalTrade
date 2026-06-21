@@ -1,10 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../providers/product_provider.dart';
+import '../../widgets/skeleton_loaders.dart';
 import 'product_details_screen.dart';
 
 class VendorShopScreen extends StatefulWidget {
@@ -30,66 +31,65 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vendorName = widget.vendor['shopName'] ?? widget.vendor['fullName'] ?? 'Vendor Shop';
-    
+    final vendorName = widget.vendor['shopName'] ?? widget.vendor['fullName'] ?? 'Vendor shop';
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 180,
             pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                vendorName,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+            backgroundColor: AppColors.background,
+            leading: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Container(
+                decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                    ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(vendorName, style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.w500, fontSize: 16)),
+              background: Container(
+                color: AppColors.background,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 16),
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                        child: const Icon(Icons.storefront_rounded, size: 36, color: AppColors.coralDark),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        widget.vendor['address'] ?? '',
+                        style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                      ),
+                    ],
                   ),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 20),
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          child: const Icon(Icons.storefront_rounded, size: 40, color: Colors.white),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          widget.vendor['address'] ?? '',
-                          style: const TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.inventory_2_outlined, size: 20, color: AppTheme.primaryColor),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'All Products',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                  ),
+                  const Icon(Icons.inventory_2_outlined, size: 18, color: AppColors.coral),
+                  const SizedBox(width: 8),
+                  const Text('Products', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
                   const Spacer(),
                   Consumer<ProductProvider>(
                     builder: (context, provider, _) => Text(
                       '${provider.products.length} items',
-                      style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 13, color: AppColors.muted),
                     ),
                   ),
                 ],
@@ -100,16 +100,16 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
             builder: (context, provider, _) {
               if (provider.isLoading) {
                 return SliverPadding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(16),
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
                       childAspectRatio: 0.75,
                     ),
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildShimmerCard(),
+                      (context, index) => const ProductCardSkeleton(),
                       childCount: 6,
                     ),
                   ),
@@ -117,31 +117,76 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
               }
 
               if (provider.products.isEmpty) {
-                return SliverFillRemaining(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shopping_basket_outlined, size: 64, color: Colors.grey[300]),
-                      const SizedBox(height: 16),
-                      const Text('This vendor has no products yet.', style: TextStyle(color: AppTheme.textSecondary)),
-                    ],
+                return const SliverFillRemaining(
+                  child: Center(
+                    child: Text('No products yet', style: TextStyle(fontSize: 14, color: AppColors.muted)),
                   ),
                 );
               }
 
               return SliverPadding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(16),
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
                     childAspectRatio: 0.75,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final product = provider.products[index];
-                      return _buildProductCard(context, product);
+                      return GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product))),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                            boxShadow: [
+                              BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusLg)),
+                                  child: CachedNetworkImage(
+                                    imageUrl: CloudinaryHelper.getOptimizedUrl(product['images'][0], width: 300),
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    placeholder: (context, url) => Container(color: AppColors.background),
+                                    errorWidget: (context, url, error) => Container(
+                                      color: AppColors.background,
+                                      child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 28),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product['title'],
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Rs. ${product['price']}',
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.coral),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
                     },
                     childCount: provider.products.length,
                   ),
@@ -151,75 +196,6 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
-      ),
-    );
-  }
-
-  Widget _buildShimmerCard() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[200]!,
-      highlightColor: Colors.grey[50]!,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProductCard(BuildContext context, dynamic product) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context, 
-        MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product))
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: AppTheme.softShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                child: CachedNetworkImage(
-                  imageUrl: CloudinaryHelper.getOptimizedUrl(product['images'][0], width: 300),
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  placeholder: (context, url) => Container(color: Colors.grey[100]),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product['title'],
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Rs. ${product['price']}',
-                    style: const TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

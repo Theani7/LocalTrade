@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
 import '../../core/network/order_service.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../widgets/skeleton_loaders.dart';
+import '../../widgets/status_badge.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String orderId;
@@ -30,9 +32,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
@@ -42,107 +42,113 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(title: const Text('Order Details')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Order details'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+      ),
       body: _isLoading
-          ? _buildSkeletonLoader()
+          ? const ListSkeleton(itemCount: 4)
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Tracking timeline
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppTheme.softShadow,
-                      border: Border.all(color: Colors.black.withOpacity(0.05)),
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Tracking Timeline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
-                        const SizedBox(height: 8),
-                        Text('Order ID: #${_order['_id'].toString().substring(18).toUpperCase()}', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                        const SizedBox(height: 32),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Tracking', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                            Text(
+                              '#${_order['_id'].toString().substring(18).toUpperCase()}',
+                              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
                         _buildTimeline(),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Text('Items Ordered', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                   const SizedBox(height: 16),
+
+                  // Items
+                  const Text('Items', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                  const SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppTheme.softShadow,
-                      border: Border.all(color: Colors.black.withOpacity(0.05)),
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      ],
                     ),
                     child: Column(
                       children: [
                         ..._order['products'].map<Widget>((p) => Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(14),
                           child: Row(
                             children: [
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  image: DecorationImage(
-                                    image: NetworkImage(p['product']['images'][0]),
-                                    fit: BoxFit.cover,
-                                  ),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                child: Container(
+                                  width: 52,
+                                  height: 52,
+                                  color: AppColors.background,
+                                  child: Image.network(p['product']['images'][0], fit: BoxFit.cover),
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       p['product']['title'],
-                                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 2),
                                     Text(
-                                      'Qty: ${p['quantity']} • Rs. ${p['price']}',
-                                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      'Qty: ${p['quantity']}  •  Rs. ${p['price']}',
+                                      style: const TextStyle(fontSize: 12, color: AppColors.muted),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
                               Text(
                                 'Rs. ${p['price'] * p['quantity']}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.coral),
                               ),
                             ],
                           ),
                         )).toList(),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Divider(color: Color(0xFFEEEEEE), thickness: 1),
-                        ),
+                        const Divider(color: AppColors.divider, height: 1),
                         Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(14),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Total Amount', style: TextStyle(fontSize: 16, color: AppTheme.textSecondary)),
-                              Flexible(
-                                child: Text(
-                                  'Rs. ${_order['totalAmount']}',
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              const Text('Total', style: TextStyle(fontSize: 14, color: AppColors.muted)),
+                              Text(
+                                'Rs. ${_order['totalAmount']}',
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink),
                               ),
                             ],
                           ),
@@ -150,17 +156,20 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Text('Delivery Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                   const SizedBox(height: 16),
+
+                  // Delivery details
+                  const Text('Delivery details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                  const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppTheme.softShadow,
-                      border: Border.all(color: Colors.black.withOpacity(0.05)),
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,39 +177,32 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-                              child: const Icon(Icons.location_on, color: AppTheme.primaryColor, size: 20),
-                            ),
-                            const SizedBox(width: 12),
+                            const Icon(Icons.location_on_outlined, size: 18, color: AppColors.coral),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 _order['shippingAddress'],
-                                style: const TextStyle(color: AppTheme.textPrimary, height: 1.5),
+                                style: const TextStyle(fontSize: 14, color: AppColors.ink, height: 1.5),
                               ),
                             ),
                           ],
                         ),
                         if (_order['notes'] != null && _order['notes'].isNotEmpty) ...[
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(color: Color(0xFFEEEEEE), thickness: 1),
-                          ),
+                          const SizedBox(height: 12),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.note_alt_outlined, color: AppTheme.textSecondary, size: 20),
-                              const SizedBox(width: 12),
+                              const Icon(Icons.note_outlined, size: 18, color: AppColors.muted),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  'Note: ${_order['notes']}',
-                                  style: const TextStyle(color: AppTheme.textSecondary, fontStyle: FontStyle.italic),
+                                  _order['notes'],
+                                  style: const TextStyle(fontSize: 13, color: AppColors.muted, fontStyle: FontStyle.italic),
                                 ),
                               ),
                             ],
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
@@ -213,16 +215,19 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   Widget _buildTimeline() {
     final status = _order['orderStatus'];
     final steps = ['Pending', 'Confirmed', 'Delivered'];
-    
+
     if (status == 'Cancelled') {
       return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppTheme.errorColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.coralLight,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
         child: const Row(
           children: [
-            Icon(Icons.cancel, color: AppTheme.errorColor),
-            SizedBox(width: 12),
-            Text('This order has been cancelled.', style: TextStyle(color: AppTheme.errorColor, fontWeight: FontWeight.bold)),
+            Icon(Icons.cancel_rounded, color: AppColors.coralDark, size: 20),
+            SizedBox(width: 10),
+            Text('Order cancelled', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.coralDark)),
           ],
         ),
       );
@@ -244,41 +249,42 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             Column(
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
-                    color: isCompleted ? AppTheme.primaryColor : Colors.grey[200],
+                    color: isCompleted ? AppColors.coral : AppColors.divider,
                     shape: BoxShape.circle,
-                    border: isCurrent ? Border.all(color: AppTheme.primaryColor.withOpacity(0.3), width: 4) : null,
                   ),
-                  child: isCompleted ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+                  child: isCompleted
+                      ? const Icon(Icons.check_rounded, size: 14, color: AppColors.ink)
+                      : null,
                 ),
                 if (!isLast)
                   Container(
                     width: 2,
-                    height: 40,
-                    color: idx < currentStep ? AppTheme.primaryColor : Colors.grey[200],
+                    height: 32,
+                    color: idx < currentStep ? AppColors.coral : AppColors.divider,
                   ),
               ],
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
                     style: TextStyle(
-                      fontWeight: isCompleted ? FontWeight.bold : FontWeight.w600,
-                      color: isCompleted ? AppTheme.textPrimary : Colors.grey[400],
-                      fontSize: 16,
+                      fontSize: 14,
+                      fontWeight: isCompleted ? FontWeight.w500 : FontWeight.w400,
+                      color: isCompleted ? AppColors.ink : AppColors.muted,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     _getStatusSubtitle(name),
-                    style: TextStyle(fontSize: 12, color: isCurrent ? AppTheme.textSecondary : Colors.grey[400]),
+                    style: TextStyle(fontSize: 12, color: isCurrent ? AppColors.muted : AppColors.muted.withOpacity(0.5)),
                   ),
                 ],
               ),
@@ -291,26 +297,14 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   String _getStatusSubtitle(String step) {
     switch (step) {
-      case 'Pending': return 'We have received your order.';
-      case 'Confirmed': return 'The vendor has confirmed your order.';
-      case 'Delivered': return 'Your order has been delivered.';
-      default: return '';
+      case 'Pending':
+        return 'We have received your order';
+      case 'Confirmed':
+        return 'The vendor has confirmed your order';
+      case 'Delivered':
+        return 'Your order has been delivered';
+      default:
+        return '';
     }
-  }
-
-  Widget _buildSkeletonLoader() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: 3,
-      itemBuilder: (context, index) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: Container(
-          height: 150,
-          margin: const EdgeInsets.only(bottom: 20),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-        ),
-      ),
-    );
   }
 }

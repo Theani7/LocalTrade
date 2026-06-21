@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/feedback_provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 
 class FeedbackSubmissionScreen extends StatefulWidget {
   const FeedbackSubmissionScreen({super.key});
@@ -11,8 +12,7 @@ class FeedbackSubmissionScreen extends StatefulWidget {
 }
 
 class _FeedbackSubmissionScreenState extends State<FeedbackSubmissionScreen> {
-  final TextEditingController _commentController = TextEditingController();
-  
+  final _commentController = TextEditingController();
   double _overallRating = 5;
   double _usabilityRating = 5;
   double _designRating = 5;
@@ -49,16 +49,16 @@ class _FeedbackSubmissionScreenState extends State<FeedbackSubmissionScreen> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Thank You!', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text('Your feedback has been submitted successfully. We appreciate your input for our UAT process.'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+          title: const Text('Thank you', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
+          content: const Text('Your feedback has been submitted.', style: TextStyle(fontSize: 14, color: AppColors.muted)),
           actions: [
-            ElevatedButton(
+            TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
-              child: const Text('Done'),
+              child: const Text('Done', style: TextStyle(color: AppColors.coral)),
             ),
           ],
         ),
@@ -69,55 +69,60 @@ class _FeedbackSubmissionScreenState extends State<FeedbackSubmissionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('UAT Feedback'),
+        title: const Text('Feedback'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Help us improve LocalTrade',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             const Text(
-              'Please rate your experience with the platform. Your feedback is vital for our final evaluation.',
-              style: TextStyle(color: AppTheme.textSecondary),
+              'Rate your experience with the platform.',
+              style: TextStyle(fontSize: 14, color: AppColors.muted),
             ),
-            const SizedBox(height: 32),
-            
-            _buildRatingSection('Overall Satisfaction', _overallRating, (val) => setState(() => _overallRating = val)),
-            _buildRatingSection('Usability & Ease of Use', _usabilityRating, (val) => setState(() => _usabilityRating = val)),
-            _buildRatingSection('UI/UX Design', _designRating, (val) => setState(() => _designRating = val)),
-            _buildRatingSection('App Performance', _performanceRating, (val) => setState(() => _performanceRating = val)),
-            _buildRatingSection('Feature Completeness', _completenessRating, (val) => setState(() => _completenessRating = val)),
-            
             const SizedBox(height: 24),
-            const Text('Additional Comments', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+
+            _buildRatingSection('Overall satisfaction', _overallRating, (v) => setState(() => _overallRating = v)),
+            _buildRatingSection('Usability', _usabilityRating, (v) => setState(() => _usabilityRating = v)),
+            _buildRatingSection('Design', _designRating, (v) => setState(() => _designRating = v)),
+            _buildRatingSection('Performance', _performanceRating, (v) => setState(() => _performanceRating = v)),
+            _buildRatingSection('Feature completeness', _completenessRating, (v) => setState(() => _completenessRating = v)),
+
+            const SizedBox(height: 16),
+            const Text('Comments', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink)),
+            const SizedBox(height: 8),
             TextField(
               controller: _commentController,
               maxLines: 4,
+              style: const TextStyle(color: AppColors.ink, fontSize: 14),
               decoration: const InputDecoration(
                 hintText: 'What did you like? What can be improved?',
-                border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 32),
-            
+            const SizedBox(height: 24),
+
             Consumer<FeedbackProvider>(
-              builder: (context, provider, _) => SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: provider.isLoading ? null : _submit,
-                  child: provider.isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white) 
-                    : const Text('Submit Feedback', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
+              builder: (context, provider, _) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: provider.isLoading ? null : _submit,
+                    child: provider.isLoading
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))
+                        : const Text('Submit feedback'),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 20),
           ],
@@ -127,29 +132,29 @@ class _FeedbackSubmissionScreenState extends State<FeedbackSubmissionScreen> {
   }
 
   Widget _buildRatingSection(String title, double value, Function(double) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        Slider(
-          value: value,
-          min: 1,
-          max: 5,
-          divisions: 4,
-          label: value.toInt().toString(),
-          activeColor: AppTheme.primaryColor,
-          onChanged: onChanged,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Poor', style: TextStyle(fontSize: 10, color: Colors.grey)),
-            Text('${value.toInt()} / 5', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
-            const Text('Excellent', style: TextStyle(fontSize: 10, color: Colors.grey)),
-          ],
-        ),
-        const SizedBox(height: 20),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: AppColors.ink)),
+              Text('${value.toInt()} / 5', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.coral)),
+            ],
+          ),
+          Slider(
+            value: value,
+            min: 1,
+            max: 5,
+            divisions: 4,
+            activeColor: AppColors.coral,
+            inactiveColor: AppColors.divider,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
     );
   }
 }

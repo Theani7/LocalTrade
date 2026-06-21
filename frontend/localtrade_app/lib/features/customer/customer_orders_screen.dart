@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
 import '../../providers/order_provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/skeleton_loaders.dart';
+import '../../widgets/status_badge.dart';
 import 'order_tracking_screen.dart';
 
 class CustomerOrdersScreen extends StatefulWidget {
@@ -24,148 +26,113 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Orders')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('My orders'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+      ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, _) {
           if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
-            return ListView.builder(
-              padding: const EdgeInsets.all(24),
-              itemCount: 4,
-              itemBuilder: (context, index) => _buildSkeletonCard(),
-            );
+            return const OrderCardSkeleton();
           }
 
           if (orderProvider.orders.isEmpty) {
             return EmptyState(
               icon: Icons.receipt_long_outlined,
-              title: 'No Orders Yet',
-              message: 'Looks like you haven\'t placed any orders.',
+              title: 'No orders yet',
+              message: 'Place your first order to see it here.',
               onAction: () => Navigator.pop(context),
-              actionLabel: 'Start Shopping',
+              actionLabel: 'Browse products',
             );
           }
 
           return RefreshIndicator(
             onRefresh: () async => orderProvider.fetchMyOrders(),
+            color: AppColors.coral,
             child: ListView.builder(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               itemCount: orderProvider.orders.length,
               itemBuilder: (context, index) {
                 final order = orderProvider.orders[index];
                 final orderId = order['_id']?.toString() ?? 'unknown';
                 final displayId = orderId.length > 18 ? orderId.substring(18).toUpperCase() : orderId.toUpperCase();
-                
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: AppTheme.softShadow,
-                    border: Border.all(color: Colors.black.withOpacity(0.05)),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => OrderTrackingScreen(orderId: orderId)),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                return GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderTrackingScreen(orderId: orderId))),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    '#$displayId',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textSecondary),
-                                  ),
-                                ),
-                                _buildStatusBadge(order['orderStatus'] ?? 'Pending'),
-                              ],
+                            Text(
+                              '#$displayId',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted),
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.secondaryColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(Icons.storefront, color: AppTheme.secondaryColor),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        order['vendorId']?['shopName'] ?? order['vendorId']?['fullName'] ?? 'Local Vendor',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${(order['products'] as List?)?.length ?? 0} items • Rs. ${order['totalAmount'] ?? 0}',
-                                        style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            StatusBadge(status: _mapStatus(order['orderStatus'] ?? 'Pending')),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.coralLight,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              ),
+                              child: const Icon(Icons.storefront_rounded, size: 20, color: AppColors.coralDark),
                             ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Divider(color: Color(0xFFEEEEEE), thickness: 1),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Flexible(
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.calendar_today, size: 14, color: AppTheme.textSecondary),
-                                      const SizedBox(width: 6),
-                                      Flexible(
-                                        child: Text(
-                                          DateFormat('MMM dd, yyyy').format(DateTime.parse(order['createdAt'] ?? DateTime.now().toString()).toLocal()),
-                                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    order['vendorId']?['shopName'] ?? order['vendorId']?['fullName'] ?? 'Local vendor',
+                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('Track Order', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                                    SizedBox(width: 4),
-                                    Icon(Icons.arrow_forward, size: 16, color: AppTheme.primaryColor),
-                                  ],
-                                ),
-                              ],
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${(order['products'] as List?)?.length ?? 0} items  •  Rs. ${order['totalAmount'] ?? 0}',
+                                    style: const TextStyle(fontSize: 13, color: AppColors.muted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: 20),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const Divider(color: AppColors.divider, height: 1),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.muted),
+                            const SizedBox(width: 6),
+                            Text(
+                              DateFormat('MMM d, yyyy').format(DateTime.parse(order['createdAt'] ?? DateTime.now().toString()).toLocal()),
+                              style: const TextStyle(fontSize: 12, color: AppColors.muted),
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 );
@@ -177,57 +144,18 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
-    Color color;
-    Color bgColor;
-    
+  BadgeStatus _mapStatus(String status) {
     switch (status) {
-      case 'Pending': 
-        color = const Color(0xFFE65100); // Deep Orange
-        bgColor = const Color(0xFFFFF3E0);
-        break;
-      case 'Confirmed': 
-        color = const Color(0xFF1565C0); // Deep Blue
-        bgColor = const Color(0xFFE3F2FD);
-        break;
-      case 'Delivered': 
-        color = const Color(0xFF2E7D32); // Deep Green
-        bgColor = const Color(0xFFE8F5E9);
-        break;
-      case 'Cancelled': 
-        color = const Color(0xFFC62828); // Deep Red
-        bgColor = const Color(0xFFFFEBEE);
-        break;
-      default: 
-        color = Colors.grey[700]!;
-        bgColor = Colors.grey[200]!;
+      case 'Pending':
+        return BadgeStatus.pending;
+      case 'Confirmed':
+        return BadgeStatus.confirmed;
+      case 'Delivered':
+        return BadgeStatus.delivered;
+      case 'Cancelled':
+        return BadgeStatus.rejected;
+      default:
+        return BadgeStatus.pending;
     }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
-      ),
-    );
-  }
-
-  Widget _buildSkeletonCard() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        height: 150,
-        margin: const EdgeInsets.only(bottom: 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    );
   }
 }
