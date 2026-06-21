@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/feedback_provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/skeleton_loaders.dart';
 import 'package:intl/intl.dart';
 
 class AdminFeedbackResultsScreen extends StatefulWidget {
@@ -22,19 +24,23 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('UAT Feedback Results'),
+        title: const Text('Feedback results'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
       ),
       body: Consumer<FeedbackProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading && provider.feedbackList.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const ListSkeleton(itemCount: 3);
           }
 
           if (provider.feedbackList.isEmpty) {
             return const EmptyState(
               icon: Icons.rate_review_outlined,
-              title: 'No Feedback Yet',
+              title: 'No feedback yet',
               message: 'Share the app with users to start collecting UAT feedback.',
             );
           }
@@ -42,18 +48,19 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
           final stats = provider.stats;
 
           return RefreshIndicator(
-            onRefresh: () => provider.fetchAllFeedback(),
+            onRefresh: provider.fetchAllFeedback,
+            color: AppColors.coral,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('UAT Analytics Summary', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
+                  const Text('Analytics summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                  const SizedBox(height: 10),
                   _buildStatsGrid(stats),
-                  const SizedBox(height: 32),
-                  const Text('Detailed Feedback Comments', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+                  const Text('Feedback comments', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                  const SizedBox(height: 10),
                   _buildFeedbackList(provider.feedbackList),
                 ],
               ),
@@ -66,69 +73,52 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
 
   Widget _buildStatsGrid(Map<String, dynamic>? stats) {
     if (stats == null) return const SizedBox();
-    
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int crossAxisCount = 2;
-        if (constraints.maxWidth > 900) {
-          crossAxisCount = 4;
-        } else if (constraints.maxWidth > 600) {
-          crossAxisCount = 3;
-        }
 
-        return GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.6,
+    final items = [
+      {'label': 'Avg. rating', 'value': stats['avgRating'], 'color': AppColors.blue},
+      {'label': 'Usability', 'value': stats['avgUsability'], 'color': AppColors.success},
+      {'label': 'Design', 'value': stats['avgDesign'], 'color': AppColors.warning},
+      {'label': 'Performance', 'value': stats['avgPerformance'], 'color': AppColors.coral},
+      {'label': 'Completeness', 'value': stats['avgCompleteness'], 'color': AppColors.danger},
+      {'label': 'Submissions', 'value': (stats['totalFeedback'] ?? 0).toDouble(), 'color': AppColors.muted},
+    ];
+
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.4,
+      ),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
           ),
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 6,
-          itemBuilder: (context, index) {
-            switch (index) {
-              case 0: return _buildStatCard('Avg. Rating', stats['avgRating'], Colors.blue);
-              case 1: return _buildStatCard('Usability', stats['avgUsability'], Colors.green);
-              case 2: return _buildStatCard('Design', stats['avgDesign'], Colors.orange);
-              case 3: return _buildStatCard('Performance', stats['avgPerformance'], Colors.purple);
-              case 4: return _buildStatCard('Completeness', stats['avgCompleteness'], Colors.red);
-              case 5: return _buildStatCard('Submissions', stats['totalFeedback'].toDouble(), Colors.teal);
-              default: return const SizedBox();
-            }
-          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                (item['value'] as double).toStringAsFixed(1),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: item['color'] as Color),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                item['label'] as String,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.muted),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         );
       },
-    );
-  }
-
-  Widget _buildStatCard(String label, double value, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            value.toStringAsFixed(1),
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: color),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 
@@ -143,12 +133,12 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
         final formattedDate = DateFormat('MMM d, yyyy').format(date);
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceColor,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: AppTheme.softShadow,
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,42 +148,41 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
                   Expanded(
                     child: Text(
                       item['userId']?['fullName'] ?? 'Anonymous',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.coralLight,
+                      borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text(
-                      item['role'].toString().toUpperCase(),
-                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                      item['role'].toString(),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.coralDark),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
-              Text(formattedDate, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-              const Divider(height: 24),
+              Text(formattedDate, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+              const SizedBox(height: 10),
               Row(
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 18),
+                  const Icon(Icons.star_rounded, color: AppColors.warning, size: 18),
                   const SizedBox(width: 4),
                   Text(
                     '${item['rating']} / 5',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 item['comment'],
-                style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary, height: 1.5),
+                style: const TextStyle(fontSize: 14, color: AppColors.muted, height: 1.5),
               ),
             ],
           ),
