@@ -68,6 +68,76 @@ flutter analyze            # Lint check
 - Test timeout: 30s (configured in `jest.config.js`)
 - Tests run sequentially (`--runInBand`)
 
+## Redesign — Full Reference
+
+**Design system file**: `/Users/theani7/Downloads/PROJ_CT/localtrade-design-system-revised.md` — always read this before building any screen.
+
+### Key Design Rules
+- **Color palette**: Cream background `#FBF5EA`, Coral `#FF6F52` (fills only, ink text — never white on coral), Ink `#2B2620`, Muted `#6E6557`
+- **Status badges**: Light-fill + dark-text pattern, never saturated fill with white text
+- **Danger red `#D32F2F`**: Only for permanent delete. Reversible negative actions use outline buttons
+- **Typography**: Inter or Noto Sans, 400/500 weights only, sentence case, min 12px for labels
+- **Cards**: 16px radius, soft shadows `0 2px 10px rgba(43,38,32,0.05)`, padding 12-18px
+- **Touch targets**: 44px minimum, 52px for primary actions
+- **Tone**: Customer=warm/community, Vendor=supportive/practical, Admin=neutral/operational
+
+### Sprint Plan (Redesign)
+
+#### Sprint 1: Theme Foundation (CURRENT)
+- [ ] Create `AppTheme` with new color palette (cream, coral, ink, muted, danger, success, warning, blue)
+- [ ] Define text styles (Inter/Noto Sans, 400/500, sentence case, scale per spec)
+- [ ] Define card theme (16px radius, soft shadows, padding)
+- [ ] Define button themes (primary=fill+ink, secondary=outline, destructive=red+white)
+- [ ] Define badge/chip styles (light-fill + dark-text pattern)
+- [ ] Create spacing constants (gaps 10-14px, padding 12-18px, touch targets 44/52px)
+- [ ] Verify `flutter analyze` passes
+
+#### Sprint 2: Shared Components
+- [ ] Build `AppButton` (primary, secondary, destructive, outline variants)
+- [ ] Build `StatusBadge` (pending, confirmed, delivered with icon+label+color)
+- [ ] Build `ProductCard` (image, name, vendor, price, reserve button)
+- [ ] Build `VendorCard` (photo/initials, name, category chip, location)
+- [ ] Build `StatCard` (tinted icon circle, value, label)
+- [ ] Build `SectionHeader` (role-aware tone)
+- [ ] Build `EmptyState` widget
+- [ ] Build `LoadingSpinner` / skeleton loaders
+
+#### Sprint 3: Auth & Common Screens
+- [ ] Redesign `SplashScreen`
+- [ ] Redesign `LoginScreen` (warm tone, proper overflow handling)
+- [ ] Redesign `RegisterScreen`
+- [ ] Redesign `ForgotPasswordScreen`
+- [ ] Redesign `RoleSelectionScreen`
+- [ ] Redesign `CustomerProfileScreen` (new theme, no dart:io)
+- [ ] Redesign `VendorProfileScreen` (new theme, no dart:io)
+- [ ] Build shared `AppBottomNav` / `AppDrawer`
+
+#### Sprint 4: Customer Screens
+- [ ] Redesign `HomeScreen` (warm, community tone, bottom tabs)
+- [ ] Redesign `CustomerDashboard`
+- [ ] Redesign `ProductListScreen` / `ProductDetailScreen` (new cards)
+- [ ] Redesign `CartScreen` / `CheckoutScreen`
+- [ ] Redesign `CustomerOrdersScreen` (status badges per spec)
+- [ ] Redesign `VendorDetailScreen`
+- [ ] Redesign `FeedbackScreen`
+- [ ] Redesign `CustomerNotificationScreen`
+
+#### Sprint 5: Vendor Screens
+- [ ] Redesign `VendorDashboard` (workspace tone, stat cards)
+- [ ] Redesign `VendorProductsScreen` / `AddEditProductScreen`
+- [ ] Redesign `VendorOrdersScreen` (plain data, status badges)
+- [ ] Redesign `VendorAnalyticsScreen` (electric blue charts)
+- [ ] Redesign `VendorProfileScreen`
+- [ ] Redesign `VendorNotificationScreen`
+
+#### Sprint 6: Admin Screens
+- [ ] Redesign `AdminDashboard` (neutral/operational, stat cards)
+- [ ] Redesign `AdminVendorsScreen` (approval rows: coral approve, outline reject)
+- [ ] Redesign `AdminOrdersScreen`
+- [ ] Redesign `VendorApprovalScreen`
+- [ ] Redesign `AdminFeedbackScreen`
+- [ ] Final polish, verify all screens against accessibility checklist
+
 ## Workflow Rules
 
 - **Always push to GitHub after major changes.** Commit and push before moving to the next task.
