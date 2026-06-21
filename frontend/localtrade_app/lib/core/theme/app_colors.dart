@@ -10,6 +10,7 @@ class AppColors {
   // ── Text ──────────────────────────────────────────────────────
   static const Color ink = Color(0xFF2B2620); // Primary text
   static const Color muted = Color(0xFF6E6557); // Secondary text
+  static const Color mutedLight = Color(0xFFF1E9DA);
 
   // ── Coral (primary action) ────────────────────────────────────
   static const Color coral = Color(0xFFFF6F52); // Button fills only
@@ -33,6 +34,8 @@ class AppColors {
 
   // ── Danger (delete only) ──────────────────────────────────────
   static const Color danger = Color(0xFFD32F2F);
+  static const Color dangerLight = Color(0xFFFCE0D6);
+  static const Color dangerDark = Color(0xFF9A3318);
 
   // ── Divider ───────────────────────────────────────────────────
   static const Color divider = Color(0xFFF1E9DA);

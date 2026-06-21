@@ -1,22 +1,22 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../core/utils/cloudinary_helper.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 import '../../providers/vendor_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/product_provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../widgets/empty_state.dart';
-import 'add_edit_product_screen.dart';
+import '../../widgets/stat_card.dart';
+import '../../widgets/skeleton_loaders.dart';
+import '../../widgets/status_badge.dart';
 import 'vendor_orders_screen.dart';
+import 'vendor_inventory_screen.dart';
+import 'vendor_profile_screen.dart';
+import 'add_edit_product_screen.dart';
 import '../customer/notification_screen.dart';
 import '../common/feedback_submission_screen.dart';
-import 'vendor_inventory_screen.dart';
 import '../auth/login_screen.dart';
-
-import 'vendor_profile_screen.dart';
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -48,68 +48,50 @@ class _VendorDashboardState extends State<VendorDashboard> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Seller Hub'),
+        title: const Text('Vendor dashboard'),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
-                icon: const Icon(Icons.notifications_none_outlined),
-              ),
-              Consumer<NotificationProvider>(
-                builder: (context, provider, _) => provider.unreadCount > 0 ? Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(color: AppTheme.errorColor, shape: BoxShape.circle),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      '${provider.unreadCount}',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ) : const SizedBox(),
-              ),
-            ],
+          IconButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+            icon: const Icon(Icons.notifications_outlined, size: 22),
           ),
           IconButton(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackSubmissionScreen())),
-            icon: const Icon(Icons.rate_review_outlined),
-            tooltip: 'UAT Feedback',
+            icon: const Icon(Icons.rate_review_outlined, size: 22),
           ),
           IconButton(
             onPressed: () => _showLogoutDialog(context),
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_rounded, size: 22),
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primaryColor,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          labelColor: AppColors.coral,
+          unselectedLabelColor: AppColors.muted,
+          indicatorColor: AppColors.coral,
+          indicatorWeight: 2,
+          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          unselectedLabelStyle: const TextStyle(fontSize: 13),
           tabs: const [
-            Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined)),
-            Tab(text: 'Orders', icon: Icon(Icons.receipt_long_outlined)),
-            Tab(text: 'Inventory', icon: Icon(Icons.inventory_2_outlined)),
-            Tab(text: 'Profile', icon: Icon(Icons.person_outline)),
+            Tab(text: 'Overview'),
+            Tab(text: 'Orders'),
+            Tab(text: 'Inventory'),
+            Tab(text: 'Profile'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          const VendorOverviewTab(),
-          const VendorOrdersScreen(),
-          const VendorInventoryScreen(),
-          const VendorProfileScreen(),
+        children: const [
+          VendorOverviewTab(),
+          VendorOrdersScreen(),
+          VendorInventoryScreen(),
+          VendorProfileScreen(),
         ],
       ),
     );
@@ -119,13 +101,13 @@ class _VendorDashboardState extends State<VendorDashboard> with SingleTickerProv
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Logout', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to log out?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: const Text('Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
+        content: const Text('Are you sure you want to log out?', style: TextStyle(fontSize: 14, color: AppColors.muted)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary))),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: AppColors.muted))),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor, minimumSize: const Size(100, 45)),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, minimumSize: const Size(100, 40)),
             onPressed: () {
               Provider.of<AuthProvider>(context, listen: false).logout();
               Navigator.pushAndRemoveUntil(
@@ -149,22 +131,23 @@ class VendorOverviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<VendorProvider>(
       builder: (context, provider, _) {
-        if (provider.isLoading) return _buildSkeletonLoader();
+        if (provider.isLoading) return const _OverviewSkeleton();
+
         if (provider.error != null) {
           return EmptyState(
-            icon: Icons.error_outline,
+            icon: Icons.error_outline_rounded,
             title: 'Failed to load data',
             message: provider.error!,
             onAction: () => provider.fetchAnalytics(),
             actionLabel: 'Retry',
           );
         }
-        if (provider.analytics == null) return const Center(child: Text('No data available'));
+
+        if (provider.analytics == null) return const Center(child: Text('No data available', style: TextStyle(color: AppColors.muted)));
 
         final stats = provider.analytics?['stats'] ?? {};
         final recentOrders = provider.analytics?['recentOrders'] as List? ?? [];
 
-        // Safe parsing for revenue and stats
         double totalRevenue = 0.0;
         if (stats['totalRevenue'] != null) {
           if (stats['totalRevenue'] is int) {
@@ -183,60 +166,87 @@ class VendorOverviewTab extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: provider.fetchAnalytics,
+          color: AppColors.coral,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Sales Performance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                const SizedBox(height: 16),
-                _buildRevenueCard(totalRevenue),
-                const SizedBox(height: 24),
-                const Text('Order Statistics', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                const SizedBox(height: 16),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    int crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-                    // Lower aspect ratio (0.85 - 0.9) makes the boxes taller to fit the content comfortably
-                    double childAspectRatio = constraints.maxWidth > 600 ? 1.6 : 0.85;
-                    return GridView.count(
-                      crossAxisCount: crossAxisCount,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: childAspectRatio,
-                      children: [
-                        _buildStatCard('Pending', pending, const Color(0xFFF59E0B), Icons.hourglass_empty),
-                        _buildStatCard('Confirmed', confirmed, AppTheme.primaryLight, Icons.thumb_up_alt_outlined),
-                        _buildStatCard('Delivered', delivered, AppTheme.successColor, Icons.local_shipping_outlined),
-                        _buildStatCard('Total Products', products, AppTheme.primaryColor, Icons.inventory_2_outlined),
-                      ],
-                    );
-                  },
+                // Revenue card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    boxShadow: [
+                      BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total revenue', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.muted)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(color: AppColors.successLight, borderRadius: BorderRadius.circular(100)),
+                            child: const Text('All time', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.successDark)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Rs. ${totalRevenue.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w500, color: AppColors.ink),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                const SizedBox(height: 16),
+
+                // Stat cards
+                const Text('Order statistics', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                const SizedBox(height: 10),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 1.4,
                   children: [
-                    const Text('Recent Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                    StatCard(icon: Icons.access_time_rounded, value: pending, label: 'Pending', tintColor: AppColors.warningLight, iconColor: AppColors.warningDark),
+                    StatCard(icon: Icons.check_circle_outline_rounded, value: confirmed, label: 'Confirmed', tintColor: AppColors.blueLight, iconColor: AppColors.blueDark),
+                    StatCard(icon: Icons.local_shipping_outlined, value: delivered, label: 'Delivered', tintColor: AppColors.successLight, iconColor: AppColors.successDark),
+                    StatCard(icon: Icons.inventory_2_outlined, value: products, label: 'Products', tintColor: AppColors.coralLight, iconColor: AppColors.coralDark),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
+
+                // Recent activity
+                const Text('Recent activity', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                const SizedBox(height: 10),
                 if (recentOrders.isEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: AppTheme.surfaceColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppTheme.borderMedium)),
-                    child: const Center(child: Text('No recent orders yet', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600))),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    ),
+                    child: const Center(child: Text('No recent orders', style: TextStyle(fontSize: 14, color: AppColors.muted))),
                   )
                 else
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppTheme.softShadow,
-                      border: Border.all(color: AppTheme.borderSubtle, width: 1.5),
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                      ],
                     ),
                     child: Column(
                       children: recentOrders.map((order) {
@@ -244,54 +254,43 @@ class VendorOverviewTab extends StatelessWidget {
                         return Column(
                           children: [
                             ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                               leading: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-                                child: const Icon(Icons.receipt_long, color: AppTheme.primaryColor, size: 20),
+                                width: 36,
+                                height: 36,
+                                decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                                child: const Icon(Icons.receipt_long_rounded, size: 18, color: AppColors.coralDark),
                               ),
                               title: Text(
-                                'Order #${order['_id'].toString().substring(18).toUpperCase()}', 
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: -0.2),
+                                'Order #${order['_id'].toString().substring(18).toUpperCase()}',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Text(
-                                  order['customerId']['fullName'] ?? 'Customer', 
-                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              subtitle: Text(
+                                order['customerId']['fullName'] ?? 'Customer',
+                                style: const TextStyle(fontSize: 12, color: AppColors.muted),
                               ),
                               trailing: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    'Rs. ${order['totalAmount']}', 
-                                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.textPrimary, fontSize: 14),
+                                    'Rs. ${order['totalAmount']}',
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    order['orderStatus'] ?? 'Pending',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      color: _getStatusColor(order['orderStatus']),
-                                    ),
-                                  ),
+                                  const SizedBox(height: 2),
+                                  StatusBadge(status: _mapStatus(order['orderStatus'])),
                                 ],
                               ),
                             ),
-                            if (!isLast) const Divider(height: 1, indent: 70, endIndent: 16, color: AppTheme.borderSubtle),
+                            if (!isLast) const Divider(height: 1, indent: 64, endIndent: 14),
                           ],
                         );
                       }).toList(),
                     ),
                   ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -300,136 +299,43 @@ class VendorOverviewTab extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String? status) {
+  BadgeStatus _mapStatus(String? status) {
     switch (status) {
       case 'Pending':
-        return const Color(0xFFF59E0B);
+        return BadgeStatus.pending;
       case 'Confirmed':
-      case 'Processing':
-        return AppTheme.primaryLight;
-      case 'Shipped':
+        return BadgeStatus.confirmed;
       case 'Delivered':
-        return AppTheme.successColor;
+        return BadgeStatus.delivered;
       case 'Cancelled':
-      case 'Rejected':
-        return AppTheme.errorColor;
+        return BadgeStatus.rejected;
       default:
-        return AppTheme.textSecondary;
+        return BadgeStatus.pending;
     }
   }
+}
 
-  Widget _buildRevenueCard(double revenue) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppTheme.borderSubtle, width: 1.5),
-        boxShadow: AppTheme.softShadow,
-      ),
+class _OverviewSkeleton extends StatelessWidget {
+  const _OverviewSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: AppTheme.primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-                    child: const Icon(Icons.account_balance_wallet_outlined, color: AppTheme.primaryColor, size: 18),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Total Revenue',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(color: AppTheme.successColor.withOpacity(0.1), borderRadius: BorderRadius.circular(100)),
-                child: const Text('ALL TIME', style: TextStyle(color: AppTheme.successColor, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              'Rs. ${revenue.toStringAsFixed(0)}',
-              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1.0),
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Successfully processed revenue',
-            style: TextStyle(color: AppTheme.textLight, fontSize: 11, fontWeight: FontWeight.w500),
+          const ShimmerSkeleton(height: 100, radius: 16),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.4,
+            children: List.generate(4, (_) => const StatCardSkeleton()),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String label, String value, Color color, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const Spacer(),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value, 
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textPrimary, height: 1),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label, 
-            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w700, letterSpacing: 0.2),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSkeletonLoader() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Container(height: 140, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24))),
-            const SizedBox(height: 32),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 1.4,
-              children: List.generate(4, (index) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)))),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -448,174 +354,120 @@ class _VendorProductsTabState extends State<VendorProductsTab> {
     super.initState();
     Future.microtask(() => Provider.of<ProductProvider>(context, listen: false).fetchMyProducts());
   }
-  
+
   @override
   Widget build(BuildContext context) {
-     return Scaffold(
-       backgroundColor: AppTheme.backgroundColor,
-       body: Consumer<ProductProvider>(
-         builder: (context, productProvider, _) {
-           if (productProvider.isLoading && productProvider.myProducts.isEmpty) {
-             return ListView.builder(
-               padding: const EdgeInsets.all(24),
-               itemCount: 4,
-               itemBuilder: (context, index) => Shimmer.fromColors(
-                 baseColor: Colors.grey[300]!,
-                 highlightColor: Colors.grey[100]!,
-                 child: Container(height: 100, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
-               ),
-             );
-           }
-           
-           if (productProvider.myProducts.isEmpty) {
-             return EmptyState(
-               icon: Icons.inventory_2_outlined,
-               title: 'No Products Listed',
-               message: 'Start selling by adding your first product.',
-               onAction: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditProductScreen())),
-               actionLabel: 'Add Product',
-             );
-           }
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Consumer<ProductProvider>(
+        builder: (context, productProvider, _) {
+          if (productProvider.isLoading && productProvider.myProducts.isEmpty) {
+            return const ListSkeleton(itemCount: 4);
+          }
 
-           return RefreshIndicator(
-             onRefresh: productProvider.fetchMyProducts,
-             child: ListView.builder(
-               padding: const EdgeInsets.all(24),
-               itemCount: productProvider.myProducts.length,
-               itemBuilder: (context, index) {
-                 final product = productProvider.myProducts[index];
-                 return Container(
-                   margin: const EdgeInsets.only(bottom: 16),
-                   decoration: BoxDecoration(
-                     color: AppTheme.surfaceColor,
-                     borderRadius: BorderRadius.circular(20),
-                     boxShadow: AppTheme.softShadow,
-                     border: Border.all(color: Colors.black.withOpacity(0.05)),
-                   ),
-                   child: Padding(
-                     padding: const EdgeInsets.all(12),
-                     child: Row(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                         Container(
-                           width: 70,
-                           height: 70,
-                           decoration: BoxDecoration(
-                             borderRadius: BorderRadius.circular(12),
-                             color: Colors.grey[100],
-                           ),
-                           child: ClipRRect(
-                             borderRadius: BorderRadius.circular(12),
-                             child: product['images'] != null && product['images'].isNotEmpty 
-                             ? CachedNetworkImage(
-                                 imageUrl: CloudinaryHelper.getOptimizedUrl(product['images'][0], width: 200),
-                                 fit: BoxFit.cover,
-                                 placeholder: (context, url) => Container(color: Colors.grey[200]),
-                                 errorWidget: (context, url, error) => const Icon(Icons.broken_image),
-                               )
-                             : const Icon(Icons.image, size: 30, color: Colors.grey),
-                           ),
-                         ),
-                         const SizedBox(width: 16),
-                         Expanded(
-                           child: Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                               Text(
-                                 product['title'], 
-                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                 maxLines: 1,
-                                 overflow: TextOverflow.ellipsis,
-                               ),
-                               const SizedBox(height: 4),
-                               Text('Price: Rs. ${product['price']}', style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.w600, fontSize: 13)),
-                               const SizedBox(height: 2),
-                               Row(
-                                 children: [
-                                   Icon(
-                                     Icons.inventory_2_outlined, 
-                                     size: 12, 
-                                     color: (product['stock'] ?? 0) < 5 ? AppTheme.errorColor : AppTheme.textSecondary
-                                   ),
-                                   const SizedBox(width: 4),
-                                   Text(
-                                     'Stock: ${product['stock'] ?? 0}', 
-                                     style: TextStyle(
-                                       fontSize: 12, 
-                                       color: (product['stock'] ?? 0) < 5 ? AppTheme.errorColor : AppTheme.textSecondary,
-                                       fontWeight: (product['stock'] ?? 0) < 5 ? FontWeight.bold : FontWeight.normal
-                                     ),
-                                   ),
-                                 ],
-                               ),
-                             ],
-                           ),
-                         ),
-                         Column(
-                           mainAxisAlignment: MainAxisAlignment.center,
-                           children: [
-                             IconButton(
-                               icon: const Icon(Icons.edit_outlined, size: 20),
-                               color: AppTheme.secondaryColor,
-                               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddEditProductScreen(product: product))),
-                               padding: EdgeInsets.zero,
-                               constraints: const BoxConstraints(),
-                             ),
-                             const SizedBox(height: 8),
-                             IconButton(
-                               icon: const Icon(Icons.delete_outline, size: 20),
-                               color: AppTheme.errorColor,
-                               onPressed: () => _showDeleteDialog(context, product),
-                               padding: EdgeInsets.zero,
-                               constraints: const BoxConstraints(),
-                             ),
-                           ],
-                         ),
-                       ],
-                     ),
-                   ),
-                 );
-               },
-             ),
-           );
-         },
-       ),
-       floatingActionButton: FloatingActionButton.extended(
-         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditProductScreen())),
-         backgroundColor: AppTheme.primaryColor,
-         foregroundColor: Colors.white,
-         elevation: 4,
-         icon: const Icon(Icons.add),
-         label: const Text('Add Product', style: TextStyle(fontWeight: FontWeight.bold)),
-       ),
-     );
+          if (productProvider.myProducts.isEmpty) {
+            return EmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'No products yet',
+              message: 'Add your first product to start selling.',
+              onAction: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditProductScreen())),
+              actionLabel: 'Add product',
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: productProvider.fetchMyProducts,
+            color: AppColors.coral,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: productProvider.myProducts.length,
+              itemBuilder: (context, index) {
+                final product = productProvider.myProducts[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    boxShadow: [
+                      BoxShadow(color: AppColors.ink.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          color: AppColors.background,
+                          child: product['images'] != null && product['images'].isNotEmpty
+                              ? Image.network(product['images'][0], fit: BoxFit.cover)
+                              : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 24),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product['title'],
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Rs. ${product['price']}  •  Stock: ${product['stock'] ?? 0}',
+                              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddEditProductScreen(product: product))),
+                            child: const Icon(Icons.edit_outlined, size: 18, color: AppColors.blue),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => _showDeleteDialog(context, product),
+                            child: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _showDeleteDialog(BuildContext context, dynamic product) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Remove Product?', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete "${product['title']}"? This action cannot be undone.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: const Text('Delete product', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
+        content: Text('Delete "${product['title']}"? This cannot be undone.', style: const TextStyle(fontSize: 14, color: AppColors.muted)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: AppColors.muted))),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorColor,
-              minimumSize: const Size(100, 40),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, minimumSize: const Size(100, 40)),
             onPressed: () async {
               final success = await Provider.of<ProductProvider>(context, listen: false).deleteProduct(product['_id']);
               if (context.mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(success ? 'Product removed successfully' : 'Failed to remove product'),
-                    backgroundColor: success ? AppTheme.textPrimary : AppTheme.errorColor,
+                    content: Text(success ? 'Product deleted' : 'Failed to delete'),
+                    backgroundColor: success ? AppColors.success : AppColors.danger,
                   ),
                 );
               }
@@ -627,4 +479,3 @@ class _VendorProductsTabState extends State<VendorProductsTab> {
     );
   }
 }
-
