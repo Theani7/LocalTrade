@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/review_provider.dart';
+import '../../providers/order_provider.dart';
 import 'package:intl/intl.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -19,13 +20,38 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
+  bool _hasPurchased = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ReviewProvider>(context, listen: false).fetchProductReviews(widget.product['_id']);
+      _checkPurchaseStatus();
     });
+  }
+
+  void _checkPurchaseStatus() {
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    final productId = widget.product['_id'];
+
+    if (orderProvider.orders.isEmpty) {
+      orderProvider.fetchMyOrders().then((_) {
+        _evaluatePurchase(orderProvider.orders, productId);
+      });
+    } else {
+      _evaluatePurchase(orderProvider.orders, productId);
+    }
+  }
+
+  void _evaluatePurchase(List<dynamic> orders, String productId) {
+    final hasBought = orders.any((order) {
+      final isDelivered = order['orderStatus'] == 'Delivered';
+      final products = order['products'] as List? ?? [];
+      final containsProduct = products.any((p) => p['product'] == productId || p['product']?['_id'] == productId);
+      return isDelivered && containsProduct;
+    });
+    if (mounted) setState(() => _hasPurchased = hasBought);
   }
 
   @override
@@ -288,7 +314,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           'Reviews',
                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.ink),
                         ),
-                        if (!isAdmin)
+                        if (!isAdmin && _hasPurchased)
                           TextButton(
                             onPressed: () => _showReviewModal(context),
                             child: const Text('Write a review', style: TextStyle(fontSize: 13, color: AppColors.coral)),
