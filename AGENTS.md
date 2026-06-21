@@ -83,16 +83,16 @@ flutter analyze            # Lint check
 
 ### Sprint Plan (Redesign)
 
-#### Sprint 1: Theme Foundation (CURRENT)
-- [ ] Create `AppTheme` with new color palette (cream, coral, ink, muted, danger, success, warning, blue)
-- [ ] Define text styles (Inter/Noto Sans, 400/500, sentence case, scale per spec)
-- [ ] Define card theme (16px radius, soft shadows, padding)
-- [ ] Define button themes (primary=fill+ink, secondary=outline, destructive=red+white)
-- [ ] Define badge/chip styles (light-fill + dark-text pattern)
-- [ ] Create spacing constants (gaps 10-14px, padding 12-18px, touch targets 44/52px)
-- [ ] Verify `flutter analyze` passes
+#### Sprint 1: Theme Foundation ✅
+- [x] Create `AppTheme` with new color palette (cream, coral, ink, muted, danger, success, warning, blue)
+- [x] Define text styles (Inter/Noto Sans, 400/500, sentence case, scale per spec)
+- [x] Define card theme (16px radius, soft shadows, padding)
+- [x] Define button themes (primary=fill+ink, secondary=outline, destructive=red+white)
+- [x] Define badge/chip styles (light-fill + dark-text pattern)
+- [x] Create spacing constants (gaps 10-14px, padding 12-18px, touch targets 44/52px)
+- [x] Verify `flutter analyze` passes
 
-#### Sprint 2: Shared Components
+#### Sprint 2: Shared Components (CURRENT)
 - [ ] Build `AppButton` (primary, secondary, destructive, outline variants)
 - [ ] Build `StatusBadge` (pending, confirmed, delivered with icon+label+color)
 - [ ] Build `ProductCard` (image, name, vendor, price, reserve button)
