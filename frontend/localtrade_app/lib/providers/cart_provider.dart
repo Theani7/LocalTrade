@@ -8,6 +8,7 @@ class CartItem {
   final double price;
   final String imageUrl;
   final String vendorId;
+  final String vendorName;
   int quantity;
 
   CartItem({
@@ -16,6 +17,7 @@ class CartItem {
     required this.price,
     required this.imageUrl,
     required this.vendorId,
+    this.vendorName = '',
     this.quantity = 1,
   });
 
@@ -25,6 +27,7 @@ class CartItem {
     'price': price,
     'imageUrl': imageUrl,
     'vendorId': vendorId,
+    'vendorName': vendorName,
     'quantity': quantity,
   };
 
@@ -34,6 +37,7 @@ class CartItem {
     price: json['price'].toDouble(),
     imageUrl: json['imageUrl'],
     vendorId: json['vendorId'],
+    vendorName: json['vendorName'] ?? '',
     quantity: json['quantity'],
   );
 }
@@ -72,7 +76,7 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void addItem(String productId, String title, double price, String imageUrl, String vendorId) {
+  void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = ''}) {
     if (_items.containsKey(productId)) {
       _items.update(
         productId,
@@ -82,6 +86,7 @@ class CartProvider with ChangeNotifier {
           price: existingItem.price,
           imageUrl: existingItem.imageUrl,
           vendorId: existingItem.vendorId,
+          vendorName: existingItem.vendorName,
           quantity: existingItem.quantity + 1,
         ),
       );
@@ -94,6 +99,7 @@ class CartProvider with ChangeNotifier {
           price: price,
           imageUrl: imageUrl,
           vendorId: vendorId,
+          vendorName: vendorName,
         ),
       );
     }

@@ -95,117 +95,365 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
+    final items = cart.items;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Checkout'),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Delivery details
-            const Text('Delivery address', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _addressController,
-              maxLines: 2,
-              style: const TextStyle(color: AppColors.ink, fontSize: 14),
-              decoration: const InputDecoration(
-                hintText: 'Enter your full delivery address',
-                prefixIcon: Icon(Icons.location_on_outlined, color: AppColors.muted),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Notes
-            const Text('Additional notes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _notesController,
-              maxLines: 2,
-              style: const TextStyle(color: AppColors.ink, fontSize: 14),
-              decoration: const InputDecoration(
-                hintText: 'e.g. call before delivery, landmarks...',
-                prefixIcon: Icon(Icons.note_outlined, color: AppColors.muted),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Summary
-            const Text('Order summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                boxShadow: [
-                  BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
-                ],
-              ),
-              child: Column(
-                children: [
-                  ...cart.items.values.map((item) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      children: [
-                        Text('${item.quantity}x', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.coral)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(item.title, style: const TextStyle(fontSize: 14, color: AppColors.ink), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ),
-                        Text('Rs. ${item.price * item.quantity}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink)),
-                      ],
-                    ),
-                  )),
-                  const SizedBox(height: 10),
-                  const Divider(color: AppColors.divider),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Total', style: TextStyle(fontSize: 14, color: AppColors.muted)),
-                      Text(
-                        'Rs. ${cart.totalAmount}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-          ],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+          onPressed: () => Navigator.pop(context),
         ),
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.divider)),
-        ),
-        child: SafeArea(
-          child: Consumer<OrderProvider>(
-            builder: (context, order, _) {
-              return SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: order.isLoading ? null : _handlePlaceOrder,
-                  child: order.isLoading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))
-                      : const Text('Place order'),
-                ),
-              );
-            },
+        title: const Text(
+          'Checkout',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.ink,
           ),
         ),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.divider, height: 1),
+        ),
       ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.screenPaddingH),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppSpacing.gapLg),
+
+                  // ── Delivery Address ──
+                  _SectionHeader(icon: Icons.location_on_outlined, title: 'Delivery address'),
+                  const SizedBox(height: AppSpacing.gapMd),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: AppColors.divider),
+                    ),
+                    child: TextField(
+                      controller: _addressController,
+                      maxLines: 2,
+                      style: const TextStyle(color: AppColors.ink, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your full delivery address',
+                        hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.6)),
+                        prefixIcon: const Icon(Icons.location_on_outlined, color: AppColors.muted, size: 20),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.cardPaddingMd,
+                          vertical: AppSpacing.cardPaddingMd,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.gapXl + 2),
+
+                  // ── Additional Notes ──
+                  _SectionHeader(icon: Icons.notes_rounded, title: 'Additional notes'),
+                  const SizedBox(height: AppSpacing.gapMd),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: AppColors.divider),
+                    ),
+                    child: TextField(
+                      controller: _notesController,
+                      maxLines: 2,
+                      style: const TextStyle(color: AppColors.ink, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. call before delivery, landmarks...',
+                        hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.6)),
+                        prefixIcon: const Icon(Icons.notes_rounded, color: AppColors.muted, size: 20),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.cardPaddingMd,
+                          vertical: AppSpacing.cardPaddingMd,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.gapXl + 2),
+
+                  // ── Order Summary ──
+                  _SectionHeader(icon: Icons.receipt_long_outlined, title: 'Order summary'),
+                  const SizedBox(height: AppSpacing.gapMd),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.cardPaddingMd),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.ink.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Item rows ──
+                        ...items.values.map((item) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.gapSm),
+                          child: Row(
+                            children: [
+                              // Thumbnail
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  color: AppColors.mutedLight,
+                                  child: item.imageUrl.isNotEmpty
+                                      ? Image.network(
+                                          item.imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const Icon(
+                                            Icons.shopping_bag_outlined,
+                                            color: AppColors.muted,
+                                            size: 22,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.shopping_bag_outlined,
+                                          color: AppColors.muted,
+                                          size: 22,
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.gapLg),
+
+                              // Title + qty x price
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.title,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.ink,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${item.quantity} x Rs. ${item.price.toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Line total
+                              Text(
+                                'Rs. ${(item.price * item.quantity).toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+
+                        const SizedBox(height: AppSpacing.gapSm),
+
+                        // ── Subtotal row ──
+                        Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.gapSm),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Subtotal',
+                                style: TextStyle(fontSize: 13, color: AppColors.muted),
+                              ),
+                              Text(
+                                'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
+                                style: const TextStyle(fontSize: 13, color: AppColors.muted),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: AppSpacing.gapMd),
+                          child: Divider(color: AppColors.divider, height: 1),
+                        ),
+
+                        // ── Total row ──
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                            Text(
+                              'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.coral,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Extra bottom padding so content isn't hidden behind bottom bar
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Bottom bar ──
+          Container(
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              border: Border(top: BorderSide(color: AppColors.divider)),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPaddingH,
+                  AppSpacing.gapMd,
+                  AppSpacing.screenPaddingH,
+                  AppSpacing.gapLg,
+                ),
+                child: Consumer<OrderProvider>(
+                  builder: (context, order, _) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Price display above button
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.gapMd),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                            const Text(
+                              'Order total',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                            Text(
+                              'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.ink,
+                              ),
+                            ),
+                          ],
+                          ),
+                        ),
+                        // Place order button
+                        SizedBox(
+                          width: double.infinity,
+                          height: AppSpacing.buttonHeightPrimary,
+                          child: ElevatedButton(
+                            onPressed: order.isLoading ? null : _handlePlaceOrder,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.coral,
+                              foregroundColor: AppColors.ink,
+                              disabledBackgroundColor: AppColors.coral.withValues(alpha: 0.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: order.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.ink,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Place order',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _SectionHeader({required this.icon, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.coral),
+        const SizedBox(width: AppSpacing.gapSm),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.ink,
+          ),
+        ),
+      ],
     );
   }
 }

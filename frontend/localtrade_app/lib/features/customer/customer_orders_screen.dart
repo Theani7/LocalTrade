@@ -6,7 +6,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
-import '../../widgets/status_badge.dart';
 import 'order_tracking_screen.dart';
 
 class CustomerOrdersScreen extends StatefulWidget {
@@ -30,10 +29,18 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('My orders'),
+        title: const Text(
+          'Your Orders',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.ink,
+          ),
+        ),
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.ink,
         elevation: 0,
+        centerTitle: false,
       ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, _) {
@@ -54,85 +61,190 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
           return RefreshIndicator(
             onRefresh: () async => orderProvider.fetchMyOrders(),
             color: AppColors.coral,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+            backgroundColor: AppColors.surface,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenPaddingH,
+                vertical: AppSpacing.screenPaddingTop,
+              ),
               itemCount: orderProvider.orders.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final order = orderProvider.orders[index];
                 final orderId = order['_id']?.toString() ?? 'unknown';
-                final displayId = orderId.length > 18 ? orderId.substring(18).toUpperCase() : orderId.toUpperCase();
+                final products = (order['products'] as List?) ?? [];
+                final status = order['orderStatus'] ?? 'Pending';
+                final dateStr = order['createdAt'] ?? DateTime.now().toString();
+                final date = DateTime.parse(dateStr).toLocal();
+                final vendorName =
+                    order['vendorId']?['shopName'] ??
+                    order['vendorId']?['fullName'] ??
+                    'Local vendor';
 
                 return GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderTrackingScreen(orderId: orderId))),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => OrderTrackingScreen(orderId: orderId),
+                        ),
+                      ),
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: [
-                        BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                        BoxShadow(
+                          color: AppColors.ink.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '#$displayId',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted),
-                            ),
-                            StatusBadge(status: _mapStatus(order['orderStatus'] ?? 'Pending')),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.coralLight,
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        // Top bar: date + status badge
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                DateFormat('MMM d, yyyy').format(date),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.muted,
+                                ),
                               ),
-                              child: const Icon(Icons.storefront_rounded, size: 20, color: AppColors.coralDark),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    order['vendorId']?['shopName'] ?? order['vendorId']?['fullName'] ?? 'Local vendor',
-                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${(order['products'] as List?)?.length ?? 0} items  •  Rs. ${order['totalAmount'] ?? 0}',
-                                    style: const TextStyle(fontSize: 13, color: AppColors.muted),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: 20),
-                          ],
+                              _buildStatusBadge(status),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        const Divider(color: AppColors.divider, height: 1),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.muted),
-                            const SizedBox(width: 6),
-                            Text(
-                              DateFormat('MMM d, yyyy').format(DateTime.parse(order['createdAt'] ?? DateTime.now().toString()).toLocal()),
-                              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                        const Divider(
+                          color: AppColors.divider,
+                          height: 1,
+                          indent: 16,
+                          endIndent: 16,
+                        ),
+
+                        // Vendor info row
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.coralLight,
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.storefront_rounded,
+                                  size: 18,
+                                  color: AppColors.coralDark,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  vendorName,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.ink,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: AppColors.muted,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Product thumbnails
+                        if (products.isNotEmpty)
+                          SizedBox(
+                            height: 56,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.only(left: 16, right: 16),
+                              itemCount: products.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (context, i) {
+                                final product = products[i];
+                                final productId =
+                                    product['productId'] is Map
+                                        ? product['productId']
+                                        : null;
+                                final imageUrl =
+                                    productId?['images']?.isNotEmpty == true
+                                        ? productId!['images'][0]
+                                        : null;
+                                return Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mutedLight,
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm,
+                                    ),
+                                    image:
+                                        imageUrl != null
+                                            ? DecorationImage(
+                                              image: NetworkImage(imageUrl),
+                                              fit: BoxFit.cover,
+                                            )
+                                            : null,
+                                  ),
+                                  child:
+                                      imageUrl == null
+                                          ? const Icon(
+                                            Icons.shopping_bag_outlined,
+                                            size: 18,
+                                            color: AppColors.muted,
+                                          )
+                                          : null,
+                                );
+                              },
                             ),
-                          ],
+                          ),
+
+                        const SizedBox(height: 8),
+
+                        // Bottom row: item count + total
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${products.length} item${products.length == 1 ? '' : 's'}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                'Rs. ${order['totalAmount'] ?? 0}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -146,18 +258,65 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
     );
   }
 
-  BadgeStatus _mapStatus(String status) {
+  Widget _buildStatusBadge(String status) {
+    Color bgColor;
+    Color textColor;
+    IconData icon;
+    String label;
+
     switch (status) {
       case 'Pending':
-        return BadgeStatus.pending;
+        bgColor = AppColors.warningLight;
+        textColor = AppColors.warningDark;
+        icon = Icons.schedule_rounded;
+        label = 'Pending';
+        break;
       case 'Confirmed':
-        return BadgeStatus.confirmed;
+        bgColor = AppColors.blueLight;
+        textColor = AppColors.blueDark;
+        icon = Icons.check_rounded;
+        label = 'Confirmed';
+        break;
       case 'Delivered':
-        return BadgeStatus.delivered;
+        bgColor = AppColors.successLight;
+        textColor = AppColors.successDark;
+        icon = Icons.check_circle_outline_rounded;
+        label = 'Delivered';
+        break;
       case 'Cancelled':
-        return BadgeStatus.rejected;
+        bgColor = AppColors.coralLight;
+        textColor = AppColors.coralDark;
+        icon = Icons.cancel_outlined;
+        label = 'Cancelled';
+        break;
       default:
-        return BadgeStatus.pending;
+        bgColor = AppColors.warningLight;
+        textColor = AppColors.warningDark;
+        icon = Icons.schedule_rounded;
+        label = status;
     }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
