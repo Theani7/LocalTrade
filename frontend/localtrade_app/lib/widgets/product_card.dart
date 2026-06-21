@@ -29,8 +29,12 @@ class ProductCard extends StatelessWidget {
         (product['images'] != null && product['images'].isNotEmpty)
             ? product['images'][0]
             : '';
+    final String vendorName = product['vendorName'] ??
+        product['vendorId']?['shopName'] ??
+        '';
     final String category = (product['category'] ?? '').toString();
     final String title = product['title'] ?? '';
+    final String description = product['description'] ?? '';
     final double price = (product['price'] ?? 0).toDouble();
     final double? originalPrice = product['originalPrice'] != null &&
             product['originalPrice'] > price
@@ -44,191 +48,155 @@ class ProductCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (_) => ProductDetailsScreen(product: product)),
+        MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
       ),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0D2B2620),
-              blurRadius: 12,
-              offset: Offset(0, 4),
+              color: Color(0x0A2B2620),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Image area — padded rounded rect ──
+            // ── Image area — edge to edge ──
             Expanded(
-              flex: 6,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Stack(
-                    children: [
-                      // Gray backdrop + centered image
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: const Color(0xFFF2F2F2),
-                        child: image.isNotEmpty
-                            ? Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: CachedNetworkImage(
-                                  imageUrl:
-                                      CloudinaryHelper.getOptimizedUrl(
-                                    image,
-                                    width: 400,
-                                  ),
-                                  fit: BoxFit.contain,
-                                  memCacheWidth: 400,
-                                  placeholder: (_, __) => const Center(
-                                    child: Icon(
-                                        Icons.inventory_2_outlined,
-                                        size: 36,
-                                        color: AppColors.divider),
-                                  ),
-                                  errorWidget: (_, __, ___) =>
-                                      const Center(
-                                    child: Icon(
-                                        Icons.inventory_2_outlined,
-                                        size: 36,
-                                        color: AppColors.divider),
-                                  ),
-                                ),
-                              )
-                            : const Center(
-                                child: Icon(
-                                    Icons.inventory_2_outlined,
-                                    size: 36,
-                                    color: AppColors.divider),
+              flex: 5,
+              child: Stack(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12)),
+                      child: image.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: CloudinaryHelper.getOptimizedUrl(
+                                image,
+                                width: 400,
                               ),
-                      ),
-                      // Category badge
-                      if (category.isNotEmpty)
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(
-                                  sigmaX: 8, sigmaY: 8),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.8),
-                                  borderRadius: BorderRadius.circular(6),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.ink
-                                          .withValues(alpha: 0.08),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                                child: Text(
-                                  category,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.muted,
-                                  ),
+                              fit: BoxFit.cover,
+                              memCacheWidth: 400,
+                              placeholder: (_, __) => Container(
+                                color: AppColors.surface,
+                                child: const Center(
+                                  child: Icon(Icons.inventory_2_outlined,
+                                      size: 32, color: AppColors.divider),
                                 ),
                               ),
+                              errorWidget: (_, __, ___) => Container(
+                                color: AppColors.surface,
+                                child: const Icon(Icons.inventory_2_outlined,
+                                    size: 32, color: AppColors.divider),
+                              ),
+                            )
+                          : Container(
+                              color: AppColors.surface,
+                              child: const Icon(Icons.inventory_2_outlined,
+                                  size: 32, color: AppColors.divider),
                             ),
-                          ),
-                        ),
-                      // Out of stock overlay
-                      if (isOutOfStock)
-                        Positioned.fill(
-                          child: Container(
-                            color:
-                                AppColors.ink.withValues(alpha: 0.55),
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.danger,
-                                  borderRadius:
-                                      BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'OUT OF STOCK',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 11,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
+                  // Category badge
+                  if (category.isNotEmpty)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.ink.withValues(alpha: 0.08),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              category,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Out of stock overlay
+                  if (isOutOfStock)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.ink.withValues(alpha: 0.55),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12)),
+                        ),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'OUT OF STOCK',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
 
-            // ── Info area ──
+            // ── Info area — sized to content ──
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Row: badge + heart
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Category or vendor tag
-                      if (category.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: AppColors.coralLight,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            category,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.coralDark,
-                            ),
-                          ),
-                        )
-                      else
-                        const SizedBox.shrink(),
-                      // Wishlist heart
-                      GestureDetector(
-                        onTap: () {},
-                        child: const Icon(
-                          Icons.favorite_border_rounded,
-                          size: 22,
-                          color: AppColors.muted,
-                        ),
+                  // Vendor name
+                  if (vendorName.isNotEmpty)
+                    Text(
+                      vendorName,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.muted,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  if (vendorName.isNotEmpty) const SizedBox(height: 2),
 
                   // Product title
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: AppColors.ink,
                       height: 1.3,
@@ -236,12 +204,12 @@ class ProductCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
 
-                  // Rating row
+                  // Trust signal: rating + review count
                   if (hasRating)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(bottom: 4),
                       child: Row(
                         children: [
                           Text(
@@ -254,7 +222,7 @@ class ProductCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 2),
                           const Icon(Icons.star_rounded,
-                              size: 14, color: AppColors.warning),
+                              size: 13, color: AppColors.warning),
                           const SizedBox(width: 4),
                           Text(
                             '($reviewCount)',
@@ -267,7 +235,23 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
 
-                  // Price + Buy Now
+                  // Short description snippet
+                  if (description.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.muted,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                  // Price + Add to cart
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -275,30 +259,23 @@ class ProductCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Price',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.muted,
-                              ),
-                            ),
                             if (originalPrice != null)
                               Text(
                                 'Rs. ${_priceFormat.format(originalPrice.toInt())}',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: AppColors.muted,
-                                  decoration:
-                                      TextDecoration.lineThrough,
+                                  decoration: TextDecoration.lineThrough,
                                   decorationColor: AppColors.muted,
                                 ),
                               ),
                             Text(
                               'Rs. ${_priceFormat.format(price.toInt())}',
                               style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.coral,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.ink,
+                                height: 1.1,
                               ),
                             ),
                           ],
@@ -310,20 +287,16 @@ class ProductCard extends StatelessWidget {
                         GestureDetector(
                           onTap: onAddToCart,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 10),
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
-                              color: AppColors.ink,
-                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.coral,
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Text(
-                              'Buy Now',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: const Icon(
+                                Icons.add_shopping_cart_rounded,
+                                size: 18,
+                                color: AppColors.ink),
                           ),
                         ),
                     ],
