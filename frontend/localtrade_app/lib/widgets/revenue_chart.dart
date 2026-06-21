@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/app_colors.dart';
+import '../core/theme/app_spacing.dart';
 
 class RevenueChart extends StatelessWidget {
   final List<dynamic> recentOrders;
-  
+
   const RevenueChart({super.key, required this.recentOrders});
 
   @override
@@ -13,10 +14,12 @@ class RevenueChart extends StatelessWidget {
       return Container(
         height: 200,
         decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
-        child: const Center(child: Text('No data for chart')),
+        child: const Center(
+          child: Text('No data for chart', style: TextStyle(color: AppColors.muted, fontSize: 14)),
+        ),
       );
     }
 
@@ -24,11 +27,9 @@ class RevenueChart extends StatelessWidget {
       height: 250,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
       ),
       child: LineChart(
         LineChartData(
@@ -39,13 +40,13 @@ class RevenueChart extends StatelessWidget {
             LineChartBarData(
               spots: _generateSpots(),
               isCurved: true,
-              color: AppTheme.primaryColor,
-              barWidth: 4,
+              color: AppColors.coral,
+              barWidth: 3,
               isStrokeCapRound: true,
               dotData: const FlDotData(show: false),
               belowBarData: BarAreaData(
                 show: true,
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppColors.coralLight.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -55,14 +56,11 @@ class RevenueChart extends StatelessWidget {
   }
 
   List<FlSpot> _generateSpots() {
-    // Very simple conversion of recent orders to chart spots
-    // In a real app, this would be grouped by date
     List<FlSpot> spots = [];
     for (int i = 0; i < recentOrders.length; i++) {
       final amount = recentOrders[i]['totalAmount'].toDouble();
       spots.add(FlSpot(i.toDouble(), amount));
     }
-    // Reverse to show chronological order if needed, but here we just show the trend
     return spots.reversed.toList();
   }
 }
