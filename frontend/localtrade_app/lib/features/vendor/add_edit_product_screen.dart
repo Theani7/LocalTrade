@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
 import '../../providers/product_provider.dart';
 
 class AddEditProductScreen extends StatefulWidget {
@@ -32,6 +32,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   ];
 
   final List<dynamic> _selectedImages = [];
+  final List<Uint8List?> _imageBytes = [];
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -59,6 +60,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Future<void> _pickImages() async {
     final List<XFile> images = await _picker.pickMultiImage();
     if (images.isNotEmpty) {
+      for (var img in images) {
+        final bytes = await img.readAsBytes();
+        _imageBytes.add(bytes);
+      }
       setState(() {
         _selectedImages.addAll(images);
       });
@@ -147,12 +152,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           margin: const EdgeInsets.only(right: 8),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
-                            image: DecorationImage(
-                              image: kIsWeb 
-                                  ? NetworkImage(_selectedImages[index].path) as ImageProvider
-                                  : FileImage(File(_selectedImages[index].path)),
-                              fit: BoxFit.cover,
-                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: _imageBytes.length > index && _imageBytes[index] != null
+                                ? Image.memory(_imageBytes[index]!, fit: BoxFit.cover, width: 100, height: 100)
+                                : Image.network(_selectedImages[index].path, fit: BoxFit.cover, width: 100, height: 100),
                           ),
                         ),
                         Positioned(

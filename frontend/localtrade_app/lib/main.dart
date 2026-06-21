@@ -30,7 +30,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  FlutterError.onError = (details) {
+    debugPrint('Flutter error: ${details.exception}');
+    debugPrintStack(stackTrace: details.stack);
+  };
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

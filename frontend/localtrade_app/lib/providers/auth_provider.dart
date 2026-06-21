@@ -1,7 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/network/auth_service.dart';
 import 'dart:convert';
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
 
@@ -82,7 +82,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile(Map<String, String> fields, {File? image}) async {
+  Future<bool> updateProfile(Map<String, String> fields, {dynamic image}) async {
     _setLoading(true);
     _error = null;
     try {

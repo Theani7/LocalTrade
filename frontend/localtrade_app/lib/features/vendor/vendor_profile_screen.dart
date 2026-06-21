@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
 import 'dart:convert';
 import '../../providers/vendor_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -24,7 +25,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   late TextEditingController _descriptionController;
   late TextEditingController _hoursController;
   
-  File? _imageFile;
+  XFile? _imageFile;
+  Uint8List? _imageBytes;
   final _picker = ImagePicker();
   List<String> _selectedCategories = [];
 
@@ -63,7 +65,11 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _imageFile = pickedFile;
+        _imageBytes = bytes;
+      });
     }
   }
 
@@ -120,13 +126,13 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         shape: BoxShape.circle,
                         color: Colors.grey[200],
                         boxShadow: AppTheme.softShadow,
-                        image: _imageFile != null 
-                          ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
+                        image: _imageBytes != null 
+                          ? DecorationImage(image: MemoryImage(_imageBytes!), fit: BoxFit.cover)
                           : (profile?['profileImage'] != null && profile!['profileImage'].isNotEmpty)
                             ? DecorationImage(image: NetworkImage(profile['profileImage']), fit: BoxFit.cover)
                             : null,
                       ),
-                      child: (_imageFile == null && (profile?['profileImage'] == null || profile!['profileImage'].isEmpty))
+                      child: (_imageBytes == null && (profile?['profileImage'] == null || profile!['profileImage'].isEmpty))
                         ? const Icon(Icons.store, size: 50, color: Colors.grey)
                         : null,
                     ),

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,11 +18,12 @@ class ApiService {
           .timeout(const Duration(seconds: 15));
       debugPrint('API GET Response [${response.statusCode}]: $url');
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('No internet connection. Please check your network.');
     } on http.ClientException {
       throw Exception('Could not connect to server. Please ensure the backend is running.');
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        throw Exception('No internet connection. Please check your network.');
+      }
       rethrow;
     }
   }
@@ -39,9 +39,10 @@ class ApiService {
       ).timeout(const Duration(seconds: 20));
       debugPrint('API POST Response [${response.statusCode}]: $url');
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('No internet connection.');
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        throw Exception('No internet connection.');
+      }
       rethrow;
     }
   }
@@ -57,9 +58,10 @@ class ApiService {
       ).timeout(const Duration(seconds: 20));
       debugPrint('API PATCH Response [${response.statusCode}]: $url');
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('No internet connection.');
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        throw Exception('No internet connection.');
+      }
       rethrow;
     }
   }
@@ -70,9 +72,10 @@ class ApiService {
       final response = await _client.delete(url, headers: await _getHeaders(headers))
           .timeout(const Duration(seconds: 20));
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('No internet connection.');
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        throw Exception('No internet connection.');
+      }
       rethrow;
     }
   }
@@ -89,7 +92,7 @@ class ApiService {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
       final token = await _storage.read(key: AppConstants.tokenKey);
-      
+
       var request = http.MultipartRequest(method, url);
       request.headers.addAll({
         'Authorization': 'Bearer $token',
@@ -100,15 +103,7 @@ class ApiService {
 
       if (files != null) {
         for (var file in files) {
-          if (file is File) {
-            String ext = file.path.split('.').last.toLowerCase();
-            String subtype = (ext == 'jpg' || ext == 'jpeg') ? 'jpeg' : ext;
-            request.files.add(await http.MultipartFile.fromPath(
-              fieldName, 
-              file.path,
-              contentType: MediaType('image', subtype),
-            ));
-          } else if (file is XFile) {
+          if (file is XFile) {
             String ext = file.name.split('.').last.toLowerCase();
             String subtype = (ext == 'jpg' || ext == 'jpeg') ? 'jpeg' : (ext.isEmpty ? 'jpeg' : ext);
             final bytes = await file.readAsBytes();
@@ -124,9 +119,10 @@ class ApiService {
 
       final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
       return await http.Response.fromStream(streamedResponse);
-    } on SocketException {
-      throw Exception('No internet connection during upload.');
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        throw Exception('No internet connection during upload.');
+      }
       rethrow;
     }
   }
@@ -149,8 +145,8 @@ class ApiService {
   http.Response _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response;
-    } 
-    
+    }
+
     String message = 'An unexpected error occurred';
     try {
       final body = json.decode(response.body);

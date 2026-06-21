@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import '../network/api_service.dart';
 import '../network/auth_service.dart';
 
@@ -33,7 +32,7 @@ class VendorService {
     }
   }
 
-  Future<Map<String, dynamic>> updateProfile(Map<String, String> fields, {File? profileImage}) async {
+  Future<Map<String, dynamic>> updateProfile(Map<String, String> fields, {dynamic profileImage}) async {
     final response = await _apiService.multipartPatch(
       '/vendors/profile',
       fields: fields,

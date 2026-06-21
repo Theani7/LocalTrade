@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
-import 'dart:io';
 import '../constants/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
@@ -53,7 +53,7 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> updateProfile(Map<String, String> fields, {File? profileImage}) async {
+  Future<Map<String, dynamic>> updateProfile(Map<String, String> fields, {dynamic profileImage}) async {
     final response = await _apiService.multipartPatch(
       '/auth/profile', 
       fields: fields, 

@@ -11,8 +11,11 @@ class NotificationService {
   final AuthService _authService = AuthService();
   
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  bool _isWeb = false;
 
   Future<void> init() async {
+    _isWeb = kIsWeb;
+
     // 1) Request Permission
     await _fcm.requestPermission(
       alert: true,
@@ -29,22 +32,21 @@ class NotificationService {
     // 3) Listen for token refresh
     _fcm.onTokenRefresh.listen(_updateTokenOnBackend);
 
-    // 4) Initialize Local Notifications (for foreground messages)
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-    
-    // Correct version for flutter_local_notifications 21.0.0
-    // Signature: Future<bool?> initialize({required InitializationSettings settings, ...})
-    await _localNotifications.initialize(
-      settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap
-        debugPrint('Notification tapped: ${response.payload}');
-      },
-    );
+    // 4) Initialize Local Notifications (skip on web — not supported)
+    if (!_isWeb) {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+      );
+      
+      await _localNotifications.initialize(
+        settings: initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          debugPrint('Notification tapped: ${response.payload}');
+        },
+      );
+    }
   }
 
   Future<void> _updateTokenOnBackend(String token) async {
@@ -63,6 +65,8 @@ class NotificationService {
   }
 
   Future<void> showLocalNotification(RemoteMessage message) async {
+    if (_isWeb) return;
+    
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'LocalTrade_channel',
@@ -110,7 +114,8 @@ class NotificationService {
     await _apiService.patch('/notifications/mark-all-read', headers: {
       'Authorization': 'Bearer $token',
     });
-    // Clear all active local notifications from the status bar
-    await _localNotifications.cancelAll();
+    if (!_isWeb) {
+      await _localNotifications.cancelAll();
+    }
   }
 }

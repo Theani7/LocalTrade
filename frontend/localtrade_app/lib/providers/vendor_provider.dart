@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import '../core/network/vendor_service.dart';
 
 class VendorProvider with ChangeNotifier {
@@ -47,7 +46,7 @@ class VendorProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile(Map<String, String> fields, {File? image}) async {
+  Future<bool> updateProfile(Map<String, String> fields, {dynamic image}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();

@@ -96,15 +96,17 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: AppTheme.darkGradient,
         ),
         child: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 20),
                     
@@ -414,11 +416,12 @@ class _QuickFillSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
           children: [
             _buildLink(context, 'Vendor', () => onFill('farm@example.com', 'password123')),
-            _buildSeparator(),
+            Container(width: 1, height: 12, color: Colors.white.withOpacity(0.2)),
             _buildLink(context, 'Customer', () => onFill('customer@example.com', 'password123')),
           ],
         ),
