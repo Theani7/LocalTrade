@@ -1,122 +1,107 @@
-# LocalTrade: Nepal's Community Marketplace 🇳🇵
+# LocalTrade: Nepal's Community Marketplace
 
-LocalTrade is a modern, elegant, full-stack mobile marketplace platform designed to empower micro and small businesses in Nepal. It connects local producers, such as vegetable sellers, handicraft makers, dairy farmers, and tailors, directly with their community through a simple and intuitive reservation-based ordering system.
+LocalTrade is a full-stack mobile marketplace platform designed to empower micro and small businesses in Nepal. It connects local producers — vegetable sellers, handicraft makers, dairy farmers, tailors — directly with their community through a reservation-based ordering system.
 
----
-
-## 🏗️ Project Architecture
+## Project Architecture
 
 ### Backend (Node.js/Express)
-- **Architecture:** Model-View-Controller (MVC).
-- **Database:** MongoDB Atlas with Mongoose ODM.
-- **Security:** JWT-based Authentication, Role-Based Access Control (RBAC), Password Hashing (bcrypt), and Middleware for rate-limiting & security headers (Helmet).
-- **Storage:** Cloudinary for high-performance image hosting.
-- **Notifications:** Firebase Admin SDK for real-time push notifications.
+- **Architecture:** Model-View-Controller (MVC)
+- **Database:** MongoDB Atlas with Mongoose ODM
+- **Security:** JWT-based Authentication, Role-Based Access Control (RBAC), Password Hashing (bcrypt), Helmet security headers
+- **Storage:** Cloudinary for image hosting
+- **Notifications:** Firebase Admin SDK for push notifications
 
 ### Frontend (Flutter)
-- **Framework:** Flutter (Material 3).
-- **State Management:** Provider pattern for scalable state handling.
-- **Networking:** HTTP package with interceptors for JWT handling.
-- **Local Storage:** Flutter Secure Storage for tokens and Shared Preferences for user settings.
+- **Framework:** Flutter (Material 3)
+- **State Management:** Provider pattern
+- **Networking:** HTTP package with interceptors for JWT handling
+- **Local Storage:** Flutter Secure Storage for tokens, Shared Preferences for user settings
 
----
-
-## 🛠️ Technical Setup & Operations
-
-Before you begin, please review the **[REQUIREMENTS.txt](REQUIREMENTS.txt)** for a full list of system prerequisites (Node.js, Flutter, etc.) and external service requirements (MongoDB, Cloudinary, Firebase).
+## Technical Setup
 
 ### 1. Environment Configuration
-LocalTrade requires several environment variables to function.
 1. Navigate to the `backend` directory.
-2. Create a `.env` file based on `.env.example`:
+2. Create a `.env` file from `.env.example`:
    ```bash
    cp .env.example .env
    ```
-3. Open the `.env` file and fill in your credentials. Detailed descriptions of each key can be found in **[REQUIREMENTS.txt](REQUIREMENTS.txt)** and **[backend/.env.example](backend/.env.example)**.
+3. Fill in your credentials in the `.env` file (see `backend/.env.example` for details).
 
 ### 2. Database Setup (MongoDB Atlas)
-1.  **Create Cluster:** Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a free shared cluster.
-2.  **Network Access:** In the Atlas dashboard, go to "Network Access" and click **Add IP Address**. For development, you can "Allow Access from Anywhere" (`0.0.0.0/0`).
-3.  **Database Access:** Create a database user with **Read and Write** permissions. Remember the password.
-4.  **Connection String:** Click **Connect** > **Drivers** and copy the URI. Replace `<password>` with your user's password.
-5.  **Environment Variable:** Add this URI to your backend `.env` file as `MONGODB_URI`.
+1. Create a free cluster at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+2. Under "Network Access", allow access from anywhere (`0.0.0.0/0`).
+3. Create a database user with Read and Write permissions.
+4. Copy the connection URI (Connect > Drivers) and add it to `.env` as `MONGODB_URI`.
 
-### 2. Image Storage (Cloudinary)
-1.  Sign up for a free account at [Cloudinary](https://cloudinary.com).
-2.  From your Dashboard, copy the **Cloud Name**, **API Key**, and **API Secret**.
-3.  Add these to your backend `.env` file.
+### 3. Image Storage (Cloudinary)
+1. Sign up at [Cloudinary](https://cloudinary.com).
+2. Copy your Cloud Name, API Key, and API Secret from the dashboard.
+3. Add them to your `.env` file.
 
-### 3. Push Notifications (Firebase)
-1.  Create a project in the [Firebase Console](https://console.firebase.google.com).
-2.  **Service Account:** Go to **Project Settings** > **Service Accounts** and click **Generate New Private Key**.
-3.  **Backend Config:** Open the downloaded JSON and map the values to your backend `.env` (Project ID, Client Email, Private Key).
-4.  **Frontend Config:** Use the [FlutterFire CLI](https://firebase.flutter.dev/docs/cli/) to configure the Flutter app:
-    ```bash
-    flutterfire configure
-    ```
+### 4. Push Notifications (Firebase)
+1. Create a project in the [Firebase Console](https://console.firebase.google.com).
+2. Go to Project Settings > Service Accounts > Generate New Private Key.
+3. Map the JSON values to your `.env` file (Project ID, Client Email, Private Key).
+4. Configure the Flutter app:
+   ```bash
+   flutterfire configure
+   ```
 
-### 4. Backend Operations
-Navigate to the `/backend` directory:
+## Installation & Running
+
+### Backend
 ```bash
 cd backend
 npm install
+cp .env.example .env   # then fill in secrets
+npm run dev             # runs on http://localhost:5000
 ```
-
-#### Seeding & Resetting Data
-To quickly populate or reset your database:
-```bash
-# Populate mock vendors and products
-node seed-data.js
-
-# Reset database (Deletes all vendors/products/orders and resets Admin)
-npm run clear:data
-```
-
-> **Default Admin Credentials:**
-> - **Email:** `admin@gmail.com`
-> - **Password:** `admin123`
-
-#### Running Tests
-```bash
-npm test
-```
-
----
-
-## 🚀 Installation & Running
-
-### Backend
-1. Create `.env` from `.env.example`.
-2. `npm install`
-3. `npm run dev` (Runs on `http://localhost:5000`)
 
 ### Frontend
-1. Navigate to `/frontend/LocalTrade_app`.
-2. `flutter pub get`
-3. Ensure the backend URL is correctly set in `lib/core/constants/app_constants.dart`.
-4. `flutter run`
+```bash
+cd frontend/localtrade_app
+flutter pub get
+flutter run              # Chrome for web dev, or connected device
+```
 
----
+Update the API base URL in `lib/core/constants/app_constants.dart` to match your backend.
 
-## 📄 Documentation & Guides
+### Seed Data
+```bash
+cd backend
+node seed-data.js        # populate mock vendors + products
+npm run clear:data       # reset database
+npm test                 # run tests (in-memory MongoDB)
+```
 
-- **[REQUIREMENTS.txt](REQUIREMENTS.txt):** Consolidated system requirements and environment keys.
-- **[API Documentation](API_DOCUMENTATION.md):** Detailed endpoint list, request formats, and auth logic.
-- **[Deployment Guide](DEPLOYMENT_GUIDE.md):** Steps for production hosting (Render/Railway).
-- **[Testing Checklist](TESTING_CHECKLIST.md):** QA procedures for new features.
+**Default Admin Credentials:**
+- Email: `admin@gmail.com`
+- Password: `admin123`
 
----
+## Key Commands
 
-## 🤝 Contributing
-1. Fork the Project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the Branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start backend dev server |
+| `npm test` | Run backend tests |
+| `npm run clear:data` | Reset database |
+| `node seed-data.js` | Seed mock data |
+| `flutter run` | Run frontend |
+| `flutter analyze` | Lint check frontend |
+| `flutter build apk` | Build Android APK |
 
-## 🎓 Academic Project
-This project was developed for a final year university submission, demonstrating a production-grade implementation of a community-focused marketplace.
+## Tech Stack
 
-## ⚖️ License
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Flutter, Dart, Provider |
+| Backend | Node.js, Express 5, Mongoose |
+| Database | MongoDB Atlas |
+| Auth | JWT (JSON Web Tokens) |
+| Storage | Cloudinary |
+| Notifications | Firebase Cloud Messaging |
+| Deployment | Render (backend), Flutter build (frontend) |
+
+## License
+
 Distributed under the MIT License. See `LICENSE` for more information.
-
