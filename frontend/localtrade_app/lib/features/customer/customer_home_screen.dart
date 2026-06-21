@@ -7,9 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
 import '../../widgets/empty_state.dart';
-import '../../widgets/skeleton_loaders.dart';
 import 'product_details_screen.dart';
 import 'cart_screen.dart';
 import 'customer_orders_screen.dart';
@@ -530,16 +528,16 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       builder: (context, provider, _) {
         if (provider.isLoading && provider.products.isEmpty) {
           return SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 220,
-                childAspectRatio: 0.65,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.58,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
               delegate: SliverChildBuilderDelegate(
-                (context, index) => const ProductCardSkeleton(),
+                (context, index) => const _ProductCardSkeleton(),
                 childCount: 6,
               ),
             ),
@@ -573,14 +571,43 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 220,
-              childAspectRatio: 0.65,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.58,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, index) => _HomeProductCard(product: provider.products[index]),
+              (context, index) => _AmazonProductCard(
+                product: provider.products[index],
+                onAddToCart: () {
+                  final p = provider.products[index];
+                  final image = (p['images'] != null && p['images'].isNotEmpty) ? p['images'][0] : '';
+                  final vendorId = p['vendorId'] is Map ? (p['vendorId']['_id'] ?? '') : (p['vendorId'] ?? '');
+                  Provider.of<CartProvider>(context, listen: false).addItem(
+                    p['_id'],
+                    p['title'],
+                    double.parse(p['price'].toString()),
+                    image,
+                    vendorId,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      backgroundColor: AppColors.ink,
+                      content: const Row(
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
+                          SizedBox(width: 10),
+                          Text('Added to cart', style: TextStyle(fontSize: 13, color: AppColors.surface)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
               childCount: provider.products.length,
             ),
           ),
@@ -622,9 +649,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   }
 }
 
-class _HomeProductCard extends StatelessWidget {
+// Amazon-inspired product card
+class _AmazonProductCard extends StatelessWidget {
   final dynamic product;
-  const _HomeProductCard({required this.product});
+  final VoidCallback onAddToCart;
+
+  const _AmazonProductCard({required this.product, required this.onAddToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -632,18 +662,23 @@ class _HomeProductCard extends StatelessWidget {
     final String status = product['productStatus'] ?? 'Available';
     final bool isOutOfStock = status == 'OutOfStock' || stock <= 0;
     final String image = (product['images'] != null && product['images'].isNotEmpty) ? product['images'][0] : '';
-    final String vendorId = product['vendorId'] is Map ? (product['vendorId']['_id'] ?? '') : (product['vendorId'] ?? '');
+    final String vendorName = product['vendorName'] ?? product['vendorId']?['shopName'] ?? '';
+    final String category = (product['category'] ?? '').toString();
+    final bool hasRating = product['ratingsQuantity'] != null && product['ratingsQuantity'] > 0;
 
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product))),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: AppColors.ink.withValues(alpha: 0.05),
-              blurRadius: 10,
+              color: AppColors.ink.withValues(alpha: 0.04),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
@@ -651,61 +686,72 @@ class _HomeProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image area
             Expanded(
-              flex: 11,
+              flex: 5,
               child: Stack(
-                fit: StackFit.expand,
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusLg)),
-                    child: image.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: CloudinaryHelper.getOptimizedUrl(image, width: 400),
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(color: AppColors.background),
-                            errorWidget: (context, url, error) => Container(
+                  SizedBox(
+                    width: double.infinity,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: image.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: CloudinaryHelper.getOptimizedUrl(image, width: 400),
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(color: AppColors.background),
+                              errorWidget: (context, url, error) => Container(
+                                color: AppColors.background,
+                                child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 32),
+                              ),
+                            )
+                          : Container(
                               color: AppColors.background,
                               child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 32),
                             ),
-                          )
-                        : Container(
-                            color: AppColors.background,
-                            child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 32),
-                          ),
-                  ),
-                  // Price badge
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        'Rs. ${product['price']}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.ink),
-                      ),
                     ),
                   ),
-                  if (isOutOfStock)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.ink.withValues(alpha: 0.6),
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusLg)),
+                  // Category tag
+                  if (category.isNotEmpty)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          category,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.muted),
+                        ),
                       ),
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.danger,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: const Text(
-                            'OUT OF STOCK',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 11),
+                    ),
+                  // Out of stock overlay
+                  if (isOutOfStock)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.ink.withValues(alpha: 0.55),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        ),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'OUT OF STOCK',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -713,88 +759,91 @@ class _HomeProductCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Info
+            // Info area
             Expanded(
-              flex: 9,
+              flex: 5,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      (product['category'] ?? '').toString(),
-                      style: const TextStyle(color: AppColors.coralDark, fontSize: 11, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 4),
+                    // Vendor name
+                    if (vendorName.isNotEmpty)
+                      Text(
+                        vendorName,
+                        style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (vendorName.isNotEmpty) const SizedBox(height: 2),
+                    // Product name
                     Text(
                       product['title'] ?? '',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.ink,
+                        height: 1.3,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const Spacer(),
-                    if (product['ratingsQuantity'] != null && product['ratingsQuantity'] > 0)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${product['ratingsAverage']}',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.ink),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '(${product['ratingsQuantity']})',
-                              style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                            ),
-                          ],
-                        ),
+                    const SizedBox(height: 4),
+                    // Rating
+                    if (hasRating)
+                      Row(
+                        children: [
+                          ...List.generate(5, (i) {
+                            final rating = (product['ratingsAverage'] ?? 0).toDouble();
+                            return Icon(
+                              i < rating.round() ? Icons.star_rounded : (i < rating ? Icons.star_half_rounded : Icons.star_border_rounded),
+                              size: 12,
+                              color: AppColors.warning,
+                            );
+                          }),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${product['ratingsQuantity']})',
+                            style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                          ),
+                        ],
                       ),
+                    const Spacer(),
+                    // Price + cart button
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Expanded(
-                          child: Text(
-                            product['vendorName'] ?? product['vendorId']?['shopName'] ?? 'Local vendor',
-                            style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Rs.',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink),
+                              ),
+                              Text(
+                                '${product['price']}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.ink,
+                                  height: 1.1,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         if (!isOutOfStock)
                           GestureDetector(
-                            onTap: () {
-                              Provider.of<CartProvider>(context, listen: false).addItem(
-                                product['_id'],
-                                product['title'],
-                                double.parse(product['price'].toString()),
-                                image,
-                                vendorId,
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  duration: const Duration(seconds: 2),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  backgroundColor: AppColors.ink,
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
-                                      const SizedBox(width: 10),
-                                      Text('Added to cart', style: const TextStyle(fontSize: 13, color: AppColors.surface)),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                            onTap: onAddToCart,
                             child: Container(
-                              padding: const EdgeInsets.all(6),
+                              width: 36,
+                              height: 36,
                               decoration: BoxDecoration(
                                 color: AppColors.coral,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.add_rounded, size: 16, color: AppColors.ink),
+                              child: const Icon(Icons.add_shopping_cart_rounded, size: 18, color: AppColors.ink),
                             ),
                           ),
                       ],
@@ -805,6 +854,54 @@ class _HomeProductCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Skeleton for Amazon-style card
+class _ProductCardSkeleton extends StatelessWidget {
+  const _ProductCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(width: 60, height: 8, color: AppColors.divider),
+                  const SizedBox(height: 6),
+                  Container(width: double.infinity, height: 10, color: AppColors.divider),
+                  const SizedBox(height: 4),
+                  Container(width: 80, height: 10, color: AppColors.divider),
+                  const Spacer(),
+                  Container(width: 40, height: 14, color: AppColors.divider),
+                  const SizedBox(height: 2),
+                  Container(width: 60, height: 18, color: AppColors.divider),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
