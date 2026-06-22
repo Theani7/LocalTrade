@@ -17,18 +17,19 @@ class AuthProvider with ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _user != null;
 
+  bool _tokenValidationInProgress = false;
+
   AuthProvider() {
     _init();
   }
 
   Future<void> _init() async {
     await _loadUserFromPrefs();
-    if (isAuthenticated) {
-      await validateToken();
-    }
   }
 
   Future<bool> validateToken() async {
+    if (_tokenValidationInProgress) return isAuthenticated;
+    _tokenValidationInProgress = true;
     try {
       final userData = await _authService.getMe();
       _user = userData;
@@ -36,9 +37,10 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      // If token is invalid or expired, logout
       await logout();
       return false;
+    } finally {
+      _tokenValidationInProgress = false;
     }
   }
 
