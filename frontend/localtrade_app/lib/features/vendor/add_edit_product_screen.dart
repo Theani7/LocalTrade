@@ -107,6 +107,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         return;
       }
 
+      final stock = int.tryParse(_stockController.text) ?? 0;
+      if (stock <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Stock quantity must be at least 1')),
+        );
+        return;
+      }
+
       final productProvider =
           Provider.of<ProductProvider>(context, listen: false);
       final productData = {
@@ -632,6 +640,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(vertical: 8),
                     ),
+                    validator: (v) {
+                      final qty = int.tryParse(v ?? '') ?? 0;
+                      if (qty <= 0) return 'Required';
+                      return null;
+                    },
                     onChanged: (v) {
                       final parsed = int.tryParse(v);
                       if (parsed != null && parsed < 0) {
