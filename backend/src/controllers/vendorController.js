@@ -95,6 +95,14 @@ exports.getVendorProfile = catchAsync(async (req, res, next) => {
 exports.updateVendorProfile = catchAsync(async (req, res, next) => {
   const { shopName, address, phone, businessDescription, bio, openingHours, categories } = req.body;
   
+  // Input validation
+  if (shopName !== undefined && shopName !== '' && (typeof shopName !== 'string' || shopName.trim().length === 0 || shopName.length > 100)) {
+    return next(new AppError('Shop name must be a non-empty string under 100 characters', 400));
+  }
+  if (phone !== undefined && phone !== '' && !/^\d{7,15}$/.test(phone)) {
+    return next(new AppError('Phone number must be digits only, 7 to 15 characters', 400));
+  }
+
   const updateData = {};
   if (shopName !== undefined) updateData.shopName = shopName;
   if (address !== undefined && address !== null && address !== '') {

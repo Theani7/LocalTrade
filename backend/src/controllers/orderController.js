@@ -149,7 +149,35 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/orders/my-orders
 // @access  Private/Customer
 exports.getMyOrders = catchAsync(async (req, res, next) => {
-  const orders = await Order.find({ customerId: req.user.id })
+  const filter = { customerId: req.user.id };
+
+  if (req.query.page || req.query.limit) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [orders, totalResults] = await Promise.all([
+      Order.find(filter)
+        .populate('vendorId', 'shopName fullName')
+        .populate('products.product', 'title images stockQuantity')
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      status: 'success',
+      results: orders.length,
+      totalPages: Math.ceil(totalResults / limit),
+      currentPage: page,
+      totalResults,
+      data: { orders },
+    });
+  }
+
+  const orders = await Order.find(filter)
     .populate('vendorId', 'shopName fullName')
     .populate('products.product', 'title images stockQuantity')
     .sort('-createdAt');
@@ -164,7 +192,35 @@ exports.getMyOrders = catchAsync(async (req, res, next) => {
 
 // @desc    Get vendor orders
 exports.getVendorOrders = catchAsync(async (req, res, next) => {
-  const orders = await Order.find({ vendorId: req.user.id })
+  const filter = { vendorId: req.user.id };
+
+  if (req.query.page || req.query.limit) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [orders, totalResults] = await Promise.all([
+      Order.find(filter)
+        .populate('customerId', 'fullName phone')
+        .populate('products.product', 'title images stockQuantity')
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      status: 'success',
+      results: orders.length,
+      totalPages: Math.ceil(totalResults / limit),
+      currentPage: page,
+      totalResults,
+      data: { orders },
+    });
+  }
+
+  const orders = await Order.find(filter)
     .populate('customerId', 'fullName phone')
     .populate('products.product', 'title images stockQuantity')
     .sort('-createdAt');

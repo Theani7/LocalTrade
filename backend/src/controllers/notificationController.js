@@ -6,7 +6,30 @@ const AppError = require('../utils/appError');
 // @route   GET /api/v1/notifications
 // @access  Private
 exports.getNotifications = catchAsync(async (req, res, next) => {
-  const notifications = await Notification.find({ recipient: req.user.id }).sort('-createdAt');
+  const filter = { recipient: req.user.id };
+
+  if (req.query.page || req.query.limit) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [notifications, totalResults] = await Promise.all([
+      Notification.find(filter).sort('-createdAt').skip(skip).limit(limit),
+      Notification.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      status: 'success',
+      results: notifications.length,
+      totalPages: Math.ceil(totalResults / limit),
+      currentPage: page,
+      totalResults,
+      data: { notifications },
+    });
+  }
+
+  const notifications = await Notification.find(filter).sort('-createdAt');
 
   res.status(200).json({
     success: true,

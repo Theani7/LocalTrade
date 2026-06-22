@@ -12,6 +12,20 @@ exports.register = catchAsync(async (req, res, next) => {
     return next(new AppError('Unauthorized: Invalid role selection', 400));
   }
 
+  // Input validation
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    return next(new AppError('Please provide a valid email address', 400));
+  }
+  if (!password || password.length < 6) {
+    return next(new AppError('Password must be at least 6 characters', 400));
+  }
+  if (!fullName || typeof fullName !== 'string' || fullName.trim().length === 0 || fullName.length > 100) {
+    return next(new AppError('Full name is required and must be under 100 characters', 400));
+  }
+  if (phone && (!/^\d{7,15}$/.test(phone))) {
+    return next(new AppError('Phone number must be digits only, 7 to 15 characters', 400));
+  }
+
   // Check if user already exists
   const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
   if (existingUser) {
@@ -132,6 +146,17 @@ exports.updateFcmToken = catchAsync(async (req, res, next) => {
 exports.updateProfile = catchAsync(async (req, res, next) => {
   const { fullName, phone, address, shopName, businessDescription, openingHours, categories } = req.body;
   
+  // Input validation
+  if (fullName !== undefined && (typeof fullName !== 'string' || fullName.trim().length === 0 || fullName.length > 100)) {
+    return next(new AppError('Full name must be a non-empty string under 100 characters', 400));
+  }
+  if (phone !== undefined && phone !== '' && !/^\d{7,15}$/.test(phone)) {
+    return next(new AppError('Phone number must be digits only, 7 to 15 characters', 400));
+  }
+  if (shopName !== undefined && shopName !== '' && (typeof shopName !== 'string' || shopName.trim().length === 0 || shopName.length > 100)) {
+    return next(new AppError('Shop name must be a non-empty string under 100 characters', 400));
+  }
+
   const updateData = {};
   if (fullName !== undefined) updateData.fullName = fullName;
   if (phone !== undefined) updateData.phone = phone;

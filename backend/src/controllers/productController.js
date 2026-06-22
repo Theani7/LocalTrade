@@ -280,8 +280,31 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/products/my-products
 // @access  Private/Vendor
 exports.getMyProducts = catchAsync(async (req, res, next) => {
-  const products = await Product.find({ vendorId: req.user.id }).sort('-createdAt');
-  
+  const filter = { vendorId: req.user.id };
+
+  if (req.query.page || req.query.limit) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const [products, totalResults] = await Promise.all([
+      Product.find(filter).sort('-createdAt').skip(skip).limit(limit),
+      Product.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      status: 'success',
+      results: products.length,
+      totalPages: Math.ceil(totalResults / limit),
+      currentPage: page,
+      totalResults,
+      data: { products },
+    });
+  }
+
+  const products = await Product.find(filter).sort('-createdAt');
+
   res.status(200).json({
     success: true,
     status: 'success',
