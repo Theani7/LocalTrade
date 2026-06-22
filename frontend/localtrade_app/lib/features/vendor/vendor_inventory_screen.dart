@@ -393,6 +393,8 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                     ),
                     const SizedBox(width: 8),
                     _buildEditButton(product),
+                    const SizedBox(width: 8),
+                    _buildDeleteButton(product),
                   ],
                 ),
               ],
@@ -483,7 +485,12 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
 
   Widget _buildEditButton(dynamic product) {
     return GestureDetector(
-      onTap: () => _showManualEntry(product),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AddEditProductScreen(product: product),
+        ),
+      ),
       child: Container(
         width: 34,
         height: 34,
@@ -492,6 +499,72 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
           borderRadius: BorderRadius.circular(10),
         ),
         child: const Icon(Icons.edit_outlined, size: 14, color: AppColors.ink),
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton(dynamic product) {
+    return GestureDetector(
+      onTap: () => _showDeleteConfirmation(product),
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: AppColors.dangerLight,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.delete_outline_rounded, size: 14, color: AppColors.dangerDark),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(dynamic product) {
+    final title = product['title'] ?? 'this product';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: Text(
+          'Delete product',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink),
+        ),
+        content: Text(
+          'Are you sure you want to delete "$title"? This cannot be undone.',
+          style: const TextStyle(fontSize: 14, color: AppColors.muted, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.muted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(80, 36),
+            ),
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final provider = Provider.of<ProductProvider>(context, listen: false);
+              Navigator.pop(context);
+              final success = await provider.deleteProduct(product['_id']);
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(success
+                        ? '"$title" deleted'
+                        : 'Failed to delete product'),
+                    backgroundColor: success ? AppColors.success : AppColors.danger,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+                  ),
+                );
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
@@ -551,56 +624,4 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
     }
   }
 
-  void _showManualEntry(dynamic product) {
-    final controller = TextEditingController(text: product['stockQuantity'].toString());
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: Text(
-          'Update stock: ${product['title']}',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink),
-        ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Stock quantity',
-            hintText: '0',
-            filled: true,
-            fillColor: AppColors.background,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              borderSide: const BorderSide(color: AppColors.coral),
-            ),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.muted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.coral,
-              minimumSize: const Size(80, 36),
-            ),
-            onPressed: () {
-              final int? val = int.tryParse(controller.text);
-              if (val != null && val >= 0) {
-                Navigator.pop(context);
-                _updateStock(product['_id'], val, product['productStatus']);
-              }
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
-  }
 }

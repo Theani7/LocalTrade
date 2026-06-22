@@ -199,6 +199,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     final status = order['orderStatus'] ?? 'Pending';
     final isCancelled = status == 'Cancelled';
     final isPending = status == 'Pending';
+    final isConfirmed = status == 'Confirmed';
     final customerName = order['customerId']?['fullName'] ?? 'Customer';
     final phone = order['customerId']?['phone'] ?? '';
     final address = _formatAddress(order['shippingAddress']);
@@ -541,6 +542,51 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                 ],
               ),
             ],
+
+            // ── Action buttons (confirmed only) ──────────────
+            if (isConfirmed) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: ElevatedButton.icon(
+                  onPressed: _updatingOrderId != null
+                      ? null
+                      : () => _updateStatus(
+                          order['_id'], 'Delivered', context),
+                  icon: _updatingOrderId == order['_id']
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.ink,
+                          ),
+                        )
+                      : const Icon(Icons.local_shipping_outlined, size: 18),
+                  label: const Text(
+                    'Mark as delivered',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.successDark,
+                    disabledBackgroundColor:
+                        AppColors.successDark.withValues(alpha: 0.5),
+                    foregroundColor: Colors.white,
+                    disabledForegroundColor: Colors.white.withValues(alpha: 0.5),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -656,7 +702,20 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     setState(() => _updatingOrderId = null);
 
     if (success) {
-      final label = status == 'Confirmed' ? 'confirmed' : 'rejected';
+      String label;
+      switch (status) {
+        case 'Confirmed':
+          label = 'confirmed';
+          break;
+        case 'Delivered':
+          label = 'marked as delivered';
+          break;
+        case 'Cancelled':
+          label = 'rejected';
+          break;
+        default:
+          label = 'updated';
+      }
       messenger.showSnackBar(
         SnackBar(
           content: Text('Order $label successfully'),

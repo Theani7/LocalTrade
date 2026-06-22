@@ -101,9 +101,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     _user = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConstants.userKey);
-    await prefs.remove('shopping_cart');
+    await _authService.logout();
     onLogoutCallback?.call();
     notifyListeners();
   }
