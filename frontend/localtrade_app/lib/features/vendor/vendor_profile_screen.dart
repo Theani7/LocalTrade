@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
@@ -498,9 +497,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                       const SizedBox(width: 4),
                       Text(
                         isApproved ? 'Approved' : 'Pending approval',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                        style: AppTextStyles.badge.copyWith(
                           color: isApproved ? AppColors.successDark : AppColors.blueDark,
                         ),
                       ),
@@ -523,12 +520,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: AppColors.muted,
-          letterSpacing: 0.5,
-        ),
+        style: AppTextStyles.label.copyWith(letterSpacing: 0.5),
       ),
     );
   }
@@ -615,9 +607,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           Text.rich(
             TextSpan(
               text: label,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+              style: AppTextStyles.label.copyWith(
                 color: required ? AppColors.coralDark : AppColors.muted,
               ),
               children: required
@@ -636,10 +626,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
               controller: controller,
               autofocus: true,
               keyboardType: keyboardType,
-              style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.ink),
+              style: AppTextStyles.cardTitle.copyWith(fontSize: 13),
               decoration: InputDecoration(
                 isDense: true,
                 contentPadding:
@@ -671,9 +658,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           Text.rich(
             TextSpan(
               text: label,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+              style: AppTextStyles.label.copyWith(
                 color: required ? AppColors.coralDark : AppColors.muted,
               ),
               children: required
@@ -688,8 +673,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           const SizedBox(height: 2),
           Text(
             hasValue ? controller.text : label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
+            style: AppTextStyles.body.copyWith(
               fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
               color: hasValue ? AppColors.ink : AppColors.muted,
             ),
@@ -760,9 +744,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         Text.rich(
                           TextSpan(
                             text: label,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                            style: AppTextStyles.label.copyWith(
                               color: required ? AppColors.coralDark : AppColors.muted,
                             ),
                             children: required
@@ -778,8 +760,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         const SizedBox(height: 2),
                         Text(
                           hasValue ? controller.text : (placeholder ?? ''),
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
+                          style: AppTextStyles.body.copyWith(
                             fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
                             color: hasValue ? AppColors.ink : AppColors.muted,
                           ),
@@ -830,9 +811,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
               Text.rich(
                 TextSpan(
                   text: label,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.label.copyWith(
                     color: required ? AppColors.coralDark : AppColors.muted,
                   ),
                   children: required
@@ -852,8 +831,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                   controller: controller,
                   autofocus: true,
                   keyboardType: keyboardType,
-                  style: GoogleFonts.inter(
-                      fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
+                  style: AppTextStyles.cardTitle.copyWith(fontSize: 13),
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding:
@@ -931,9 +909,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                       children: [
                         Text(
                           'Description',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                          style: AppTextStyles.label.copyWith(
                             color: AppColors.muted,
                           ),
                         ),
@@ -942,8 +918,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           hasValue
                               ? _descriptionController.text
                               : 'Tell customers what you sell and what makes your store special...',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
+                          style: AppTextStyles.body.copyWith(
                             fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
                             color: hasValue ? AppColors.ink : AppColors.muted,
                           ),
@@ -986,9 +961,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
             children: [
               Text(
                 'Description',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+                style: AppTextStyles.label.copyWith(
                   color: AppColors.muted,
                 ),
               ),
@@ -997,10 +970,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                 controller: _descriptionController,
                 autofocus: true,
                 maxLines: 3,
-                style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.ink),
+                style: AppTextStyles.cardTitle.copyWith(fontSize: 13),
                 decoration: InputDecoration(
                   isDense: true,
                   contentPadding: const EdgeInsets.all(10),
@@ -1065,9 +1035,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                 Text.rich(
                   TextSpan(
                     text: 'Categories',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
+                    style: AppTextStyles.label.copyWith(
                       color: AppColors.coralDark,
                     ),
                     children: const [
@@ -1095,9 +1063,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                             children: [
                               Text(
                                 cat,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
+                                style: AppTextStyles.label.copyWith(
                                   color: AppColors.coralDark,
                                 ),
                               ),
@@ -1133,8 +1099,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                             const SizedBox(width: 2),
                             Text(
                               'Add',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
+                              style: AppTextStyles.caption.copyWith(
                                 color: AppColors.muted,
                               ),
                             ),
@@ -1202,7 +1167,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.ink.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -1297,7 +1262,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.blueLight,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1308,9 +1273,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           Expanded(
             child: Text(
               'Changes to your profile will be reviewed by the admin before going live to customers.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
+              style: AppTextStyles.caption.copyWith(
                 color: AppColors.blueDark,
                 height: 1.5,
               ),
@@ -1341,7 +1304,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.coral,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -1353,11 +1316,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           color: AppColors.ink, strokeWidth: 2))
                   : Text(
                       'Save changes',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.ink,
-                      ),
+                      style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
                     ),
             ),
           ),
