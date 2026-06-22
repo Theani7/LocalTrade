@@ -232,43 +232,40 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
           // Categories
           SliverToBoxAdapter(
-            child: SizedBox(
-              height: 44,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                itemCount: _categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final cat = _categories[index];
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: _categories.map((cat) {
                   final isSelected = _selectedCategory == cat;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedCategory = cat);
-                      _fetchProducts();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.coral : AppColors.surface,
-                        borderRadius: BorderRadius.circular(100),
-                        border: Border.all(
-                          color: isSelected ? AppColors.coral : AppColors.divider,
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _selectedCategory = cat);
+                        _fetchProducts();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.coral : AppColors.surface,
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(
+                            color: isSelected ? AppColors.coral : AppColors.divider,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        cat,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: isSelected ? AppColors.ink : AppColors.muted,
+                        child: Text(
+                          cat,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected ? AppColors.ink : AppColors.muted,
+                          ),
                         ),
                       ),
                     ),
                   );
-                },
+                }).toList(),
               ),
             ),
           ),
