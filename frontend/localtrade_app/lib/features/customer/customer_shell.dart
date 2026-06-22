@@ -56,17 +56,11 @@ class _CustomerShellState extends State<CustomerShell> {
           if (i == 0) {
             _switchTab(0);
           } else if (i == 1) {
-            AuthGuard.requireAuthRoute(context, const CartScreen());
+            AuthGuard.requireAuth(context, onAuthenticated: () => _switchTab(1));
           } else if (i == 2) {
-            AuthGuard.requireAuthRoute(
-              context,
-              const CustomerOrdersScreen(),
-            );
+            AuthGuard.requireAuth(context, onAuthenticated: () => _switchTab(2));
           } else if (i == 3) {
-            AuthGuard.requireAuthRoute(
-              context,
-              const CustomerProfileScreen(),
-            );
+            AuthGuard.requireAuth(context, onAuthenticated: () => _switchTab(3));
           }
         },
       ),
