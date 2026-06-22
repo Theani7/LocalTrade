@@ -22,7 +22,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _priceController;
   late TextEditingController _originalPriceController;
 
-  int _stockQuantity = 0;
   late TextEditingController _stockController;
   bool _availableForPickup = true;
 
@@ -63,8 +62,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       text: widget.product?['originalPrice']?.toString() ?? '',
     );
 
-    _stockQuantity = widget.product?['stock'] ?? 0;
-    _stockController = TextEditingController(text: '$_stockQuantity');
+    final initialStock = widget.product?['stock'] ?? 0;
+    _stockController = TextEditingController(text: '$initialStock');
 
     if (widget.product != null) {
       _selectedCategory = widget.product['category'] ?? 'Vegetables';

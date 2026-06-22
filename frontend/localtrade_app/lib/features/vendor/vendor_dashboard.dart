@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/vendor_order_status_badge.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'vendor_orders_screen.dart';
 import 'vendor_inventory_screen.dart';
@@ -27,7 +28,6 @@ class _VendorDashboardState extends State<VendorDashboard> {
   final List<Widget> _screens = const [
     VendorOverviewTab(),
     VendorOrdersScreen(),
-    SizedBox.shrink(), // placeholder for center FAB
     VendorInventoryScreen(),
     VendorProfileScreen(),
   ];
@@ -84,8 +84,8 @@ class _VendorDashboardState extends State<VendorDashboard> {
               _buildNavItem(index: 0, icon: Icons.dashboard_outlined, label: 'Dashboard'),
               _buildNavItem(index: 1, icon: Icons.receipt_long_outlined, label: 'Orders'),
               const SizedBox(width: 56), // space for FAB
-              _buildNavItem(index: 3, icon: Icons.inventory_2_outlined, label: 'Inventory'),
-              _buildNavItem(index: 4, icon: Icons.person_outline_rounded, label: 'Profile'),
+              _buildNavItem(index: 2, icon: Icons.inventory_2_outlined, label: 'Inventory'),
+              _buildNavItem(index: 3, icon: Icons.person_outline_rounded, label: 'Profile'),
             ],
           ),
         ),
@@ -484,7 +484,7 @@ class VendorOverviewTab extends StatelessWidget {
                     style: AppTextStyles.cardTitle.copyWith(fontSize: 13),
                   ),
                   const SizedBox(height: 4),
-                  _buildStatusChip(status),
+                  VendorOrderStatusBadge(status: status, compact: true),
                 ],
               ),
             ],
@@ -498,64 +498,6 @@ class VendorOverviewTab extends StatelessWidget {
             color: AppColors.divider,
           ),
       ],
-    );
-  }
-
-  Widget _buildStatusChip(String status) {
-    Color bgColor;
-    Color textColor;
-    String label;
-    IconData icon;
-
-    switch (status) {
-      case 'Pending':
-        bgColor = AppColors.warningLight;
-        textColor = AppColors.warningDark;
-        label = 'Pending';
-        icon = Icons.schedule_outlined;
-        break;
-      case 'Confirmed':
-        bgColor = AppColors.blueLight;
-        textColor = AppColors.blueDark;
-        label = 'Confirmed';
-        icon = Icons.check_circle_outline_rounded;
-        break;
-      case 'Delivered':
-        bgColor = AppColors.successLight;
-        textColor = AppColors.successDark;
-        label = 'Delivered';
-        icon = Icons.check_circle_outline_rounded;
-        break;
-      case 'Cancelled':
-        bgColor = AppColors.coralLight;
-        textColor = AppColors.coralDark;
-        label = 'Cancelled';
-        icon = Icons.cancel_outlined;
-        break;
-      default:
-        bgColor = AppColors.warningLight;
-        textColor = AppColors.warningDark;
-        label = status;
-        icon = Icons.schedule_outlined;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: textColor),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: AppTextStyles.badge.copyWith(color: textColor, fontSize: 10),
-          ),
-        ],
-      ),
     );
   }
 
@@ -669,8 +611,7 @@ class _MiniBarChart extends StatelessWidget {
       if (revenue <= 0) return 0.0;
       // Fake distribution — more weight toward the right (recent)
       final base = (i + 1) / barCount;
-      final normalized = base * (revenue > 0 ? 1.0 : 0.0);
-      return (0.2 + normalized * 0.8).clamp(0.05, 1.0);
+      return (0.2 + base * 0.8).clamp(0.0, 1.0);
     });
 
     return SizedBox(

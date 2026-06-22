@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/vendor_order_status_badge.dart';
 import '../../widgets/skeleton_loaders.dart';
 
 class VendorOrdersScreen extends StatefulWidget {
@@ -259,7 +260,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                   '#$shortId',
                   style: AppTextStyles.label.copyWith(color: AppColors.muted),
                 ),
-                _buildStatusBadge(status),
+                VendorOrderStatusBadge(status: status),
               ],
             ),
             const SizedBox(height: 12),
@@ -578,67 +579,6 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // Status badge — light fill + dark text + icon
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildStatusBadge(String status) {
-    Color bgColor;
-    Color textColor;
-    String label;
-    IconData icon;
-
-    switch (status) {
-      case 'Pending':
-        bgColor = AppColors.warningLight;
-        textColor = AppColors.warningDark;
-        label = 'Pending';
-        icon = Icons.schedule_outlined;
-        break;
-      case 'Confirmed':
-        bgColor = AppColors.blueLight;
-        textColor = AppColors.blueDark;
-        label = 'Confirmed';
-        icon = Icons.check_circle_outline_rounded;
-        break;
-      case 'Delivered':
-        bgColor = AppColors.successLight;
-        textColor = AppColors.successDark;
-        label = 'Delivered';
-        icon = Icons.local_shipping_outlined;
-        break;
-      case 'Cancelled':
-        bgColor = AppColors.mutedLight;
-        textColor = AppColors.muted;
-        label = 'Cancelled';
-        icon = Icons.close_rounded;
-        break;
-      default:
-        bgColor = AppColors.warningLight;
-        textColor = AppColors.warningDark;
-        label = status;
-        icon = Icons.schedule_outlined;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: textColor),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppTextStyles.badge.copyWith(color: textColor),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // Initials avatar — coral-light circle with coral-dark initial
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildInitialsAvatar(String name) {
@@ -663,13 +603,13 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
       String orderId, String status, BuildContext context) async {
     if (_updatingOrderId != null) return;
 
-    setState(() => _updatingOrderId = orderId.toString());
+    setState(() => _updatingOrderId = orderId);
 
     final messenger = ScaffoldMessenger.of(context);
     final orderProvider =
         Provider.of<OrderProvider>(context, listen: false);
     final success = await orderProvider.updateOrderStatus(
-      orderId.toString(),
+      orderId,
       status,
     );
 
