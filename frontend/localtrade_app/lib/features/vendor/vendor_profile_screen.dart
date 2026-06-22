@@ -260,6 +260,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        titleTextStyle: AppTextStyles.screenTitle.copyWith(fontSize: 16),
+        toolbarHeight: 56,
         leading: canGoBack
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
@@ -268,6 +270,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
             : const SizedBox.shrink(),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text('Vendor profile', style: AppTextStyles.screenTitle),
             const SizedBox(height: 2),
