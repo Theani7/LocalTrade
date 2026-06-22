@@ -7,7 +7,9 @@ import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../widgets/app_button.dart';
 import 'customer_home_screen.dart';
 import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
@@ -177,11 +179,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
           backgroundColor: AppColors.background,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          title: const Text('My Account',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.ink)),
+          title: Text('My Account', style: AppTextStyles.screenTitle),
         ),
         body: Center(
           child: Column(
@@ -196,25 +194,19 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                     size: 36, color: AppColors.coral),
               ),
               const SizedBox(height: 16),
-              const Text('Login to view your profile',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.ink)),
+              Text('Login to view your profile',
+                  style: AppTextStyles.sectionHeading),
               const SizedBox(height: 8),
-              const Text('Sign in to manage your account',
-                  style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              Text('Sign in to manage your account',
+                  style: AppTextStyles.bodyMuted),
               const SizedBox(height: 20),
-              ElevatedButton(
+              AppButton(
+                label: 'Login',
                 onPressed: () {
                   AuthGuard.requireAuth(context, onAuthenticated: () {
                     if (mounted) setState(() {});
                   });
                 },
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.coral,
-                    foregroundColor: AppColors.ink),
-                child: const Text('Login'),
               ),
             ],
           ),
@@ -245,10 +237,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'My Account',
-          style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink),
+          style: AppTextStyles.screenTitle,
         ),
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.ink,
@@ -377,17 +368,14 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               children: [
                 Text(
                   _toTitleCase(name),
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.ink),
+                  style: AppTextStyles.cardTitle.copyWith(fontSize: 16),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   email,
-                  style: const TextStyle(fontSize: 13, color: AppColors.muted),
+                  style: AppTextStyles.caption,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -401,10 +389,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   ),
                   child: Text(
                     role[0].toUpperCase() + role.substring(1),
-                    style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.blueDark),
+                    style: AppTextStyles.label.copyWith(color: AppColors.blueDark, fontSize: 11),
                   ),
                 ),
               ],
@@ -507,13 +492,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             ),
             const SizedBox(height: 8),
             Text(value,
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.ink)),
+                style: AppTextStyles.price.copyWith(fontSize: 18)),
             const SizedBox(height: 2),
             Text(label,
-                style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                style: AppTextStyles.caption.copyWith(fontSize: 11),
                 textAlign: TextAlign.center),
           ],
         ),
@@ -527,11 +509,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   Widget _buildSectionLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: AppColors.muted,
-          letterSpacing: 0.5),
+      style: AppTextStyles.label.copyWith(letterSpacing: 0.5),
     );
   }
 
@@ -614,11 +592,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Delivery Address',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink)),
+                  Text('Delivery Address',
+                      style: AppTextStyles.cardTitle),
                   const SizedBox(height: 2),
                   Row(
                     children: [
@@ -702,14 +677,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink)),
+                      style: AppTextStyles.cardTitle),
                   const SizedBox(height: 2),
                   Text(subtitle,
-                      style:
-                          const TextStyle(fontSize: 12, color: AppColors.muted),
+                      style: AppTextStyles.caption,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                 ],
@@ -819,11 +790,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Personal Information',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.ink)),
+                          Text('Personal Information',
+                              style: AppTextStyles.cardTitle),
                           IconButton(
                             icon: const Icon(Icons.close,
                                 size: 20, color: AppColors.muted),
@@ -866,11 +834,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                                       width: 20,
                                       child: CircularProgressIndicator(
                                           color: AppColors.ink, strokeWidth: 2))
-                                  : const Text('Save',
-                                      style: TextStyle(
-                                          color: AppColors.ink,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 15)),
+                                   : Text('Save',
+                                       style: AppTextStyles.buttonPrimary),
                             ),
                           );
                         },
@@ -901,11 +866,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Delivery Address',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.ink)),
+                          Text('Delivery Address',
+                              style: AppTextStyles.cardTitle),
                           IconButton(
                             icon: const Icon(Icons.close,
                                 size: 20, color: AppColors.muted),
@@ -975,11 +937,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                                       width: 20,
                                       child: CircularProgressIndicator(
                                           color: AppColors.ink, strokeWidth: 2))
-                                  : const Text('Save Address',
-                                      style: TextStyle(
-                                          color: AppColors.ink,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 15)),
+                                   : Text('Save Address',
+                                       style: AppTextStyles.buttonPrimary),
                             ),
                           );
                         },
@@ -1054,18 +1013,15 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Logout',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: AppColors.ink)),
-        content: const Text('Are you sure you want to log out?',
-            style: TextStyle(fontSize: 14, color: AppColors.muted)),
+        title: Text('Logout',
+            style: AppTextStyles.sectionHeading),
+        content: Text('Are you sure you want to log out?',
+            style: AppTextStyles.bodyMuted),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child:
-                const Text('Cancel', style: TextStyle(color: AppColors.muted)),
+                Text('Cancel', style: AppTextStyles.bodyMuted),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -1081,9 +1037,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                   MaterialPageRoute(builder: (_) => const CustomerHomeScreen()),
                   (route) => false);
             },
-            child: const Text('Logout',
-                style: TextStyle(
-                    color: AppColors.ink, fontWeight: FontWeight.w500)),
+            child: Text('Logout',
+                style: AppTextStyles.buttonPrimary),
           ),
         ],
       ),

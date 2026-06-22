@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../providers/auth_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -209,10 +210,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                       child: Text(
                         category,
-                        style: const TextStyle(
-                            color: AppColors.coralDark,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12),
+                        style: AppTextStyles.label.copyWith(color: AppColors.coralDark),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -220,12 +218,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     // Title
                     Text(
                       _sentenceCase(widget.product['title'] ?? ''),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.ink,
-                        height: 1.3,
-                      ),
+                      style: AppTextStyles.screenTitle.copyWith(height: 1.3),
                     ),
                     const SizedBox(height: 8),
 
@@ -250,16 +243,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           const SizedBox(width: 6),
                           Text(
                             '${widget.product['ratingsAverage']}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 13,
-                                color: AppColors.ink),
+                            style: AppTextStyles.label.copyWith(color: AppColors.ink),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '(${widget.product['ratingsQuantity']} reviews)',
-                            style: const TextStyle(
-                                fontSize: 13, color: AppColors.muted),
+                            style: AppTextStyles.caption,
                           ),
                         ],
                       ),
@@ -275,20 +264,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             if (originalPrice != null)
                               Text(
                                 'Rs. ${_priceFormat.format(originalPrice.toInt())}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.muted,
+                                style: AppTextStyles.bodyMuted.copyWith(
                                   decoration: TextDecoration.lineThrough,
                                   decorationColor: AppColors.muted,
                                 ),
                               ),
                             Text(
                               'Rs. ${_priceFormat.format(price.toInt())}',
-                              style: const TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.ink,
-                                  height: 1.1),
+                              style: AppTextStyles.price.copyWith(fontSize: 26, height: 1.1),
                             ),
                           ],
                         ),
@@ -332,10 +315,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             const SizedBox(width: 8),
                             Text(
                               'Only $stock left - order soon',
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.warningDark),
+                              style: AppTextStyles.label.copyWith(color: AppColors.warningDark),
                             ),
                           ],
                         ),
@@ -353,31 +333,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ],
 
                     // Description
-                    const Text(
+                    Text(
                       'Description',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink),
+                      style: AppTextStyles.cardTitle,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.product['description'] ??
                           'No description provided.',
-                      style: const TextStyle(
-                          fontSize: 14, height: 1.6, color: AppColors.muted),
+                      style: AppTextStyles.bodyMuted.copyWith(height: 1.6),
                     ),
                     const SizedBox(height: 16),
                     const Divider(color: AppColors.divider, height: 1),
                     const SizedBox(height: 16),
 
                     // Vendor
-                    const Text(
+                    Text(
                       'Sold by',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink),
+                      style: AppTextStyles.cardTitle,
                     ),
                     const SizedBox(height: 10),
                     _buildVendorCard(),
@@ -389,19 +362,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Reviews',
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.ink),
+                          style: AppTextStyles.cardTitle,
                         ),
                         if (!isAdmin && _hasPurchased)
                           TextButton(
                             onPressed: () => _showReviewModal(context),
-                            child: const Text('Write a review',
-                                style: TextStyle(
-                                    fontSize: 13, color: AppColors.coral)),
+                            child: Text('Write a review',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.coral)),
                           ),
                       ],
                     ),
@@ -430,9 +399,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     // Quantity selector
                     Row(
                       children: [
-                        const Text('Qty',
-                            style: TextStyle(
-                                fontSize: 13, color: AppColors.muted)),
+                        Text('Qty',
+                            style: AppTextStyles.caption),
                         const SizedBox(width: 12),
                         Container(
                           height: 36,
@@ -462,13 +430,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               ),
                               SizedBox(
                                 width: 36,
-                                child: Text(
+                                child:                                 Text(
                                   '$_quantity',
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.ink),
+                                  style: AppTextStyles.cardTitle,
                                 ),
                               ),
                               GestureDetector(
@@ -493,10 +458,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         // Price
                         Text(
                           'Rs. ${_priceFormat.format((price * _quantity).toInt())}',
-                          style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.ink),
+                          style: AppTextStyles.price,
                         ),
                       ],
                     ),
@@ -577,9 +539,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   : (requireSize && _selectedSize == null)
                                       ? 'Select a size'
                                       : 'Add to cart',
-                              style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500),
+                              style: AppTextStyles.cardTitle,
                             ),
                           ],
                         ),
@@ -603,19 +563,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   'Size',
-                  style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.ink),
+                  style: AppTextStyles.cardTitle,
                 ),
                 if (_selectedSize != null) ...[
                   const SizedBox(width: 8),
                   Text(
                     _selectedSize!,
-                    style:
-                        const TextStyle(fontSize: 14, color: AppColors.muted),
+                    style: AppTextStyles.bodyMuted,
                   ),
                 ],
               ],
@@ -657,11 +613,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               }).toList(),
             ),
             if (requireSize && _selectedSize == null)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 6),
                 child: Text(
                   'Please select a size',
-                  style: TextStyle(fontSize: 12, color: AppColors.danger),
+                  style: AppTextStyles.caption.copyWith(color: AppColors.danger),
                 ),
               ),
           ],
@@ -735,10 +691,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               children: [
                 Text(
                   vendorName,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                      color: AppColors.ink),
+                  style: AppTextStyles.cardTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -746,8 +699,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   const SizedBox(height: 2),
                   Text(
                     vendorPhone,
-                    style:
-                        const TextStyle(fontSize: 13, color: AppColors.muted),
+                    style: AppTextStyles.caption,
                   ),
                 ],
               ],
@@ -770,10 +722,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       child: Center(
         child: Text(
           initial,
-          style: const TextStyle(
-              color: AppColors.coralDark,
-              fontSize: 16,
-              fontWeight: FontWeight.w600),
+          style: AppTextStyles.cardTitle.copyWith(color: AppColors.coralDark),
         ),
       ),
     );
@@ -817,17 +766,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       size: 26, color: AppColors.coral),
                 ),
                 const SizedBox(height: 14),
-                const Text(
+                Text(
                   'No reviews yet',
-                  style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.ink),
+                  style: AppTextStyles.cardTitle,
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Be the first to share your experience',
-                  style: TextStyle(fontSize: 13, color: AppColors.muted),
+                  style: AppTextStyles.caption,
                 ),
                 if (_hasPurchased) ...[
                   const SizedBox(height: 16),
@@ -841,9 +787,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('Write a review',
-                          style: TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500)),
+                      child: Text('Write a review',
+                          style: AppTextStyles.label.copyWith(color: AppColors.coral)),
                     ),
                   ),
                 ],
@@ -898,13 +843,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           children: [
                             Text(
                                 review['userId']?['fullName'] ?? 'Anonymous',
-                                style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.ink)),
+                                style: AppTextStyles.label.copyWith(color: AppColors.ink)),
                             Text(DateFormat('MMM d, yyyy').format(date),
-                                style: const TextStyle(
-                                    fontSize: 11, color: AppColors.muted)),
+                                style: AppTextStyles.caption),
                           ],
                         ),
                       ),
@@ -923,8 +864,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(review['reviewText'],
-                      style: const TextStyle(
-                          fontSize: 13, height: 1.5, color: AppColors.ink)),
+                      style: AppTextStyles.body.copyWith(height: 1.5)),
                 ],
               ),
             );
@@ -962,11 +902,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Write a review',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.ink)),
+                      Text('Write a review',
+                          style: AppTextStyles.sectionHeading),
                       IconButton(
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.close,
@@ -974,11 +911,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text('Rate this product',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.muted)),
+                  Text('Rate this product',
+                      style: AppTextStyles.label),
                   const SizedBox(height: 8),
                   Row(
                     children: List.generate(5, (index) {
@@ -999,8 +933,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   TextField(
                     controller: reviewController,
                     maxLines: 4,
-                    style:
-                        const TextStyle(color: AppColors.ink, fontSize: 14),
+                    style: AppTextStyles.body.copyWith(color: AppColors.ink),
                     decoration: const InputDecoration(
                       hintText: 'Share your experience...',
                       hintStyle: TextStyle(color: AppColors.muted),
