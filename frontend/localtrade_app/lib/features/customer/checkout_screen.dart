@@ -11,8 +11,8 @@ import '../../core/utils/auth_guard.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/empty_state.dart';
-import 'customer_orders_screen.dart';
 import 'customer_profile_screen.dart';
+import 'order_success_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -150,15 +150,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       cart.clear();
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const CustomerOrdersScreen()),
+        MaterialPageRoute(builder: (_) => const OrderSuccessScreen()),
         (route) => route.isFirst,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Order placed successfully'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
+import '../core/utils/app_animations.dart';
 
 /// Shows a small circular widget that flies from [sourceContext] to
 /// [cartIconKey] and then fades out. Call [show] to trigger.
 class CartFlyAnimation {
   static OverlayEntry? _entry;
 
-  /// Triggers a fly-to-cart animation.
-  ///
-  /// [sourceContext] — the widget to fly from (e.g. the add-to-cart button).
-  /// [cartIconKey] — GlobalKey attached to the cart icon in the bottom nav.
   static void show({
     required BuildContext sourceContext,
     required GlobalKey cartIconKey,
@@ -136,8 +133,8 @@ class _FlyingWidgetState extends State<_FlyingWidget>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder2(
-      animation: _ctrl,
+    return TickBuilder(
+      listenable: _ctrl,
       builder: (context, _) {
         final t = _ctrl.value;
         final arcOffset =
@@ -175,21 +172,5 @@ class _FlyingWidgetState extends State<_FlyingWidget>
         );
       },
     );
-  }
-}
-
-/// A simple AnimatedWidget that rebuilds on each animation tick.
-class AnimatedBuilder2 extends AnimatedWidget {
-  final Widget Function(BuildContext, Widget?) builder;
-
-  const AnimatedBuilder2({
-    super.key,
-    required Animation<double> animation,
-    required this.builder,
-  }) : super(listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    return builder(context, null);
   }
 }

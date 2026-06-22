@@ -8,19 +8,18 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../core/utils/app_animations.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/app_button.dart';
 import 'checkout_screen.dart';
 
 final _priceFormat = NumberFormat('#,##0');
 
-/// Converts text to sentence case: first letter capitalized, rest lowercase.
 String _toSentenceCase(String text) {
   if (text.isEmpty) return text;
   return text[0].toUpperCase() + text.substring(1).toLowerCase();
 }
 
-/// Returns up to 2-letter initials from a vendor name for the avatar circle.
 String _vendorInitials(String name) {
   if (name.isEmpty) return '?';
   final words = name.trim().split(RegExp(r'\s+'));
@@ -122,7 +121,6 @@ class _CartScreenState extends State<CartScreen> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     children: [
-                      // Vendor group cards
                       ...cart.itemsByVendor.entries.map((entry) {
                         final rawName = entry.value.first.vendorName;
                         final vendorName =
@@ -134,12 +132,8 @@ class _CartScreenState extends State<CartScreen> {
                           cart: cart,
                         );
                       }),
-
-                      // Vendor note card
                       const SizedBox(height: 12),
                       _VendorNoteCard(noteController: _noteController),
-
-                      // Extra space so bottom bar doesn't cover content
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -180,7 +174,6 @@ class _CartScreenState extends State<CartScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Subtotal
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -195,7 +188,6 @@ class _CartScreenState extends State<CartScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            // Delivery
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -218,7 +210,6 @@ class _CartScreenState extends State<CartScreen> {
               padding: EdgeInsets.symmetric(vertical: 10),
               child: Divider(color: AppColors.divider, height: 1),
             ),
-            // Total — ink text, not coral
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -234,7 +225,7 @@ class _CartScreenState extends State<CartScreen> {
               label: 'Checkout',
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const CheckoutScreen()),
+                SlideFadePageRoute(builder: (_) => const CheckoutScreen()),
               ),
             ),
           ],
@@ -268,7 +259,7 @@ class _VendorGroupCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0D2B2620), // 5% ink
+            color: Color(0x0D2B2620),
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
@@ -277,10 +268,8 @@ class _VendorGroupCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Vendor header
           Row(
             children: [
-              // Initials circle
               Container(
                 width: 36,
                 height: 36,
@@ -304,26 +293,18 @@ class _VendorGroupCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      vendorName,
-                      style: AppTextStyles.cardTitle,
-                    ),
+                    Text(vendorName, style: AppTextStyles.cardTitle),
                     const SizedBox(height: 2),
-                    Text(
-                      'Pickup from vendor',
-                      style: AppTextStyles.caption,
-                    ),
+                    Text('Pickup from vendor', style: AppTextStyles.caption),
                   ],
                 ),
               ),
             ],
           ),
-          // Divider
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(color: AppColors.divider, height: 1),
           ),
-          // Items
           ...items.map(
             (item) => _CartItemTile(
               item: item,
@@ -338,9 +319,9 @@ class _VendorGroupCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Cart item tile
+// Cart item tile — animated quantity + animated removal
 // ---------------------------------------------------------------------------
-class _CartItemTile extends StatelessWidget {
+class _CartItemTile extends StatefulWidget {
   final CartItem item;
   final CartProvider cart;
   final VoidCallback onRemove;
@@ -352,22 +333,85 @@ class _CartItemTile extends StatelessWidget {
   });
 
   @override
+  State<_CartItemTile> createState() => _CartItemTileState();
+}
+
+class _CartItemTileState extends State<_CartItemTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _removeCtrl;
+  late final Animation<double> _removeSlide;
+  late final Animation<double> _removeSize;
+  bool _isRemoving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _removeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _removeSlide = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _removeCtrl, curve: Curves.easeInOut),
+    );
+    _removeSize = Tween(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _removeCtrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _removeCtrl.dispose();
+    super.dispose();
+  }
+
+  void _handleRemove() {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    if (reduceMotion) {
+      widget.onRemove();
+      return;
+    }
+    setState(() => _isRemoving = true);
+    _removeCtrl.forward().then((_) => widget.onRemove());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isRemoving) {
+      return TickBuilder(
+        listenable: _removeCtrl,
+        builder: (context, _) {
+          return Transform.translate(
+            offset: Offset(_removeSlide.value * 100, 0),
+            child: SizeTransition(
+              sizeFactor: _removeSize,
+              child: Opacity(
+                opacity: 1.0 - _removeSlide.value,
+                child: _buildContent(),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return _buildContent();
+  }
+
+  Widget _buildContent() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product image
           ClipRRect(
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             child: SizedBox(
               width: 64,
               height: 64,
-              child: item.imageUrl.isNotEmpty
+              child: widget.item.imageUrl.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: CloudinaryHelper.getOptimizedUrl(
-                        item.imageUrl,
+                        widget.item.imageUrl,
                         width: 200,
                       ),
                       fit: BoxFit.cover,
@@ -393,26 +437,25 @@ class _CartItemTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // Product info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title (sentence case) + trash icon inline
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
-                        _toSentenceCase(item.title),
-                        style: AppTextStyles.cardTitle.copyWith(height: 1.3),
+                        _toSentenceCase(widget.item.title),
+                        style:
+                            AppTextStyles.cardTitle.copyWith(height: 1.3),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: onRemove,
+                      onTap: _handleRemove,
                       child: const Padding(
                         padding: EdgeInsets.all(2),
                         child: Icon(
@@ -425,75 +468,24 @@ class _CartItemTile extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                // Quantity stepper + price
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Quantity stepper — coral-light pill, coral-dark icons
-                    Container(
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: AppColors.coralLight,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              if (item.quantity > 1) {
-                                cart.updateQuantity(
-                                    item.id, item.quantity - 1);
-                              } else {
-                                onRemove();
-                              }
-                            },
-                            behavior: HitTestBehavior.opaque,
-                            child: SizedBox(
-                              width: 32,
-                              height: 32,
-                              child: Icon(
-                                item.quantity > 1
-                                    ? Icons.remove_rounded
-                                    : Icons.delete_outline_rounded,
-                                size: 16,
-                                color: AppColors.coralDark,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 36,
-                            child: Text(
-                              '${item.quantity}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.ink,
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => cart.updateQuantity(
-                                item.id, item.quantity + 1),
-                            behavior: HitTestBehavior.opaque,
-                            child: const SizedBox(
-                              width: 32,
-                              height: 32,
-                              child: Icon(
-                                Icons.add_rounded,
-                                size: 16,
-                                color: AppColors.coralDark,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    _QuantityStepper(
+                      quantity: widget.item.quantity,
+                      onIncrement: () => widget.cart.updateQuantity(
+                          widget.item.id, widget.item.quantity + 1),
+                      onDecrement: () {
+                        if (widget.item.quantity > 1) {
+                          widget.cart.updateQuantity(
+                              widget.item.id, widget.item.quantity - 1);
+                        } else {
+                          _handleRemove();
+                        }
+                      },
                     ),
-                    // Price
                     Text(
-                      'Rs. ${_priceFormat.format((item.price * item.quantity).toInt())}',
+                      'Rs. ${_priceFormat.format((widget.item.price * widget.item.quantity).toInt())}',
                       style: AppTextStyles.cardTitle,
                     ),
                   ],
@@ -508,7 +500,97 @@ class _CartItemTile extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Vendor note card — separate white card with muted label
+// Animated quantity stepper — number slides up/down with AnimatedSwitcher
+// ---------------------------------------------------------------------------
+class _QuantityStepper extends StatelessWidget {
+  final int quantity;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
+
+  const _QuantityStepper({
+    required this.quantity,
+    required this.onIncrement,
+    required this.onDecrement,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 32,
+      decoration: BoxDecoration(
+        color: AppColors.coralLight,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onDecrement,
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Icon(
+                quantity > 1
+                    ? Icons.remove_rounded
+                    : Icons.delete_outline_rounded,
+                size: 16,
+                color: AppColors.coralDark,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 36,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) {
+                final isNewGreater = quantity > ((child.key as ValueKey<int>?)?.value ?? 0);
+                return FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: isNewGreater
+                          ? const Offset(0, 0.5)
+                          : const Offset(0, -0.5),
+                      end: Offset.zero,
+                    ).animate(anim),
+                    child: child,
+                  ),
+                );
+              },
+              child: Text(
+                '$quantity',
+                key: ValueKey('qty-$quantity'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
+                ),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onIncrement,
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox(
+              width: 32,
+              height: 32,
+              child: Icon(
+                Icons.add_rounded,
+                size: 16,
+                color: AppColors.coralDark,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Vendor note card
 // ---------------------------------------------------------------------------
 class _VendorNoteCard extends StatelessWidget {
   final TextEditingController noteController;
@@ -540,7 +622,8 @@ class _VendorNoteCard extends StatelessWidget {
             maxLines: 2,
             style: AppTextStyles.body,
             decoration: InputDecoration(
-              hintText: 'e.g. ripeness preference, allergies, special request',
+              hintText:
+                  'e.g. ripeness preference, allergies, special request',
               hintStyle: AppTextStyles.caption,
               filled: true,
               fillColor: AppColors.background,

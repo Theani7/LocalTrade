@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/cloudinary_helper.dart';
+import '../core/utils/app_animations.dart';
 import '../features/customer/product_details_screen.dart';
 
 final _priceFormat = NumberFormat('#,##0');
@@ -49,11 +50,14 @@ class ProductCard extends StatelessWidget {
         product['ratingsQuantity'] != null && product['ratingsQuantity'] > 0;
     final double rating = (product['ratingsAverage'] ?? 0).toDouble();
     final int reviewCount = product['ratingsQuantity'] ?? 0;
+    final String productId = product['_id'] ?? '';
 
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
+        SlideFadePageRoute(
+          builder: (_) => ProductDetailsScreen(product: product),
+        ),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -70,7 +74,7 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Image area — edge to edge ──
+            // ── Image area with Hero ──
             Expanded(
               flex: 5,
               child: Stack(
@@ -81,32 +85,35 @@ class ProductCard extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(12)),
-                      child: image.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: CloudinaryHelper.getOptimizedUrl(
-                                image,
-                                width: 400,
-                              ),
-                              fit: BoxFit.cover,
-                              memCacheWidth: 400,
-                              placeholder: (_, __) => Container(
-                                color: AppColors.surface,
-                                child: const Center(
-                                  child: Icon(Icons.inventory_2_outlined,
+                      child: Hero(
+                        tag: 'product-image-$productId',
+                        child: image.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: CloudinaryHelper.getOptimizedUrl(
+                                  image,
+                                  width: 400,
+                                ),
+                                fit: BoxFit.cover,
+                                memCacheWidth: 400,
+                                placeholder: (_, __) => Container(
+                                  color: AppColors.surface,
+                                  child: const Center(
+                                    child: Icon(Icons.inventory_2_outlined,
+                                        size: 32, color: AppColors.divider),
+                                  ),
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  color: AppColors.surface,
+                                  child: const Icon(Icons.inventory_2_outlined,
                                       size: 32, color: AppColors.divider),
                                 ),
-                              ),
-                              errorWidget: (_, __, ___) => Container(
+                              )
+                            : Container(
                                 color: AppColors.surface,
                                 child: const Icon(Icons.inventory_2_outlined,
                                     size: 32, color: AppColors.divider),
                               ),
-                            )
-                          : Container(
-                              color: AppColors.surface,
-                              child: const Icon(Icons.inventory_2_outlined,
-                                  size: 32, color: AppColors.divider),
-                            ),
+                      ),
                     ),
                   ),
                   // Category badge
@@ -178,13 +185,12 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // ── Info area — sized to content ──
+            // ── Info area ──
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Vendor name
                   if (vendorName.isNotEmpty)
                     Text(
                       vendorName,
@@ -196,8 +202,6 @@ class ProductCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   if (vendorName.isNotEmpty) const SizedBox(height: 2),
-
-                  // Product title
                   Text(
                     _sentenceCase(title),
                     style: const TextStyle(
@@ -210,8 +214,6 @@ class ProductCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-
-                  // Trust signal: rating + review count
                   if (hasRating)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
@@ -239,8 +241,6 @@ class ProductCard extends StatelessWidget {
                         ],
                       ),
                     ),
-
-                  // Short description snippet
                   if (description.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
@@ -255,7 +255,6 @@ class ProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-
                   // Price + Add to cart
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -289,21 +288,7 @@ class ProductCard extends StatelessWidget {
                       if (showCartButton &&
                           !isOutOfStock &&
                           onAddToCart != null)
-                        GestureDetector(
-                          onTap: onAddToCart,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.coral,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                                Icons.add_shopping_cart_rounded,
-                                size: 18,
-                                color: AppColors.ink),
-                          ),
-                        ),
+                        _CartButton(onTap: onAddToCart!),
                     ],
                   ),
                 ],
@@ -311,6 +296,73 @@ class ProductCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Cart button with scale tap animation.
+class _CartButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _CartButton({required this.onTap});
+
+  @override
+  State<_CartButton> createState() => _CartButtonState();
+}
+
+class _CartButtonState extends State<_CartButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.15), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.15, end: 1.0), weight: 60),
+    ]).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+
+    return GestureDetector(
+      onTap: () {
+        widget.onTap();
+        if (!reduceMotion) _ctrl.forward(from: 0.0);
+      },
+      child: TickBuilder(
+        listenable: _ctrl,
+        builder: (context, _) {
+          return Transform.scale(
+            scale: _scaleAnim.value,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.coral,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.add_shopping_cart_rounded,
+                size: 18,
+                color: AppColors.ink,
+              ),
+            ),
+          );
+        },
       ),
     );
   }

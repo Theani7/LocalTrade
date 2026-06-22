@@ -125,26 +125,29 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 fit: StackFit.expand,
                 children: [
                   images.isNotEmpty
-                      ? PageView.builder(
-                          controller: _pageController,
-                          itemCount: images.length,
-                          onPageChanged: (page) =>
-                              setState(() => _currentPage = page),
-                          itemBuilder: (context, index) {
-                            return CachedNetworkImage(
-                              imageUrl: CloudinaryHelper.getOptimizedUrl(
-                                  images[index],
-                                  width: 800),
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                                  Container(color: AppColors.background),
-                              errorWidget: (context, url, error) => Container(
-                                color: AppColors.background,
-                                child: const Icon(Icons.inventory_2_outlined,
-                                    size: 64, color: AppColors.muted),
-                              ),
-                            );
-                          },
+                      ? Hero(
+                          tag: 'product-image-${widget.product['_id'] ?? ''}',
+                          child: PageView.builder(
+                            controller: _pageController,
+                            itemCount: images.length,
+                            onPageChanged: (page) =>
+                                setState(() => _currentPage = page),
+                            itemBuilder: (context, index) {
+                              return CachedNetworkImage(
+                                imageUrl: CloudinaryHelper.getOptimizedUrl(
+                                    images[index],
+                                    width: 800),
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) =>
+                                    Container(color: AppColors.background),
+                                errorWidget: (context, url, error) => Container(
+                                  color: AppColors.background,
+                                  child: const Icon(Icons.inventory_2_outlined,
+                                      size: 64, color: AppColors.muted),
+                                ),
+                              );
+                            },
+                          ),
                         )
                       : Container(
                           color: AppColors.background,
