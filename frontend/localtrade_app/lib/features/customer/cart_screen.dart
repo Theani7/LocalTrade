@@ -177,9 +177,12 @@ class _CartScreenState extends State<CartScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Subtotal ($totalQty item${totalQty == 1 ? '' : 's'})',
-                  style: AppTextStyles.bodyMuted,
+                Flexible(
+                  child: Text(
+                    'Subtotal ($totalQty item${totalQty == 1 ? '' : 's'})',
+                    style: AppTextStyles.bodyMuted,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 Text(
                   'Rs. ${_priceFormat.format(subtotal.toInt())}',
@@ -544,7 +547,8 @@ class _QuantityStepper extends StatelessWidget {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               transitionBuilder: (child, anim) {
-                final isNewGreater = quantity > ((child.key as ValueKey<int>?)?.value ?? 0);
+                final prevQty = (child.key as ValueKey<int>?)?.value ?? 0;
+                final isNewGreater = quantity > prevQty;
                 return FadeTransition(
                   opacity: anim,
                   child: SlideTransition(
@@ -560,7 +564,7 @@ class _QuantityStepper extends StatelessWidget {
               },
               child: Text(
                 '$quantity',
-                key: ValueKey('qty-$quantity'),
+                key: ValueKey(quantity),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13,

@@ -13,11 +13,20 @@ class CartFlyAnimation {
   }) {
     dismiss();
 
-    final sourceBox =
-        sourceContext.findRenderObject() as RenderBox?;
     final cartBox =
         cartIconKey.currentContext?.findRenderObject() as RenderBox?;
-    if (sourceBox == null || cartBox == null) return;
+    if (cartBox == null) return;
+
+    RenderBox? sourceBox;
+    RenderObject? renderObj = sourceContext.findRenderObject();
+    while (renderObj != null) {
+      if (renderObj is RenderBox) {
+        sourceBox = renderObj;
+        break;
+      }
+      renderObj = renderObj.parent;
+    }
+    if (sourceBox == null) return;
 
     final sourcePos = sourceBox.localToGlobal(Offset.zero);
     final cartPos = cartBox.localToGlobal(Offset.zero);
