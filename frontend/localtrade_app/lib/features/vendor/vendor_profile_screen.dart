@@ -23,7 +23,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   late TextEditingController _fullNameController;
   late TextEditingController _shopNameController;
   late TextEditingController _phoneController;
-  late TextEditingController _addressController;
+  late TextEditingController _streetController;
+  late TextEditingController _cityController;
+  late TextEditingController _stateController;
+  late TextEditingController _zipController;
   late TextEditingController _descriptionController;
   late TextEditingController _hoursController;
 
@@ -59,18 +62,14 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     _phoneController =
         TextEditingController(text: profile?['phone'] ?? '');
     final rawAddr = profile?['address'];
-    String addrText = '';
-    if (rawAddr is Map) {
-      final parts = <String>[
-        if ((rawAddr['street'] ?? '').isNotEmpty) rawAddr['street'],
-        if ((rawAddr['city'] ?? '').isNotEmpty) rawAddr['city'],
-        if ((rawAddr['state'] ?? '').isNotEmpty) rawAddr['state'],
-      ];
-      addrText = parts.join(', ');
-    } else {
-      addrText = rawAddr?.toString() ?? '';
-    }
-    _addressController = TextEditingController(text: addrText);
+    _streetController = TextEditingController(
+        text: (rawAddr is Map) ? (rawAddr['street'] ?? '') : '');
+    _cityController = TextEditingController(
+        text: (rawAddr is Map) ? (rawAddr['city'] ?? '') : '');
+    _stateController = TextEditingController(
+        text: (rawAddr is Map) ? (rawAddr['state'] ?? '') : '');
+    _zipController = TextEditingController(
+        text: (rawAddr is Map) ? (rawAddr['zipCode'] ?? '') : '');
     _descriptionController =
         TextEditingController(text: profile?['businessDescription'] ?? '');
     _hoursController = TextEditingController(
@@ -86,7 +85,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     _fullNameController.dispose();
     _shopNameController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
+    _streetController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _zipController.dispose();
     _descriptionController.dispose();
     _hoursController.dispose();
     super.dispose();
@@ -124,7 +126,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       'fullName': _fullNameController.text.trim(),
       'shopName': _shopNameController.text.trim(),
       'phone': _phoneController.text.trim(),
-      'address': jsonEncode({'city': _addressController.text.trim()}),
+      'address': jsonEncode({
+        'street': _streetController.text.trim(),
+        'city': _cityController.text.trim(),
+        'state': _stateController.text.trim(),
+        'zipCode': _zipController.text.trim(),
+      }),
       'businessDescription': _descriptionController.text.trim(),
       'openingHours': _hoursController.text.trim(),
       'categories': json.encode(_selectedCategories),
@@ -203,15 +210,24 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                       placeholder: "e.g. Maya's Dairy, Hari Crafts",
                     ),
                     _buildFieldRow(
-                      field: 'address',
-                      label: 'Address',
+                      field: 'street',
+                      label: 'Street / Area',
                       required: true,
-                      icon: Icons.location_on_outlined,
+                      icon: Icons.signpost_outlined,
                       iconBg: AppColors.blueLight,
                       iconColor: AppColors.blueDark,
-                      controller: _addressController,
-                      placeholder: 'Thamel, Kathmandu...',
+                      controller: _streetController,
                     ),
+                    _buildFieldRow(
+                      field: 'city',
+                      label: 'City',
+                      required: true,
+                      icon: Icons.location_city_outlined,
+                      iconBg: AppColors.coralLight,
+                      iconColor: AppColors.coralDark,
+                      controller: _cityController,
+                    ),
+                    _buildAddressRowPair(),
                     _buildFieldRow(
                       field: 'hours',
                       label: 'Opening hours',
@@ -385,6 +401,151 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         ],
       ),
       child: Column(children: children),
+    );
+  }
+
+  Widget _buildAddressRowPair() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.divider, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildCompactField(
+              field: 'state',
+              label: 'State',
+              required: true,
+              icon: Icons.map_outlined,
+              iconBg: AppColors.blueLight,
+              iconColor: AppColors.blueDark,
+              controller: _stateController,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildCompactField(
+              field: 'zip',
+              label: 'ZIP code',
+              required: true,
+              icon: Icons.pin_drop_outlined,
+              iconBg: AppColors.coralLight,
+              iconColor: AppColors.coralDark,
+              controller: _zipController,
+              keyboardType: TextInputType.number,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactField({
+    required String field,
+    required String label,
+    required bool required,
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required TextEditingController controller,
+    TextInputType? keyboardType,
+  }) {
+    final isEditing = _editingFields.contains(field);
+    final hasValue = controller.text.isNotEmpty;
+
+    if (isEditing) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              text: label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: required ? AppColors.coralDark : AppColors.muted,
+              ),
+              children: required
+                  ? const [
+                      TextSpan(
+                          text: ' *',
+                          style: TextStyle(color: AppColors.coralDark)),
+                    ]
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            height: 36,
+            child: TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: keyboardType,
+              style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.ink),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      const BorderSide(color: AppColors.coral, width: 1.5),
+                ),
+              ),
+              onSubmitted: (_) => _toggleEdit(field),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => _toggleEdit(field),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              text: label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: required ? AppColors.coralDark : AppColors.muted,
+              ),
+              children: required
+                  ? const [
+                      TextSpan(
+                          text: ' *',
+                          style: TextStyle(color: AppColors.coralDark)),
+                    ]
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            hasValue ? controller.text : label,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
+              color: hasValue ? AppColors.ink : AppColors.muted,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
