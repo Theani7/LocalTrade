@@ -95,14 +95,13 @@ productSchema.virtual('isAvailable').get(function() {
   return this.productStatus === 'Available' && this.stockQuantity > 0;
 });
 
-// Middleware to update status based on stock
+// Middleware to update status based on stock — only if productStatus wasn't explicitly set
 productSchema.pre('save', function() {
-  if (this.productStatus !== 'Inactive') {
-    if (this.stockQuantity <= 0) {
-      this.productStatus = 'OutOfStock';
-    } else {
-      this.productStatus = 'Available';
-    }
+  if (this.isModified('productStatus')) return;
+  if (this.stockQuantity <= 0) {
+    this.productStatus = 'OutOfStock';
+  } else if (this.productStatus === 'OutOfStock') {
+    this.productStatus = 'Available';
   }
 });
 

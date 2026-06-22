@@ -41,8 +41,6 @@ exports.markAsRead = catchAsync(async (req, res, next) => {
 // @route   PATCH /api/v1/notifications/mark-all-read
 // @access  Private
 exports.markAllAsRead = catchAsync(async (req, res, next) => {
-  console.log(`[DEBUG] MarkAllRead request received for user: ${req.user.id}`);
-  
   const result = await Notification.updateMany(
     { recipient: req.user.id, isRead: { $ne: true } }, 
     { isRead: true }
@@ -52,8 +50,6 @@ exports.markAllAsRead = catchAsync(async (req, res, next) => {
     recipient: req.user.id, 
     isRead: false 
   });
-
-  console.log(`[DEBUG] MarkAllRead result for ${req.user.id}: Modified: ${result.modifiedCount}, Unread now: ${unreadCountAfter}`);
 
   res.status(200).json({
     success: true,

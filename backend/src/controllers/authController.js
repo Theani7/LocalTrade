@@ -130,10 +130,6 @@ exports.updateFcmToken = catchAsync(async (req, res, next) => {
 // @route   PATCH /api/v1/auth/profile
 // @access  Private
 exports.updateProfile = catchAsync(async (req, res, next) => {
-  console.log('--- UPDATE PROFILE HIT ---');
-  console.log('Body:', req.body);
-  console.log('File:', req.file ? 'Attached' : 'None');
-  
   const { fullName, phone, address, shopName, businessDescription, openingHours, categories } = req.body;
   
   const updateData = {};
@@ -155,10 +151,8 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
           state: parsed.state || '',
           zipCode: parsed.zipCode || '',
         };
-        console.log('Parsed and set updateData.address:', updateData.address);
       }
     } catch (e) {
-      console.log('Parse error for address:', e);
       // If parse fails, skip address update
     }
   }

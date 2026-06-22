@@ -23,6 +23,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   let totalAmount = 0;
   const orderProducts = [];
   const processedProducts = [];
+  let vendorId = null;
 
   try {
     for (const item of items) {
@@ -55,6 +56,9 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 
       processedProducts.push({ id: productId, quantity: item.quantity });
 
+      // Capture vendorId from the product (server-side, not from client)
+      if (!vendorId) vendorId = updatedProduct.vendorId;
+
       // Auto-update status if stock hits zero (The model pre-save middleware will also handle this, 
       // but findOneAndUpdate doesn't always trigger pre-save unless explicitly handled or saved again)
       if (updatedProduct.stockQuantity === 0) {
@@ -70,10 +74,10 @@ exports.createOrder = catchAsync(async (req, res, next) => {
       });
     }
 
-    // 2) Create order record
+    // 2) Create order record — vendorId derived from product, not from client request
     const order = await Order.create({
       customerId: req.user.id,
-      vendorId: req.body.vendorId || items[0].vendorId,
+      vendorId,
       products: orderProducts,
       totalAmount: totalAmount, // ALWAYS use server-calculated total
       shippingAddress: req.body.shippingAddress,
