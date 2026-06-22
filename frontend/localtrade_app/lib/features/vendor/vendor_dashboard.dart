@@ -13,7 +13,6 @@ import 'vendor_inventory_screen.dart';
 import 'vendor_profile_screen.dart';
 import 'add_edit_product_screen.dart';
 import '../customer/notification_screen.dart';
-import '../auth/login_screen.dart';
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -261,11 +260,6 @@ class VendorOverviewTab extends StatelessWidget {
                                 ),
                               );
                             },
-                          ),
-                          const SizedBox(width: 8),
-                          _iconButton(
-                            icon: Icons.logout_rounded,
-                            onTap: () => _showLogoutDialog(context),
                           ),
                         ],
                       ),
@@ -596,62 +590,6 @@ class VendorOverviewTab extends StatelessWidget {
             'Orders from customers will appear here',
             style: AppTextStyles.caption,
             textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  Widget _iconButton({required IconData icon, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.ink.withValues(alpha: 0.06),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(icon, size: 20, color: AppColors.ink),
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: Text('Logout', style: AppTextStyles.sectionHeading),
-        content: Text('Are you sure you want to log out?', style: AppTextStyles.bodyMuted),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTextStyles.bodyMuted),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              minimumSize: const Size(100, 40),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-            child: const Text('Logout'),
           ),
         ],
       ),
