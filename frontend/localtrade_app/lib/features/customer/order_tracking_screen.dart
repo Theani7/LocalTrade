@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 import '../../core/network/order_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -68,64 +69,102 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTrackingCard(),
+                  _buildOrderHeader(),
+                  const SizedBox(height: AppSpacing.gapLg),
+                  _buildTimelineCard(),
                   const SizedBox(height: AppSpacing.gapLg),
                   _buildItemsCard(),
                   const SizedBox(height: AppSpacing.gapLg),
                   _buildDeliveryCard(),
                   const SizedBox(height: AppSpacing.gapLg),
-                  _buildPaymentCard(),
-                  const SizedBox(height: 24),
+                  _buildPaymentSummary(),
+                  const SizedBox(height: AppSpacing.gapLg),
+                  _buildActionButtons(),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildTrackingCard() {
+  // ── Order Header ──────────────────────────────────────────────────────────
+  Widget _buildOrderHeader() {
     final orderId = _order['_id'].toString();
     final shortId = orderId.length > 6
         ? orderId.substring(orderId.length - 6).toUpperCase()
         : orderId.toUpperCase();
     final status = _order['orderStatus'];
+    final dateStr = _order['createdAt'] ?? DateTime.now().toString();
+    final date = DateTime.parse(dateStr).toLocal();
+    final formattedDate = DateFormat('MMM d, yyyy').format(date);
+    final formattedTime = DateFormat('h:mm a').format(date);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _statusColor(status).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: _statusColor(status).withValues(alpha: 0.15),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _statusColor(status),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(_statusIcon(status), size: 20, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '#$shortId',
+                      style: AppTextStyles.cardTitle.copyWith(letterSpacing: 0.3),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$formattedDate at $formattedTime',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
+              _buildStatusBadge(status),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Timeline Card ─────────────────────────────────────────────────────────
+  Widget _buildTimelineCard() {
+    final status = _order['orderStatus'];
     final isCancelled = status == 'Cancelled';
+    final dateStr = _order['createdAt'] ?? DateTime.now().toString();
+    final orderDate = DateTime.parse(dateStr).toLocal();
 
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '#$shortId',
-                style: AppTextStyles.cardTitle.copyWith(letterSpacing: 0.3),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: _statusColor(status).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _statusColor(status),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.gapXl),
+          Text('Order Progress', style: AppTextStyles.cardTitle),
+          const SizedBox(height: AppSpacing.gapLg),
           if (isCancelled)
             _buildCancelledBanner()
           else
-            _buildTimeline(status),
+            _buildTimeline(status, orderDate),
         ],
       ),
     );
@@ -164,11 +203,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
   }
 
-  Widget _buildTimeline(String currentStatus) {
+  Widget _buildTimeline(String currentStatus, DateTime orderDate) {
     final steps = [
-      ('Pending', 'Order received'),
-      ('Confirmed', 'Vendor confirmed'),
-      ('Delivered', 'Delivered to you'),
+      ('Pending', 'Order received', Icons.receipt_outlined),
+      ('Confirmed', 'Vendor confirmed', Icons.storefront_outlined),
+      ('Delivered', 'Delivered to you', Icons.check_circle_outline_rounded),
     ];
 
     int currentIdx = steps.indexWhere((s) => s.$1 == currentStatus);
@@ -176,22 +215,38 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
     return Column(
       children: List.generate(steps.length, (idx) {
-        final (name, subtitle) = steps[idx];
+        final (name, subtitle, stepIcon) = steps[idx];
         final isCompleted = idx <= currentIdx;
         final isCurrent = idx == currentIdx;
         final isLast = idx == steps.length - 1;
+
+        // Calculate relative time for each step
+        String stepTime = '';
+        if (isCompleted) {
+          if (idx == 0) {
+            stepTime = DateFormat('MMM d, h:mm a').format(orderDate);
+          } else if (idx == 1 && _order['confirmedAt'] != null) {
+            stepTime = DateFormat('MMM d, h:mm a').format(
+              DateTime.parse(_order['confirmedAt']).toLocal(),
+            );
+          } else if (idx == 2 && _order['deliveredAt'] != null) {
+            stepTime = DateFormat('MMM d, h:mm a').format(
+              DateTime.parse(_order['deliveredAt']).toLocal(),
+            );
+          }
+        }
 
         return IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
-                width: 28,
+                width: 32,
                 child: Column(
                   children: [
                     Container(
-                      width: 28,
-                      height: 28,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
                         color: isCompleted ? AppColors.coral : Colors.transparent,
                         shape: BoxShape.circle,
@@ -201,8 +256,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         ),
                       ),
                       child: isCompleted
-                          ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
-                          : null,
+                          ? Icon(stepIcon, size: 14, color: Colors.white)
+                          : Icon(stepIcon, size: 14, color: AppColors.muted),
                     ),
                     if (!isLast)
                       Expanded(
@@ -219,7 +274,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
-                    top: 3,
+                    top: 4,
                     bottom: isLast ? 0 : AppSpacing.gapMd,
                   ),
                   child: Column(
@@ -242,6 +297,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                           color: isCurrent ? AppColors.muted : AppColors.muted.withValues(alpha: 0.5),
                         ),
                       ),
+                      if (stepTime.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          stepTime,
+                          style: AppTextStyles.caption.copyWith(fontSize: 11),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -253,6 +315,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
   }
 
+  // ── Items Card ────────────────────────────────────────────────────────────
   Widget _buildItemsCard() {
     final products = _order['products'] as List;
 
@@ -260,26 +323,14 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Items',
-            style: AppTextStyles.cardTitle,
-          ),
-          const SizedBox(height: AppSpacing.gapLg),
-          ...products.map((p) => _buildItemRow(p)),
-          const Divider(color: AppColors.divider, height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Subtotal',
-                style: TextStyle(fontSize: 13, color: AppColors.muted),
-              ),
-              Text(
-                'Rs. ${_order['totalAmount']}',
-                style: AppTextStyles.price,
-              ),
+              Text('Items (${products.length})', style: AppTextStyles.cardTitle),
             ],
           ),
+          const SizedBox(height: AppSpacing.gapLg),
+          ...products.map((p) => _buildItemRow(p)),
         ],
       ),
     );
@@ -294,6 +345,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             height: 96,
           )
         : '';
+    final quantity = p['quantity'] ?? 1;
+    final unitPrice = p['price'] ?? 0;
+    final lineTotal = unitPrice * quantity;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.gapLg),
@@ -302,8 +356,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             child: Container(
-              width: 48,
-              height: 48,
+              width: 52,
+              height: 52,
               color: AppColors.background,
               child: imageUrl.isNotEmpty
                   ? CachedNetworkImage(
@@ -311,26 +365,14 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(
                         color: AppColors.divider,
-                        child: const Icon(
-                          Icons.image_outlined,
-                          size: 20,
-                          color: AppColors.muted,
-                        ),
+                        child: const Icon(Icons.image_outlined, size: 20, color: AppColors.muted),
                       ),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.divider,
-                        child: const Icon(
-                          Icons.broken_image_outlined,
-                          size: 20,
-                          color: AppColors.muted,
-                        ),
+                        child: const Icon(Icons.broken_image_outlined, size: 20, color: AppColors.muted),
                       ),
                     )
-                  : const Icon(
-                      Icons.image_outlined,
-                      size: 20,
-                      color: AppColors.muted,
-                    ),
+                  : const Icon(Icons.image_outlined, size: 20, color: AppColors.muted),
             ),
           ),
           const SizedBox(width: AppSpacing.gapLg),
@@ -339,41 +381,42 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product['title'],
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.ink,
-                  ),
+                  product['title'] ?? 'Product',
+                  style: AppTextStyles.cardTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${p['quantity']} x Rs. ${p['price']}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      'Qty: $quantity',
+                      style: AppTextStyles.caption,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'x Rs. $unitPrice',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           Text(
-            'Rs. ${p['price'] * p['quantity']}',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.coral,
-            ),
+            'Rs. $lineTotal',
+            style: AppTextStyles.cardTitle.copyWith(color: AppColors.ink),
           ),
         ],
       ),
     );
   }
 
+  // ── Delivery Card ─────────────────────────────────────────────────────────
   Widget _buildDeliveryCard() {
     final rawAddress = _order['shippingAddress'] ?? '';
     final notes = _order['notes'];
 
-    // Parse structured address (new format) or legacy string
     String displayName = '';
     String displayAddress = '';
 
@@ -396,18 +439,19 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Delivery Details',
-            style: AppTextStyles.cardTitle,
-          ),
+          Text('Delivery Details', style: AppTextStyles.cardTitle),
           const SizedBox(height: AppSpacing.gapLg),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 18,
-                color: AppColors.coral,
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.coralLight,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.location_on_outlined, size: 18, color: AppColors.coralDark),
               ),
               const SizedBox(width: AppSpacing.gapLg),
               Expanded(
@@ -415,35 +459,42 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (displayName.isNotEmpty)
-                      Text(
-                        displayName,
-                        style: AppTextStyles.cardTitle.copyWith(height: 1.4),
-                      ),
+                      Text(displayName, style: AppTextStyles.cardTitle.copyWith(height: 1.4)),
                     if (displayAddress.isNotEmpty)
-                      Text(
-                        displayAddress,
-                        style: AppTextStyles.caption.copyWith(height: 1.4),
-                      ),
+                      Text(displayAddress, style: AppTextStyles.caption.copyWith(height: 1.4)),
                   ],
                 ),
               ),
             ],
           ),
           if (notes != null && notes.toString().isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.gapXl),
+            const SizedBox(height: AppSpacing.gapLg),
+            const Divider(color: AppColors.divider, height: 1),
+            const SizedBox(height: AppSpacing.gapLg),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.notes_rounded,
-                  size: 18,
-                  color: AppColors.muted,
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.blueLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.notes_rounded, size: 18, color: AppColors.blueDark),
                 ),
                 const SizedBox(width: AppSpacing.gapLg),
                 Expanded(
-                  child: Text(
-                    notes.toString(),
-                    style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Delivery Notes', style: AppTextStyles.label),
+                      const SizedBox(height: 4),
+                      Text(
+                        notes.toString(),
+                        style: AppTextStyles.bodyMuted.copyWith(fontStyle: FontStyle.italic),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -454,24 +505,157 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
   }
 
-  Widget _buildPaymentCard() {
+  // ── Payment Summary ───────────────────────────────────────────────────────
+  Widget _buildPaymentSummary() {
+    final products = _order['products'] as List;
+    final totalAmount = _order['totalAmount'] ?? 0;
+
+    // Calculate subtotal
+    int subtotal = 0;
+    for (final p in products) {
+      final quantity = (p['quantity'] ?? 1) as int;
+      final price = (p['price'] ?? 0) as int;
+      subtotal += price * quantity;
+    }
+
     return _Card(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Total Amount',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.muted,
-            ),
-          ),
-          Text(
-            'Rs. ${_order['totalAmount']}',
-            style: AppTextStyles.screenTitle,
+          Text('Payment Summary', style: AppTextStyles.cardTitle),
+          const SizedBox(height: AppSpacing.gapLg),
+          _buildPaymentRow('Subtotal', 'Rs. $subtotal'),
+          const SizedBox(height: 8),
+          _buildPaymentRow('Delivery', 'Free'),
+          const SizedBox(height: 8),
+          const Divider(color: AppColors.divider, height: 1),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total', style: AppTextStyles.cardTitle),
+              Text('Rs. $totalAmount', style: AppTextStyles.price),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: AppTextStyles.bodyMuted),
+        Text(value, style: AppTextStyles.body),
+      ],
+    );
+  }
+
+  // ── Action Buttons ────────────────────────────────────────────────────────
+  Widget _buildActionButtons() {
+    final status = _order['orderStatus'];
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Contact vendor coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            icon: const Icon(Icons.chat_outlined, size: 18),
+            label: Text('Contact Vendor', style: AppTextStyles.cardTitle.copyWith(fontSize: 13)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.ink,
+              side: const BorderSide(color: AppColors.divider),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+        if (status == 'Delivered') ...[
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Reorder coming soon'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.replay_rounded, size: 18),
+              label: Text('Reorder', style: AppTextStyles.cardTitle.copyWith(fontSize: 13, color: AppColors.ink)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.coral,
+                foregroundColor: AppColors.ink,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  Widget _buildStatusBadge(String status) {
+    Color bgColor;
+    Color textColor;
+    String label;
+
+    switch (status) {
+      case 'Pending':
+        bgColor = AppColors.warningLight;
+        textColor = AppColors.warningDark;
+        label = 'Pending';
+        break;
+      case 'Confirmed':
+        bgColor = AppColors.blueLight;
+        textColor = AppColors.blueDark;
+        label = 'Confirmed';
+        break;
+      case 'Delivered':
+        bgColor = AppColors.successLight;
+        textColor = AppColors.successDark;
+        label = 'Delivered';
+        break;
+      case 'Cancelled':
+        bgColor = AppColors.coralLight;
+        textColor = AppColors.coralDark;
+        label = 'Cancelled';
+        break;
+      default:
+        bgColor = AppColors.warningLight;
+        textColor = AppColors.warningDark;
+        label = status;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
       ),
     );
   }
@@ -488,6 +672,21 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         return AppColors.danger;
       default:
         return AppColors.muted;
+    }
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status) {
+      case 'Pending':
+        return Icons.schedule_rounded;
+      case 'Confirmed':
+        return Icons.check_rounded;
+      case 'Delivered':
+        return Icons.check_circle_outline_rounded;
+      case 'Cancelled':
+        return Icons.cancel_outlined;
+      default:
+        return Icons.schedule_rounded;
     }
   }
 }
