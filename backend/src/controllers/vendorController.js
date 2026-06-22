@@ -96,7 +96,25 @@ exports.updateVendorProfile = catchAsync(async (req, res, next) => {
   
   const updateData = {};
   if (shopName !== undefined) updateData.shopName = shopName;
-  if (address !== undefined) updateData.address = address;
+  if (address !== undefined && address !== null && address !== '') {
+    try {
+      const parsed = typeof address === 'string' ? JSON.parse(address) : address;
+      if (typeof parsed === 'object' && parsed !== null) {
+        updateData.address = {
+          fullName: parsed.fullName || '',
+          phone: parsed.phone || '',
+          flatHouse: parsed.flatHouse || '',
+          street: parsed.street || '',
+          landmark: parsed.landmark || '',
+          city: parsed.city || '',
+          state: parsed.state || '',
+          zipCode: parsed.zipCode || '',
+        };
+      }
+    } catch (e) {
+      // If parse fails, skip address update
+    }
+  }
   if (phone !== undefined) updateData.phone = phone;
   if (openingHours !== undefined) updateData.openingHours = openingHours;
   
