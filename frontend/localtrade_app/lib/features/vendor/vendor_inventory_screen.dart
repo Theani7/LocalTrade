@@ -6,7 +6,6 @@ import '../../providers/product_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/utils/cloudinary_helper.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'add_edit_product_screen.dart';
@@ -119,7 +118,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                     onRefresh: provider.fetchMyProducts,
                     color: AppColors.coral,
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                       itemCount: filtered.length + 1,
                       itemBuilder: (context, index) {
                         if (index == filtered.length) {
@@ -236,36 +235,39 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
       ('Unavailable', AppColors.mutedLight, AppColors.muted),
     ];
 
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final (label, bgColor, textColor) = filters[index];
-          final isActive = _activeFilter == label;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: SizedBox(
+        height: 40,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: filters.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final (label, bgColor, textColor) = filters[index];
+            final isActive = _activeFilter == label;
 
-          return GestureDetector(
-            onTap: () => setState(() => _activeFilter = label),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: isActive ? bgColor : bgColor.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: textColor,
+            return GestureDetector(
+              onTap: () => setState(() => _activeFilter = label),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isActive ? bgColor : bgColor.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -306,7 +308,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                     color: AppColors.mutedLight,
                     child: image.isNotEmpty
                         ? CachedNetworkImage(
-                            imageUrl: CloudinaryHelper.getOptimizedUrl(image, width: 112),
+                            imageUrl: image,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(
                               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted),
