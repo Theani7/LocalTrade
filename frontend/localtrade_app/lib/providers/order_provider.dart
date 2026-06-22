@@ -69,11 +69,11 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> cancelOrder(String id) async {
+  Future<bool> cancelOrder(String id, {String? reason, String? feedback}) async {
     _setLoading(true);
     _error = null;
     try {
-      await _orderService.cancelOrder(id);
+      await _orderService.cancelOrder(id, reason: reason, feedback: feedback);
       await fetchMyOrders();
       await fetchVendorOrders();
       return true;

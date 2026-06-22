@@ -118,7 +118,7 @@ exports.getOrder = catchAsync(async (req, res, next) => {
   const order = await Order.findById(req.params.id)
     .populate('customerId', 'fullName phone email')
     .populate('vendorId', 'fullName shopName phone address')
-    .populate('products.product', 'title images');
+    .populate('products.product', 'title images stockQuantity');
 
   if (!order) {
     return next(new AppError('No order found with that ID', 404));
@@ -146,7 +146,7 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 exports.getMyOrders = catchAsync(async (req, res, next) => {
   const orders = await Order.find({ customerId: req.user.id })
     .populate('vendorId', 'shopName fullName')
-    .populate('products.product', 'title images')
+    .populate('products.product', 'title images stockQuantity')
     .sort('-createdAt');
 
   res.status(200).json({
@@ -158,12 +158,10 @@ exports.getMyOrders = catchAsync(async (req, res, next) => {
 });
 
 // @desc    Get vendor orders
-// @route   GET /api/v1/orders/vendor-orders
-// @access  Private/Vendor
 exports.getVendorOrders = catchAsync(async (req, res, next) => {
   const orders = await Order.find({ vendorId: req.user.id })
     .populate('customerId', 'fullName phone')
-    .populate('products.product', 'title images')
+    .populate('products.product', 'title images stockQuantity')
     .sort('-createdAt');
 
   res.status(200).json({
@@ -246,6 +244,8 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   }
 
   order.orderStatus = 'Cancelled';
+  order.cancellationReason = req.body.reason || undefined;
+  order.cancellationFeedback = req.body.feedback || undefined;
   await order.save();
 
   // Rollback stock for all products in this order

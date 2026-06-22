@@ -53,6 +53,8 @@ const orderSchema = new mongoose.Schema(
       required: [true, 'Order must have a shipping address'],
     },
     notes: String,
+    cancellationReason: String,
+    cancellationFeedback: String,
   },
   {
     timestamps: true,

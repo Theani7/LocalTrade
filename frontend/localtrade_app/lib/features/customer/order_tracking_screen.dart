@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../core/network/order_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/cloudinary_helper.dart';
+import '../../providers/order_provider.dart';
 import '../../widgets/skeleton_loaders.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
@@ -30,18 +32,102 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   void _fetchOrder() async {
     try {
       final result = await _orderService.getOrder(widget.orderId);
-      setState(() {
-        _order = result['data']['order'];
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() {
+          _order = result['data']['order'];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString())),
         );
       }
     }
+  }
+
+  // ── ETA Logic ─────────────────────────────────────────────────────────────
+  String _getEtaText() {
+    final status = _order['orderStatus'];
+    final dateStr = _order['createdAt'] ?? DateTime.now().toString();
+    final orderDate = DateTime.parse(dateStr).toLocal();
+    final now = DateTime.now();
+
+    switch (status) {
+      case 'Delivered':
+        return 'Delivered';
+      case 'Cancelled':
+        return 'Cancelled';
+      case 'Confirmed':
+        final deliveryDate = orderDate.add(const Duration(days: 1));
+        final remaining = deliveryDate.difference(now);
+        if (remaining.isNegative || remaining.inHours < 1) {
+          return 'Arriving today';
+        } else if (remaining.inHours < 24) {
+          return 'Arriving in ${remaining.inHours}h';
+        } else {
+          return 'Expected ${DateFormat('MMM d').format(deliveryDate)}';
+        }
+      case 'Pending':
+      default:
+        final deliveryDate = orderDate.add(const Duration(days: 2));
+        final remaining = deliveryDate.difference(now);
+        if (remaining.isNegative || remaining.inHours < 1) {
+          return 'Arriving today';
+        } else if (remaining.inHours < 24) {
+          return 'Expected in ${remaining.inHours}h';
+        } else {
+          final days = remaining.inDays;
+          return 'Expected in $days ${days == 1 ? 'day' : 'days'}';
+        }
+    }
+  }
+
+  Color _getEtaColor() {
+    final status = _order['orderStatus'];
+    switch (status) {
+      case 'Delivered':
+        return AppColors.success;
+      case 'Cancelled':
+        return AppColors.danger;
+      case 'Confirmed':
+        return AppColors.blue;
+      default:
+        return AppColors.warning;
+    }
+  }
+
+  IconData _getEtaIcon() {
+    final status = _order['orderStatus'];
+    switch (status) {
+      case 'Delivered':
+        return Icons.check_circle_outline_rounded;
+      case 'Cancelled':
+        return Icons.cancel_outlined;
+      case 'Confirmed':
+        return Icons.local_shipping_outlined;
+      default:
+        return Icons.schedule_rounded;
+    }
+  }
+
+  // ── Stock Info ────────────────────────────────────────────────────────────
+  List<Map<String, dynamic>> _getLowStockItems() {
+    final products = _order['products'] as List? ?? [];
+    final lowStock = <Map<String, dynamic>>[];
+    for (final p in products) {
+      final product = p['product'];
+      if (product is Map) {
+        final stock = product['stockQuantity'] ?? 0;
+        final title = product['title'] ?? 'Product';
+        if (stock <= 5 && stock > 0) {
+          lowStock.add({'title': title, 'stock': stock});
+        }
+      }
+    }
+    return lowStock;
   }
 
   @override
@@ -70,6 +156,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildOrderHeader(),
+                  const SizedBox(height: AppSpacing.gapLg),
+                  _buildEtaBanner(),
                   const SizedBox(height: AppSpacing.gapLg),
                   _buildTimelineCard(),
                   const SizedBox(height: AppSpacing.gapLg),
@@ -148,6 +236,50 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
   }
 
+  // ── ETA Banner ────────────────────────────────────────────────────────────
+  Widget _buildEtaBanner() {
+    final etaColor = _getEtaColor();
+    final status = _order['orderStatus'];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: etaColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: etaColor.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(_getEtaIcon(), size: 20, color: etaColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getEtaText(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: etaColor,
+                  ),
+                ),
+                if (status == 'Pending' || status == 'Confirmed') ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'We are preparing your order',
+                    style: AppTextStyles.caption.copyWith(color: etaColor.withValues(alpha: 0.7)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Timeline Card ─────────────────────────────────────────────────────────
   Widget _buildTimelineCard() {
     final status = _order['orderStatus'];
@@ -171,6 +303,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Widget _buildCancelledBanner() {
+    final reason = _order['cancellationReason'];
+    final feedback = _order['cancellationFeedback'];
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.cardPaddingMd),
@@ -178,26 +313,56 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         color: AppColors.dangerLight,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.cancel_rounded, color: AppColors.danger, size: 20),
-          const SizedBox(width: AppSpacing.gapLg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Order Cancelled',
-                  style: AppTextStyles.cardTitle.copyWith(color: AppColors.danger),
+          Row(
+            children: [
+              const Icon(Icons.cancel_rounded, color: AppColors.danger, size: 20),
+              const SizedBox(width: AppSpacing.gapLg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Order Cancelled',
+                      style: AppTextStyles.cardTitle.copyWith(color: AppColors.danger),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'This order has been cancelled.',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'This order has been cancelled.',
-                  style: AppTextStyles.caption,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (reason != null && reason.toString().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Reason', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 2),
+                  Text(reason.toString(), style: AppTextStyles.bodyMuted),
+                  if (feedback != null && feedback.toString().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text('Feedback', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 2),
+                    Text(feedback.toString(), style: AppTextStyles.bodyMuted),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -220,7 +385,6 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         final isCurrent = idx == currentIdx;
         final isLast = idx == steps.length - 1;
 
-        // Calculate relative time for each step
         String stepTime = '';
         if (isCompleted) {
           if (idx == 0) {
@@ -348,6 +512,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     final quantity = p['quantity'] ?? 1;
     final unitPrice = p['price'] ?? 0;
     final lineTotal = unitPrice * quantity;
+    final stock = product['stockQuantity'] ?? 0;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.gapLg),
@@ -400,6 +565,17 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                     ),
                   ],
                 ),
+                if (stock > 0 && stock <= 5) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Only $stock left in stock',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -510,7 +686,6 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     final products = _order['products'] as List;
     final totalAmount = _order['totalAmount'] ?? 0;
 
-    // Calculate subtotal
     int subtotal = 0;
     for (final p in products) {
       final quantity = (p['quantity'] ?? 1) as int;
@@ -555,59 +730,348 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   // ── Action Buttons ────────────────────────────────────────────────────────
   Widget _buildActionButtons() {
     final status = _order['orderStatus'];
+    final canCancel = status == 'Pending';
 
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Contact vendor coming soon'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            icon: const Icon(Icons.chat_outlined, size: 18),
-            label: Text('Contact Vendor', style: AppTextStyles.cardTitle.copyWith(fontSize: 13)),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.ink,
-              side: const BorderSide(color: AppColors.divider),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
-        ),
-        if (status == 'Delivered') ...[
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Reorder coming soon'),
-                    behavior: SnackBarBehavior.floating,
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Contact vendor coming soon'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.chat_outlined, size: 18),
+                label: Text('Contact Vendor', style: AppTextStyles.cardTitle.copyWith(fontSize: 13)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.ink,
+                  side: const BorderSide(color: AppColors.divider),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
-                );
-              },
-              icon: const Icon(Icons.replay_rounded, size: 18),
-              label: Text('Reorder', style: AppTextStyles.cardTitle.copyWith(fontSize: 13, color: AppColors.ink)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.coral,
-                foregroundColor: AppColors.ink,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+            if (status == 'Delivered') ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Reorder coming soon'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.replay_rounded, size: 18),
+                  label: Text('Reorder', style: AppTextStyles.cardTitle.copyWith(fontSize: 13, color: AppColors.ink)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.coral,
+                    foregroundColor: AppColors.ink,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (canCancel) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _showCancelModal,
+              icon: const Icon(Icons.cancel_outlined, size: 18),
+              label: Text(
+                'Cancel Order',
+                style: AppTextStyles.cardTitle.copyWith(fontSize: 13, color: AppColors.danger),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.danger,
+                side: const BorderSide(color: AppColors.danger),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
               ),
             ),
           ),
         ],
       ],
     );
+  }
+
+  // ── Cancel Modal ──────────────────────────────────────────────────────────
+  void _showCancelModal() {
+    final lowStockItems = _getLowStockItems();
+    String? selectedReason;
+    final feedbackController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.divider,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Title
+                Text('Cancel Order?', style: AppTextStyles.screenTitle),
+                const SizedBox(height: 8),
+                Text(
+                  'Are you sure you want to cancel this order? This action cannot be undone.',
+                  style: AppTextStyles.bodyMuted,
+                ),
+                const SizedBox(height: 20),
+
+                // Dissuasion: arriving soon
+                _buildDissuasionCard(
+                  icon: Icons.local_shipping_outlined,
+                  color: AppColors.blue,
+                  title: 'Arriving in 2 days',
+                  subtitle: 'Your order is already being prepared and will arrive soon.',
+                ),
+                const SizedBox(height: 10),
+
+                // Dissuasion: low stock
+                if (lowStockItems.isNotEmpty)
+                  ...lowStockItems.map((item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildDissuasionCard(
+                      icon: Icons.inventory_2_outlined,
+                      color: AppColors.warning,
+                      title: 'Only ${item['stock']} left in stock',
+                      subtitle: '"${item['title']}" is almost sold out. Cancelling means you might not get it again.',
+                    ),
+                  )),
+
+                // Reason dropdown
+                Text('Reason for cancelling', style: AppTextStyles.label),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: AppColors.divider),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedReason,
+                      hint: Text('Select a reason', style: AppTextStyles.bodyMuted),
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: 'Changed my mind', child: Text('Changed my mind')),
+                        DropdownMenuItem(value: 'Found a better price', child: Text('Found a better price')),
+                        DropdownMenuItem(value: 'Ordered by mistake', child: Text('Ordered by mistake')),
+                        DropdownMenuItem(value: 'Delivery too slow', child: Text('Delivery too slow')),
+                        DropdownMenuItem(value: 'No longer needed', child: Text('No longer needed')),
+                        DropdownMenuItem(value: 'Other', child: Text('Other')),
+                      ],
+                      onChanged: (value) {
+                        setModalState(() => selectedReason = value);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Feedback
+                Text('Additional feedback (optional)', style: AppTextStyles.label),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: feedbackController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Tell us how we can improve...',
+                    hintStyle: AppTextStyles.bodyMuted,
+                    filled: true,
+                    fillColor: AppColors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      borderSide: const BorderSide(color: AppColors.divider),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      borderSide: const BorderSide(color: AppColors.divider),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.ink,
+                          side: const BorderSide(color: AppColors.divider),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text('Keep Order', style: AppTextStyles.cardTitle.copyWith(fontSize: 14)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          await _cancelOrder(
+                            reason: selectedReason,
+                            feedback: feedbackController.text.trim(),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.danger,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                        ),
+                        child: const Text('Yes, Cancel', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDissuasionCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTextStyles.caption.copyWith(color: color.withValues(alpha: 0.7)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelOrder({String? reason, String? feedback}) async {
+    final orderProvider = context.read<OrderProvider>();
+    final success = await orderProvider.cancelOrder(
+      _order['_id'],
+      reason: reason,
+      feedback: feedback,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Order cancelled successfully'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      _fetchOrder(); // Refresh to show updated status
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(orderProvider.error ?? 'Failed to cancel order'),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

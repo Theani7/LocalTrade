@@ -80,10 +80,14 @@ class OrderService {
     }
   }
 
-  Future<Map<String, dynamic>> cancelOrder(String id) async {
+  Future<Map<String, dynamic>> cancelOrder(String id, {String? reason, String? feedback}) async {
     final token = await _authService.getToken();
+    final body = <String, dynamic>{};
+    if (reason != null && reason.isNotEmpty) body['reason'] = reason;
+    if (feedback != null && feedback.isNotEmpty) body['feedback'] = feedback;
     final response = await _apiService.patch(
       '/orders/$id/cancel',
+      body: body,
       headers: {'Authorization': 'Bearer $token'},
     );
 
