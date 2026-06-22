@@ -506,6 +506,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           _buildFieldRow(
             label: 'Description',
             required: false,
+            isLast: true,
             child: TextFormField(
               controller: _descController,
               maxLines: 3,
@@ -564,6 +565,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             label: 'Original price (MRP)',
             required: false,
             prefix: 'Rs.',
+            isLast: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -662,6 +664,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           _buildFieldRow(
             label: 'Available for pickup',
             required: false,
+            isLast: true,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -747,13 +750,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     required bool required,
     required Widget child,
     String? prefix,
+    bool isLast = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: EdgeInsets.fromLTRB(14, 12, 14, isLast ? 14 : 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 12),
           Row(
             children: [
               Text(
@@ -772,6 +775,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ],
             ],
           ),
+          const SizedBox(height: 6),
           child,
         ],
       ),
