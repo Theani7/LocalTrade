@@ -7,6 +7,7 @@ import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/cart_fly_animation.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -25,6 +26,7 @@ class CustomerHomeScreen extends StatefulWidget {
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _cartIconKey = GlobalKey();
   int _currentNavIndex = 0;
 
   String _selectedCategory = 'All';
@@ -99,17 +101,23 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: _currentNavIndex == 0 ? _buildHomeBody() : const SizedBox(),
       bottomNavigationBar: AppBottomNav(
           currentIndex: _currentNavIndex,
+          cartItemCount: cart.itemCount,
+          cartIconKey: _cartIconKey,
           onTap: (i) {
             if (i == 0) {
               setState(() => _currentNavIndex = i);
             } else if (i == 1) {
-              AuthGuard.requireAuthRoute(context, const CustomerOrdersScreen());
+              AuthGuard.requireAuthRoute(context, const CartScreen());
             } else if (i == 2) {
+              AuthGuard.requireAuthRoute(context, const CustomerOrdersScreen());
+            } else if (i == 3) {
               AuthGuard.requireAuthRoute(context, const CustomerProfileScreen());
             }
           },
@@ -156,15 +164,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      _buildIconButton(
-                        icon: Icons.notifications_outlined,
-                        onTap: () => AuthGuard.requireAuthRoute(context, const NotificationScreen()),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCartButton(),
-                    ],
+                  _buildIconButton(
+                    icon: Icons.notifications_outlined,
+                    onTap: () => AuthGuard.requireAuthRoute(context, const NotificationScreen()),
                   ),
                 ],
               ),
@@ -346,44 +348,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 22, color: AppColors.ink),
-      ),
-    );
-  }
-
-  Widget _buildCartButton() {
-    return GestureDetector(
-      onTap: () => AuthGuard.requireAuthRoute(context, const CartScreen()),
-      child: Stack(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.ink),
-          ),
-          Consumer<CartProvider>(
-            builder: (context, cart, _) => cart.itemCount > 0
-                ? Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: AppColors.coral,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '${cart.itemCount}',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.ink),
-                      ),
-                    ),
-                  )
-                : const SizedBox(),
-          ),
-        ],
       ),
     );
   }
@@ -575,6 +539,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       double.parse(p['price'].toString()),
                       image,
                       vendorId,
+                    );
+                    // Fly-to-cart animation
+                    CartFlyAnimation.show(
+                      sourceContext: context,
+                      cartIconKey: _cartIconKey,
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
