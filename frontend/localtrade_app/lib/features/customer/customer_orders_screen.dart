@@ -185,15 +185,15 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                 // Extract product names
                 final productNames = <String>[];
                 for (final p in products) {
-                  final productId = p['productId'];
-                  final title = productId is Map ? (productId['title'] ?? '') : '';
+                  final productData = p['product'];
+                  final title = productData is Map ? (productData['title'] ?? '') : '';
                   if (title.isNotEmpty) productNames.add(title);
                 }
 
                 // Get first product image
                 String? heroImage;
                 if (products.isNotEmpty) {
-                  final firstProduct = products[0]['productId'];
+                  final firstProduct = products[0]['product'];
                   if (firstProduct is Map &&
                       firstProduct['images'] != null &&
                       (firstProduct['images'] as List).isNotEmpty) {
