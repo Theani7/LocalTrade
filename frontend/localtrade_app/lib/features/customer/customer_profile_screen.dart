@@ -13,6 +13,8 @@ import '../../widgets/app_button.dart';
 import 'customer_home_screen.dart';
 import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
+import 'help_support_screen.dart';
+import 'privacy_policy_screen.dart';
 
 String _toTitleCase(String text) {
   if (text.isEmpty) return text;
@@ -717,14 +719,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             subtitle: 'FAQs, contact us',
             iconBg: AppColors.coralLight,
             iconColor: AppColors.coralDark,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Support page coming soon'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildSettingsTile(
@@ -733,14 +730,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             subtitle: 'How we handle your data',
             iconBg: AppColors.blueLight,
             iconColor: AppColors.blueDark,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Privacy policy coming soon'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())),
           ),
         ],
       ),
