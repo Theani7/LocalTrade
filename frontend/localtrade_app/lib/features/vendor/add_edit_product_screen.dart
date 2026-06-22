@@ -473,14 +473,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             child: TextFormField(
               controller: _titleController,
               style: AppTextStyles.body,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Fresh tomatoes',
-                hintStyle: TextStyle(color: AppColors.muted, fontSize: 14),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 14),
-              ),
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'Required' : null,
+              decoration: _noBorderDecoration(hint: 'e.g. Fresh tomatoes'),
+              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
             ),
           ),
           const _HairlineDivider(),
@@ -511,12 +505,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               controller: _descController,
               maxLines: 3,
               style: AppTextStyles.body,
-              decoration: const InputDecoration(
-                hintText: 'What makes this product special?',
-                hintStyle: TextStyle(color: AppColors.muted, fontSize: 14),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 14),
-              ),
+              decoration:
+                  _noBorderDecoration(hint: 'What makes this product special?'),
             ),
           ),
         ],
@@ -550,14 +540,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               controller: _priceController,
               keyboardType: TextInputType.number,
               style: AppTextStyles.body,
-              decoration: const InputDecoration(
-                hintText: '0',
-                hintStyle: TextStyle(color: AppColors.muted, fontSize: 14),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 14),
-              ),
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'Required' : null,
+              decoration: _noBorderDecoration(hint: '0'),
+              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
             ),
           ),
           const _HairlineDivider(),
@@ -573,13 +557,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   controller: _originalPriceController,
                   keyboardType: TextInputType.number,
                   style: AppTextStyles.body,
-                  decoration: const InputDecoration(
-                    hintText: 'Optional',
-                    hintStyle: TextStyle(color: AppColors.muted, fontSize: 14),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 14),
-                  ),
+                  decoration: _noBorderDecoration(hint: 'Optional'),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'Shows a strikethrough on the listing',
                   style: AppTextStyles.caption.copyWith(fontSize: 11),
@@ -610,12 +590,19 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       ),
       child: Column(
         children: [
-          _buildFieldRow(
-            label: 'Stock quantity',
-            required: true,
+          // Stock quantity — label left, stepper right
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                Text(
+                  'Stock quantity',
+                  style: AppTextStyles.label.copyWith(
+                    fontSize: 12,
+                    color: AppColors.coralDark,
+                  ),
+                ),
+                const Spacer(),
                 _stepperButton(
                   icon: Icons.remove_rounded,
                   onTap: () {
@@ -661,23 +648,36 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             ),
           ),
           const _HairlineDivider(),
-          _buildFieldRow(
-            label: 'Available for pickup',
-            required: false,
-            isLast: true,
+          // Pickup toggle — label + subtitle left, toggle right
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'Customers can collect from you.',
-                  style: AppTextStyles.caption.copyWith(fontSize: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Available for pickup',
+                        style: AppTextStyles.label.copyWith(
+                          fontSize: 12,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Customers can collect from you.',
+                        style: AppTextStyles.caption.copyWith(fontSize: 11),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 10),
                 Transform.scale(
                   scale: 0.85,
                   child: Switch(
                     value: _availableForPickup,
-                    onChanged: (v) => setState(() => _availableForPickup = v),
+                    onChanged: (v) =>
+                        setState(() => _availableForPickup = v),
                     activeThumbColor: AppColors.surface,
                     activeTrackColor: AppColors.coral,
                     inactiveTrackColor: AppColors.divider,
@@ -739,6 +739,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Shared no-border InputDecoration for inline fields
+  // ═══════════════════════════════════════════════════════════════════════════
+  InputDecoration _noBorderDecoration({required String hint}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
+      isDense: true,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      disabledBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      contentPadding: const EdgeInsets.symmetric(vertical: 10),
     );
   }
 
