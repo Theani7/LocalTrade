@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/order_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../core/utils/cloudinary_helper.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -29,14 +31,63 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
     });
   }
 
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays == 1) return 'Yesterday';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return DateFormat('MMM d').format(date);
+  String _getEta(String status, DateTime orderDate) {
+    switch (status) {
+      case 'Pending':
+        // ETA: 1-2 days from order
+        final eta = orderDate.add(const Duration(days: 2));
+        if (DateTime.now().isAfter(eta)) {
+          return 'Arriving today';
+        }
+        final diff = eta.difference(DateTime.now());
+        if (diff.inHours < 24) {
+          return 'Expected in ${diff.inHours}h';
+        }
+        return 'Expected ${DateFormat('MMM d').format(eta)}';
+      case 'Confirmed':
+        // ETA: next day
+        final eta = orderDate.add(const Duration(days: 1));
+        if (DateTime.now().isAfter(eta)) {
+          return 'Arriving today';
+        }
+        return 'Expected ${DateFormat('MMM d').format(eta)}';
+      case 'Delivered':
+        return 'Delivered';
+      case 'Cancelled':
+        return 'Cancelled';
+      default:
+        return 'Processing';
+    }
+  }
+
+  IconData _getEtaIcon(String status) {
+    switch (status) {
+      case 'Pending':
+        return Icons.schedule_rounded;
+      case 'Confirmed':
+        return Icons.storefront_outlined;
+      case 'Delivered':
+        return Icons.check_circle_outline_rounded;
+      case 'Cancelled':
+        return Icons.cancel_outlined;
+      default:
+        return Icons.hourglass_empty_rounded;
+    }
+  }
+
+  Color _getEtaColor(String status) {
+    switch (status) {
+      case 'Pending':
+        return AppColors.warningDark;
+      case 'Confirmed':
+        return AppColors.blueDark;
+      case 'Delivered':
+        return AppColors.successDark;
+      case 'Cancelled':
+        return AppColors.coralDark;
+      default:
+        return AppColors.muted;
+    }
   }
 
   @override
@@ -131,7 +182,15 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                     'Local vendor';
                 final totalAmount = order['totalAmount'] ?? 0;
 
-                // Get first product image for hero thumbnail
+                // Extract product names
+                final productNames = <String>[];
+                for (final p in products) {
+                  final productId = p['productId'];
+                  final title = productId is Map ? (productId['title'] ?? '') : '';
+                  if (title.isNotEmpty) productNames.add(title);
+                }
+
+                // Get first product image
                 String? heroImage;
                 if (products.isNotEmpty) {
                   final firstProduct = products[0]['productId'];
@@ -152,6 +211,9 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                     deliverySnippet = [city, state].where((s) => s.isNotEmpty).join(', ');
                   }
                 }
+
+                final eta = _getEta(status, date);
+                final etaColor = _getEtaColor(status);
 
                 return GestureDetector(
                   onTap: () => Navigator.push(
@@ -175,12 +237,11 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header: Order ID + status + time
+                        // ── Header: Order ID + Status ──
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
                           child: Row(
                             children: [
-                              // Order ID chip
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
@@ -188,13 +249,13 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-          '#$shortId',
-          style: AppTextStyles.label.copyWith(color: AppColors.muted),
-        ),
+                                  '#$shortId',
+                                  style: AppTextStyles.label.copyWith(color: AppColors.muted),
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                _timeAgo(date),
+                                DateFormat('MMM d, yyyy').format(date),
                                 style: AppTextStyles.caption,
                               ),
                               const Spacer(),
@@ -203,72 +264,97 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                           ),
                         ),
 
-                        // Product row with hero image
+                        // ── Product Row: Image + Names ──
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Hero product image
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
+                              // Product image
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                child: Container(
+                                  width: 56,
+                                  height: 56,
                                   color: AppColors.mutedLight,
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                  image: heroImage != null
-                                      ? DecorationImage(
-                                          image: NetworkImage(heroImage),
+                                  child: heroImage != null
+                                      ? CachedNetworkImage(
+                                          imageUrl: CloudinaryHelper.getOptimizedUrl(heroImage, width: 112),
                                           fit: BoxFit.cover,
+                                          placeholder: (_, __) => const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.muted),
+                                          errorWidget: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.muted),
                                         )
-                                      : null,
+                                      : const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.muted),
                                 ),
-                                child: heroImage == null
-                                    ? const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.muted)
-                                    : null,
                               ),
                               const SizedBox(width: 12),
-                              // Product info
+                              // Product names + vendor
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      vendorName,
-                                      style: AppTextStyles.cardTitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${products.length} item${products.length == 1 ? '' : 's'}',
-                                      style: AppTextStyles.caption,
+                                    // Product names
+                                    if (productNames.isNotEmpty)
+                                      Text(
+                                        productNames.length == 1
+                                            ? productNames[0]
+                                            : '${productNames[0]} +${products.length - 1} more',
+                                        style: AppTextStyles.cardTitle,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    else
+                                      Text(
+                                        '${products.length} item${products.length == 1 ? '' : 's'}',
+                                        style: AppTextStyles.cardTitle,
+                                      ),
+                                    const SizedBox(height: 4),
+                                    // Vendor name
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.storefront_outlined, size: 12, color: AppColors.muted),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            vendorName,
+                                            style: AppTextStyles.caption,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ),
-                              // Total + chevron
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Rs. $totalAmount',
-                                    style: AppTextStyles.cardTitle.copyWith(color: AppColors.ink),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
-                                ],
+                              // Price
+                              Text(
+                                'Rs. $totalAmount',
+                                style: AppTextStyles.cardTitle.copyWith(color: AppColors.ink),
                               ),
                             ],
                           ),
                         ),
 
-                        // Delivery address snippet
-                        if (deliverySnippet != null) ...[
-                          const SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: Row(
-                              children: [
+                        const SizedBox(height: 12),
+                        const Divider(color: AppColors.divider, height: 1, indent: 16, endIndent: 16),
+                        const SizedBox(height: 10),
+
+                        // ── Footer: ETA + Delivery + Chevron ──
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                          child: Row(
+                            children: [
+                              // ETA with icon
+                              Icon(_getEtaIcon(status), size: 14, color: etaColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                eta,
+                                style: AppTextStyles.label.copyWith(color: etaColor),
+                              ),
+                              const SizedBox(width: 16),
+                              // Delivery location
+                              if (deliverySnippet != null) ...[
                                 const Icon(Icons.location_on_outlined, size: 14, color: AppColors.muted),
                                 const SizedBox(width: 4),
                                 Expanded(
@@ -279,11 +365,13 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ] else
+                                const Spacer(),
+                              // Chevron
+                              const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
+                            ],
                           ),
-                        ] else
-                          const SizedBox(height: 12),
+                        ),
                       ],
                     ),
                   ),
