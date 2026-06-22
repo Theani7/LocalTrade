@@ -10,10 +10,25 @@ import '../../core/utils/cloudinary_helper.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/app_button.dart';
-import '../../widgets/section_header.dart';
 import 'checkout_screen.dart';
 
 final _priceFormat = NumberFormat('#,##0');
+
+/// Converts text to sentence case: first letter capitalized, rest lowercase.
+String _toSentenceCase(String text) {
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1).toLowerCase();
+}
+
+/// Returns up to 2-letter initials from a vendor name for the avatar circle.
+String _vendorInitials(String name) {
+  if (name.isEmpty) return '?';
+  final words = name.trim().split(RegExp(r'\s+'));
+  if (words.length >= 2) {
+    return '${words[0][0]}${words[1][0]}'.toUpperCase();
+  }
+  return name.substring(0, name.length.clamp(0, 2)).toUpperCase();
+}
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -51,13 +66,23 @@ class _CartScreenState extends State<CartScreen> {
               Container(
                 width: 72,
                 height: 72,
-                decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
-                child: const Icon(Icons.shopping_bag_outlined, size: 36, color: AppColors.coralDark),
+                decoration: const BoxDecoration(
+                  color: AppColors.coralLight,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 36,
+                  color: AppColors.coralDark,
+                ),
               ),
               const SizedBox(height: 16),
               Text('Login to view your cart', style: AppTextStyles.cardTitle),
               const SizedBox(height: 8),
-              Text('Sign in to add items and checkout', style: AppTextStyles.bodyMuted),
+              Text(
+                'Sign in to add items and checkout',
+                style: AppTextStyles.bodyMuted,
+              ),
               const SizedBox(height: 20),
               AppButton(
                 label: 'Login',
@@ -97,35 +122,24 @@ class _CartScreenState extends State<CartScreen> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     children: [
+                      // Vendor group cards
                       ...cart.itemsByVendor.entries.map((entry) {
-                        final vendorName = entry.value.first.vendorName.isNotEmpty
-                            ? entry.value.first.vendorName
-                            : 'Vendor';
+                        final rawName = entry.value.first.vendorName;
+                        final vendorName =
+                            rawName.isNotEmpty ? rawName : 'Local vendor';
                         final vendorItems = entry.value;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8, bottom: 4),
-                              child: SectionHeader(
-                                title: vendorName,
-                                subtitle: '${vendorItems.length} item${vendorItems.length == 1 ? '' : 's'}',
-                                tone: SectionTone.warm,
-                              ),
-                            ),
-                            const Divider(color: AppColors.divider, height: 1),
-                            ...vendorItems.map((item) => _CartItemTile(
-                                  item: item,
-                                  cart: cart,
-                                  onRemove: () => cart.removeItem(item.id),
-                                )),
-                            const SizedBox(height: 8),
-                          ],
+                        return _VendorGroupCard(
+                          vendorName: vendorName,
+                          items: vendorItems,
+                          cart: cart,
                         );
                       }),
 
-                      const SizedBox(height: 8),
-                      _OrderSummaryCard(noteController: _noteController),
+                      // Vendor note card
+                      const SizedBox(height: 12),
+                      _VendorNoteCard(noteController: _noteController),
+
+                      // Extra space so bottom bar doesn't cover content
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -150,27 +164,23 @@ class _CartScreenState extends State<CartScreen> {
     final cartItems = cart.items.values.toList();
     final totalQty = cartItems.fold<int>(0, (s, i) => s + i.quantity);
     final subtotal = cart.totalAmount;
-    final deliveryFee = 0.0;
+    const deliveryFee = 0.0;
     final total = subtotal + deliveryFee;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        border: Border(
+          top: BorderSide(color: AppColors.divider, width: 1),
+        ),
       ),
       child: SafeArea(
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Subtotal
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -184,28 +194,31 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Divider(color: AppColors.divider, height: 1),
-            ),
+            const SizedBox(height: 10),
+            // Delivery
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Delivery', style: AppTextStyles.bodyMuted),
                 Text(
-                  deliveryFee == 0 ? 'Free' : 'Rs. ${_priceFormat.format(deliveryFee.toInt())}',
+                  deliveryFee == 0
+                      ? 'Free'
+                      : 'Rs. ${_priceFormat.format(deliveryFee.toInt())}',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: deliveryFee == 0 ? FontWeight.w500 : FontWeight.w400,
-                    color: deliveryFee == 0 ? AppColors.success : AppColors.ink,
+                    fontWeight:
+                        deliveryFee == 0 ? FontWeight.w500 : FontWeight.w400,
+                    color:
+                        deliveryFee == 0 ? AppColors.success : AppColors.ink,
                   ),
                 ),
               ],
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.symmetric(vertical: 10),
               child: Divider(color: AppColors.divider, height: 1),
             ),
+            // Total — ink text, not coral
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -231,74 +244,91 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
-class _OrderSummaryCard extends StatelessWidget {
-  final TextEditingController noteController;
+// ---------------------------------------------------------------------------
+// Vendor group card
+// ---------------------------------------------------------------------------
+class _VendorGroupCard extends StatelessWidget {
+  final String vendorName;
+  final List<CartItem> items;
+  final CartProvider cart;
 
-  const _OrderSummaryCard({required this.noteController});
+  const _VendorGroupCard({
+    required this.vendorName,
+    required this.items,
+    required this.cart,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.cardPaddingMd),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(AppSpacing.cardPaddingLg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Color(0x0D2B2620), // 5% ink
+            blurRadius: 10,
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Order summary', style: AppTextStyles.sectionHeading),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.coralLight,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.store_rounded, size: 18, color: AppColors.coralDark),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Pickup from vendor',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
-                      ),
-                      Text(
-                        'Items will be ready for pickup',
-                        style: TextStyle(fontSize: 11, color: AppColors.muted),
-                      ),
-                    ],
+          // Vendor header
+          Row(
+            children: [
+              // Initials circle
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: AppColors.coralLight,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    _vendorInitials(vendorName),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.coralDark,
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: noteController,
-            maxLines: 2,
-            style: AppTextStyles.body,
-            decoration: InputDecoration(
-              hintText: 'Add a note for the vendor (optional)',
-              hintStyle: AppTextStyles.bodyMuted,
-              filled: true,
-              fillColor: AppColors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vendorName,
+                      style: AppTextStyles.cardTitle,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Pickup from vendor',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Divider
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: AppColors.divider, height: 1),
+          ),
+          // Items
+          ...items.map(
+            (item) => _CartItemTile(
+              item: item,
+              cart: cart,
+              onRemove: () => cart.removeItem(item.id),
             ),
           ),
         ],
@@ -307,6 +337,9 @@ class _OrderSummaryCard extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Cart item tile
+// ---------------------------------------------------------------------------
 class _CartItemTile extends StatelessWidget {
   final CartItem item;
   final CartProvider cart;
@@ -321,42 +354,57 @@ class _CartItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Product image
           ClipRRect(
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             child: SizedBox(
-              width: 72,
-              height: 72,
+              width: 64,
+              height: 64,
               child: item.imageUrl.isNotEmpty
                   ? CachedNetworkImage(
-                      imageUrl: CloudinaryHelper.getOptimizedUrl(item.imageUrl, width: 200),
+                      imageUrl: CloudinaryHelper.getOptimizedUrl(
+                        item.imageUrl,
+                        width: 200,
+                      ),
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: AppColors.divider),
-                      errorWidget: (_, __, ___) => Container(
+                      placeholder: (_, __) =>
+                          const ColoredBox(color: AppColors.divider),
+                      errorWidget: (_, __, ___) => const ColoredBox(
                         color: AppColors.divider,
-                        child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 24),
+                        child: Icon(
+                          Icons.inventory_2_outlined,
+                          color: AppColors.muted,
+                          size: 24,
+                        ),
                       ),
                     )
-                  : Container(
+                  : const ColoredBox(
                       color: AppColors.divider,
-                      child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 24),
+                      child: Icon(
+                        Icons.inventory_2_outlined,
+                        color: AppColors.muted,
+                        size: 24,
+                      ),
                     ),
             ),
           ),
           const SizedBox(width: 12),
+          // Product info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Title (sentence case) + trash icon inline
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
-                        item.title,
+                        _toSentenceCase(item.title),
                         style: AppTextStyles.cardTitle.copyWith(height: 1.3),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -365,23 +413,29 @@ class _CartItemTile extends StatelessWidget {
                     const SizedBox(width: 8),
                     GestureDetector(
                       onTap: onRemove,
-                      child: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.muted),
+                      child: const Padding(
+                        padding: EdgeInsets.all(2),
+                        child: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                          color: AppColors.muted,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                if (item.vendorName.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(item.vendorName, style: AppTextStyles.caption),
-                ],
                 const SizedBox(height: 8),
+                // Quantity stepper + price
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // Quantity stepper — coral-light pill, coral-dark icons
                     Container(
                       height: 32,
                       decoration: BoxDecoration(
                         color: AppColors.coralLight,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -389,7 +443,8 @@ class _CartItemTile extends StatelessWidget {
                           GestureDetector(
                             onTap: () {
                               if (item.quantity > 1) {
-                                cart.updateQuantity(item.id, item.quantity - 1);
+                                cart.updateQuantity(
+                                    item.id, item.quantity - 1);
                               } else {
                                 onRemove();
                               }
@@ -399,7 +454,9 @@ class _CartItemTile extends StatelessWidget {
                               width: 32,
                               height: 32,
                               child: Icon(
-                                item.quantity > 1 ? Icons.remove_rounded : Icons.delete_outline_rounded,
+                                item.quantity > 1
+                                    ? Icons.remove_rounded
+                                    : Icons.delete_outline_rounded,
                                 size: 16,
                                 color: AppColors.coralDark,
                               ),
@@ -418,17 +475,23 @@ class _CartItemTile extends StatelessWidget {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => cart.updateQuantity(item.id, item.quantity + 1),
+                            onTap: () => cart.updateQuantity(
+                                item.id, item.quantity + 1),
                             behavior: HitTestBehavior.opaque,
                             child: const SizedBox(
                               width: 32,
                               height: 32,
-                              child: Icon(Icons.add_rounded, size: 16, color: AppColors.coralDark),
+                              child: Icon(
+                                Icons.add_rounded,
+                                size: 16,
+                                color: AppColors.coralDark,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
+                    // Price
                     Text(
                       'Rs. ${_priceFormat.format((item.price * item.quantity).toInt())}',
                       style: AppTextStyles.cardTitle,
@@ -436,6 +499,59 @@ class _CartItemTile extends StatelessWidget {
                   ],
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Vendor note card — separate white card with muted label
+// ---------------------------------------------------------------------------
+class _VendorNoteCard extends StatelessWidget {
+  final TextEditingController noteController;
+
+  const _VendorNoteCard({required this.noteController});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.cardPaddingLg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D2B2620),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Note for vendor', style: AppTextStyles.label),
+          const SizedBox(height: 8),
+          TextField(
+            controller: noteController,
+            maxLines: 2,
+            style: AppTextStyles.body,
+            decoration: InputDecoration(
+              hintText: 'e.g. ripeness preference, allergies, special request',
+              hintStyle: AppTextStyles.caption,
+              filled: true,
+              fillColor: AppColors.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
           ),
         ],
