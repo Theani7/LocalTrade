@@ -10,7 +10,7 @@ class ProductProvider with ChangeNotifier {
   bool _isFetchingMore = false;
   String? _error;
 
-  // Pagination & Filters State
+  // Catalog pagination & Filters State
   int _currentPage = 1;
   int _totalPages = 1;
   int _totalCount = 0;
@@ -20,17 +20,28 @@ class ProductProvider with ChangeNotifier {
   String? _sort;
   bool _showAll = false;
 
+  // My products pagination
+  int _myCurrentPage = 1;
+  int _myTotalPages = 1;
+  int _myTotalResults = 0;
+  bool _myHasMore = false;
+  bool _isFetchingMoreMyProducts = false;
+
   // Getters
   List<dynamic> get products => _products;
   List<dynamic> get myProducts => _myProducts;
   bool get isLoading => _isLoading;
   bool get isFetchingMore => _isFetchingMore;
+  bool get isFetchingMoreMyProducts => _isFetchingMoreMyProducts;
   String? get error => _error;
   
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
   int get totalCount => _totalCount;
   bool get hasMore => _currentPage <= _totalPages;
+  
+  bool get myHasMore => _myHasMore;
+  int get myTotalResults => _myTotalResults;
   
   String? get selectedCategory => _category;
   String? get selectedSort => _sort;
@@ -139,13 +150,45 @@ class ProductProvider with ChangeNotifier {
   Future<void> fetchMyProducts() async {
     _setLoading(true);
     _error = null;
+    _myCurrentPage = 1;
     try {
-      final result = await _productService.getMyProducts();
+      final result = await _productService.getMyProducts(page: 1, limit: 20);
       _myProducts = result['data']['products'];
+      if (result['totalPages'] != null) {
+        _myTotalPages = result['totalPages'];
+        _myTotalResults = result['totalResults'] ?? _myProducts.length;
+        _myHasMore = _myCurrentPage < _myTotalPages;
+      } else {
+        _myHasMore = false;
+      }
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> loadMoreMyProducts() async {
+    if (_isFetchingMoreMyProducts || !_myHasMore) return;
+    _isFetchingMoreMyProducts = true;
+    notifyListeners();
+    try {
+      _myCurrentPage++;
+      final result = await _productService.getMyProducts(page: _myCurrentPage, limit: 20);
+      final newProducts = result['data']['products'] as List<dynamic>;
+      _myProducts.addAll(newProducts);
+      if (result['totalPages'] != null) {
+        _myTotalPages = result['totalPages'];
+        _myHasMore = _myCurrentPage < _myTotalPages;
+      } else {
+        _myHasMore = false;
+      }
+    } catch (e) {
+      _myCurrentPage--;
+      _error = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _isFetchingMoreMyProducts = false;
+      notifyListeners();
     }
   }
 

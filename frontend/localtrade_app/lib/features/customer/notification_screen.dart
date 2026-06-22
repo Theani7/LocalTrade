@@ -251,33 +251,63 @@ class _NotificationScreenState extends State<NotificationScreen>
       onRefresh: provider.fetchNotifications,
       color: AppColors.coral,
       backgroundColor: AppColors.surface,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (scrollNotification) {
+          if (scrollNotification.metrics.pixels >=
+              scrollNotification.metrics.maxScrollExtent - 200 &&
+              provider.hasMore &&
+              !provider.isFetchingMore) {
+            provider.loadMoreNotifications();
+          }
+          return false;
+        },
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+          itemCount: notifications.length + (provider.hasMore ? 1 : 0),
+          separatorBuilder: (context, index) {
+            if (index >= notifications.length) {
+              return const SizedBox.shrink();
+            }
+            if (isPromotional) {
+              return const SizedBox.shrink();
+            }
+            return const Divider(
+              height: 1,
+              thickness: 0.5,
+              color: AppColors.divider,
+              indent: 72,
+            );
+          },
+          itemBuilder: (context, index) {
+            if (index == notifications.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.coral,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final notification = notifications[index];
+            final bool isRead = notification['isRead'] ?? false;
+
+            if (isPromotional) {
+              return _buildPromoCard(notification, isRead, provider);
+            }
+
+            return _buildImportantRow(notification, isRead, provider);
+          },
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-        itemCount: notifications.length,
-        separatorBuilder: (context, index) {
-          if (isPromotional) {
-            return const SizedBox.shrink();
-          }
-          return const Divider(
-            height: 1,
-            thickness: 0.5,
-            color: AppColors.divider,
-            indent: 72,
-          );
-        },
-        itemBuilder: (context, index) {
-          final notification = notifications[index];
-          final bool isRead = notification['isRead'] ?? false;
-
-          if (isPromotional) {
-            return _buildPromoCard(notification, isRead, provider);
-          }
-
-          return _buildImportantRow(notification, isRead, provider);
-        },
       ),
     );
   }

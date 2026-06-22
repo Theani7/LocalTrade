@@ -83,10 +83,10 @@ class NotificationService {
     );
   }
 
-  Future<Map<String, dynamic>> getNotifications() async {
+  Future<Map<String, dynamic>> getNotifications({int page = 1, int limit = 20}) async {
     final token = await _authService.getToken();
     if (token == null) return {'success': false, 'message': 'Not authenticated'};
-    final response = await _apiService.get('/notifications', headers: {
+    final response = await _apiService.get('/notifications?page=$page&limit=$limit', headers: {
       'Authorization': 'Bearer $token',
     });
 

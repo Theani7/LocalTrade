@@ -28,10 +28,10 @@ class OrderService {
     }
   }
 
-  Future<Map<String, dynamic>> getMyOrders() async {
+  Future<Map<String, dynamic>> getMyOrders({int page = 1, int limit = 20}) async {
     final token = await _authService.getToken();
     if (token == null) throw Exception('Not authenticated');
-    final response = await _apiService.get('/orders/my-orders', headers: {
+    final response = await _apiService.get('/orders/my-orders?page=$page&limit=$limit', headers: {
       'Authorization': 'Bearer $token',
     });
 
@@ -48,10 +48,10 @@ class OrderService {
     }
   }
 
-  Future<Map<String, dynamic>> getVendorOrders() async {
+  Future<Map<String, dynamic>> getVendorOrders({int page = 1, int limit = 20}) async {
     final token = await _authService.getToken();
     if (token == null) throw Exception('Not authenticated');
-    final response = await _apiService.get('/orders/vendor-orders', headers: {
+    final response = await _apiService.get('/orders/vendor-orders?page=$page&limit=$limit', headers: {
       'Authorization': 'Bearer $token',
     });
 

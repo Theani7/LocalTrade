@@ -62,10 +62,10 @@ class ProductService {
     }
   }
 
-  Future<Map<String, dynamic>> getMyProducts() async {
+  Future<Map<String, dynamic>> getMyProducts({int page = 1, int limit = 20}) async {
     final token = await _authService.getToken();
     if (token == null) throw Exception('Not authenticated');
-    final response = await _apiService.get('/products/my-products', headers: {
+    final response = await _apiService.get('/products/my-products?page=$page&limit=$limit', headers: {
       'Authorization': 'Bearer $token',
     });
 

@@ -116,15 +116,41 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                   return RefreshIndicator(
                     onRefresh: provider.fetchMyProducts,
                     color: AppColors.coral,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                      itemCount: filtered.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == filtered.length) {
-                          return _buildTipBanner();
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (notification.metrics.pixels >=
+                            notification.metrics.maxScrollExtent - 200 &&
+                            provider.myHasMore &&
+                            !provider.isFetchingMoreMyProducts) {
+                          provider.loadMoreMyProducts();
                         }
-                        return _buildProductCard(filtered[index]);
+                        return false;
                       },
+                      child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                        itemCount: filtered.length + 1 + (provider.myHasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == filtered.length) {
+                            return _buildTipBanner();
+                          }
+                          if (index == filtered.length + 1) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.coral,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          return _buildProductCard(filtered[index]);
+                        },
+                      ),
                     ),
                   );
                 },

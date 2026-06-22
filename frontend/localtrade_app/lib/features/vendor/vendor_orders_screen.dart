@@ -61,27 +61,54 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               _buildFilterChips(allOrders),
               // ── Order list ─────────────────────────────────
               Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async => orderProvider.fetchVendorOrders(),
-                  color: AppColors.coral,
-                  child: filtered.isEmpty
-                      ? ListView(
-                          children: const [
-                            SizedBox(height: 80),
-                            EmptyState(
-                              icon: Icons.receipt_long_outlined,
-                              title: 'No matching orders',
-                              message: 'Try a different filter.',
+                    child: RefreshIndicator(
+                      onRefresh: () async => orderProvider.fetchVendorOrders(),
+                      color: AppColors.coral,
+                      child: filtered.isEmpty
+                          ? ListView(
+                              children: const [
+                                SizedBox(height: 80),
+                                EmptyState(
+                                  icon: Icons.receipt_long_outlined,
+                                  title: 'No matching orders',
+                                  message: 'Try a different filter.',
+                                ),
+                              ],
+                            )
+                          : NotificationListener<ScrollNotification>(
+                              onNotification: (notification) {
+                                if (notification.metrics.pixels >=
+                                    notification.metrics.maxScrollExtent - 200 &&
+                                    orderProvider.hasMore &&
+                                    !orderProvider.isFetchingMore) {
+                                  orderProvider.loadMoreVendorOrders();
+                                }
+                                return false;
+                              },
+                              child: ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                                itemCount: filtered.length + (orderProvider.hasMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index == filtered.length) {
+                                    return const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.coral,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return _buildOrderCard(filtered[index]);
+                                },
+                              ),
                             ),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, index) =>
-                              _buildOrderCard(filtered[index]),
-                        ),
-                ),
+                    ),
               ),
             ],
           );

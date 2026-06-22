@@ -7,19 +7,43 @@ class OrderProvider with ChangeNotifier {
   List<dynamic> _orders = [];
   List<dynamic> _vendorOrders = [];
   bool _isLoading = false;
+  bool _isFetchingMore = false;
   String? _error;
+
+  int _currentPage = 1;
+  int _totalPages = 1;
+  int _totalResults = 0;
+  bool _hasMore = false;
+
+  int _myCurrentPage = 1;
+  int _myTotalPages = 1;
+  int _myTotalResults = 0;
+  bool _myHasMore = false;
 
   List<dynamic> get orders => _orders;
   List<dynamic> get vendorOrders => _vendorOrders;
   bool get isLoading => _isLoading;
+  bool get isFetchingMore => _isFetchingMore;
   String? get error => _error;
+  bool get hasMore => _hasMore;
+  bool get myHasMore => _myHasMore;
+  int get totalResults => _totalResults;
+  int get myTotalResults => _myTotalResults;
 
   Future<void> fetchMyOrders() async {
     _setLoading(true);
     _error = null;
+    _myCurrentPage = 1;
     try {
-      final result = await _orderService.getMyOrders();
+      final result = await _orderService.getMyOrders(page: 1, limit: 20);
       _orders = result['data']['orders'];
+      if (result['totalPages'] != null) {
+        _myTotalPages = result['totalPages'];
+        _myTotalResults = result['totalResults'] ?? _orders.length;
+        _myHasMore = _myCurrentPage < _myTotalPages;
+      } else {
+        _myHasMore = false;
+      }
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
     } finally {
@@ -27,16 +51,72 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
+  Future<void> loadMoreMyOrders() async {
+    if (_isFetchingMore || !_myHasMore) return;
+    _isFetchingMore = true;
+    notifyListeners();
+    try {
+      _myCurrentPage++;
+      final result = await _orderService.getMyOrders(page: _myCurrentPage, limit: 20);
+      final newOrders = result['data']['orders'] as List<dynamic>;
+      _orders.addAll(newOrders);
+      if (result['totalPages'] != null) {
+        _myTotalPages = result['totalPages'];
+        _myHasMore = _myCurrentPage < _myTotalPages;
+      } else {
+        _myHasMore = false;
+      }
+    } catch (e) {
+      _myCurrentPage--;
+      _error = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _isFetchingMore = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> fetchVendorOrders() async {
     _setLoading(true);
     _error = null;
+    _currentPage = 1;
     try {
-      final result = await _orderService.getVendorOrders();
+      final result = await _orderService.getVendorOrders(page: 1, limit: 20);
       _vendorOrders = result['data']['orders'];
+      if (result['totalPages'] != null) {
+        _totalPages = result['totalPages'];
+        _totalResults = result['totalResults'] ?? _vendorOrders.length;
+        _hasMore = _currentPage < _totalPages;
+      } else {
+        _hasMore = false;
+      }
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> loadMoreVendorOrders() async {
+    if (_isFetchingMore || !_hasMore) return;
+    _isFetchingMore = true;
+    notifyListeners();
+    try {
+      _currentPage++;
+      final result = await _orderService.getVendorOrders(page: _currentPage, limit: 20);
+      final newOrders = result['data']['orders'] as List<dynamic>;
+      _vendorOrders.addAll(newOrders);
+      if (result['totalPages'] != null) {
+        _totalPages = result['totalPages'];
+        _hasMore = _currentPage < _totalPages;
+      } else {
+        _hasMore = false;
+      }
+    } catch (e) {
+      _currentPage--;
+      _error = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _isFetchingMore = false;
+      notifyListeners();
     }
   }
 
