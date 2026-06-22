@@ -15,7 +15,12 @@ class AuthService {
       'password': password,
     });
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       await _saveToken(data['token']);
       return data;
@@ -27,7 +32,12 @@ class AuthService {
   Future<Map<String, dynamic>> register(Map<String, dynamic> userData) async {
     final response = await _apiService.post('/auth/register', body: userData);
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 201) {
       await _saveToken(data['token']);
       return data;
@@ -44,7 +54,12 @@ class AuthService {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data['data']['user'];
     } else {
@@ -54,13 +69,18 @@ class AuthService {
 
   Future<Map<String, dynamic>> updateProfile(Map<String, String> fields, {dynamic profileImage}) async {
     final response = await _apiService.multipartPatch(
-      '/auth/profile', 
-      fields: fields, 
+      '/auth/profile',
+      fields: fields,
       files: profileImage != null ? [profileImage] : null,
       fieldName: 'profileImage'
     );
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {

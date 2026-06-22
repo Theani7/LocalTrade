@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
@@ -13,10 +12,8 @@ class ApiService {
   Future<http.Response> get(String endpoint, {Map<String, String>? headers}) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
-      debugPrint('API GET: $url');
       final response = await _client.get(url, headers: await _getHeaders(headers))
           .timeout(const Duration(seconds: 15));
-      debugPrint('API GET Response [${response.statusCode}]: $url');
       return _handleResponse(response);
     } on http.ClientException {
       throw Exception('Could not connect to server. Please ensure the backend is running.');
@@ -31,13 +28,11 @@ class ApiService {
   Future<http.Response> post(String endpoint, {dynamic body, Map<String, String>? headers}) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
-      debugPrint('API POST: $url');
       final response = await _client.post(
         url,
         headers: await _getHeaders(headers),
         body: json.encode(body ?? {}),
       ).timeout(const Duration(seconds: 20));
-      debugPrint('API POST Response [${response.statusCode}]: $url');
       return _handleResponse(response);
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
@@ -50,13 +45,11 @@ class ApiService {
   Future<http.Response> patch(String endpoint, {dynamic body, Map<String, String>? headers}) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
-      debugPrint('API PATCH: $url');
       final response = await _client.patch(
         url,
         headers: await _getHeaders(headers),
         body: json.encode(body ?? {}),
       ).timeout(const Duration(seconds: 20));
-      debugPrint('API PATCH Response [${response.statusCode}]: $url');
       return _handleResponse(response);
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {

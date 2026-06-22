@@ -8,13 +8,19 @@ class OrderService {
 
   Future<Map<String, dynamic>> placeOrder(Map<String, dynamic> orderData) async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.post(
       '/orders',
       body: orderData,
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 201) {
       return data;
     } else {
@@ -24,11 +30,17 @@ class OrderService {
 
   Future<Map<String, dynamic>> getMyOrders() async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.get('/orders/my-orders', headers: {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -38,11 +50,17 @@ class OrderService {
 
   Future<Map<String, dynamic>> getVendorOrders() async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.get('/orders/vendor-orders', headers: {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -52,11 +70,17 @@ class OrderService {
 
   Future<Map<String, dynamic>> getOrder(String id) async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.get('/orders/$id', headers: {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -66,13 +90,19 @@ class OrderService {
 
   Future<Map<String, dynamic>> updateOrderStatus(String id, String status) async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.patch(
       '/orders/$id/status',
       body: {'status': status},
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -82,6 +112,7 @@ class OrderService {
 
   Future<Map<String, dynamic>> cancelOrder(String id, {String? reason, String? feedback}) async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final body = <String, dynamic>{};
     if (reason != null && reason.isNotEmpty) body['reason'] = reason;
     if (feedback != null && feedback.isNotEmpty) body['feedback'] = feedback;
@@ -91,7 +122,12 @@ class OrderService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {

@@ -8,10 +8,16 @@ class VendorService {
 
   Future<Map<String, dynamic>> getAnalytics() async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.get('/vendors/analytics', headers: {
       'Authorization': 'Bearer $token',
     });
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -21,10 +27,16 @@ class VendorService {
 
   Future<Map<String, dynamic>> getProfile() async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.get('/vendors/profile', headers: {
       'Authorization': 'Bearer $token',
     });
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -39,7 +51,12 @@ class VendorService {
       files: profileImage != null ? [profileImage] : null,
       fieldName: 'profileImage',
     );
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {

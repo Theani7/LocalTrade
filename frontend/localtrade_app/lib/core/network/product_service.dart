@@ -26,7 +26,12 @@ class ProductService {
     if (vendorId != null) query += '&vendorId=$vendorId';
 
     final response = await _apiService.get('/products$query');
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -36,7 +41,12 @@ class ProductService {
 
   Future<Map<String, dynamic>> getProduct(String id) async {
     final response = await _apiService.get('/products/$id');
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -46,11 +56,17 @@ class ProductService {
 
   Future<Map<String, dynamic>> getMyProducts() async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.get('/products/my-products', headers: {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -62,7 +78,12 @@ class ProductService {
     final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
     final response = await _apiService.multipartPost('/products', fields: fields, files: images);
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 201) {
       return data;
     } else {
@@ -71,11 +92,15 @@ class ProductService {
   }
 
   Future<Map<String, dynamic>> updateProduct(String id, Map<String, dynamic> productData, {List<dynamic>? images}) async {
-    // For simplicity, we'll use multipart even for updates if images are provided
     if (images != null && images.isNotEmpty) {
        final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
        final response = await _apiService.multipartPatch('/products/$id', fields: fields, files: images);
-       final data = json.decode(response.body);
+       final Map<String, dynamic> data;
+       try {
+         data = json.decode(response.body);
+       } catch (e) {
+         return {'success': false, 'message': 'Invalid server response'};
+       }
         if (response.statusCode == 200) {
           return data;
         } else {
@@ -83,13 +108,19 @@ class ProductService {
         }
     } else {
       final token = await _authService.getToken();
+      if (token == null) throw Exception('Not authenticated');
       final response = await _apiService.patch(
         '/products/$id',
         body: productData,
         headers: {'Authorization': 'Bearer $token'},
       );
 
-      final data = json.decode(response.body);
+      final Map<String, dynamic> data;
+      try {
+        data = json.decode(response.body);
+      } catch (e) {
+        return {'success': false, 'message': 'Invalid server response'};
+      }
       if (response.statusCode == 200) {
         return data;
       } else {
@@ -100,25 +131,37 @@ class ProductService {
 
   Future<void> deleteProduct(String id) async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.delete('/products/$id', headers: {
       'Authorization': 'Bearer $token',
     });
 
     if (response.statusCode != 204) {
-      final data = json.decode(response.body);
+      final Map<String, dynamic> data;
+      try {
+        data = json.decode(response.body);
+      } catch (e) {
+        throw Exception('Failed to delete product');
+      }
       throw Exception(data['message'] ?? 'Failed to delete product');
     }
   }
 
   Future<Map<String, dynamic>> updateProductStock(String id, int quantity, String status) async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.patch(
       '/products/$id/stock',
       body: {'stockQuantity': quantity, 'productStatus': status},
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {

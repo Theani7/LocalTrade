@@ -9,7 +9,7 @@ class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final ApiService _apiService = ApiService();
   final AuthService _authService = AuthService();
-  
+
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   bool _isWeb = false;
 
@@ -39,12 +39,9 @@ class NotificationService {
       const InitializationSettings initializationSettings = InitializationSettings(
         android: initializationSettingsAndroid,
       );
-      
+
       await _localNotifications.initialize(
         settings: initializationSettings,
-        onDidReceiveNotificationResponse: (NotificationResponse response) {
-          debugPrint('Notification tapped: ${response.payload}');
-        },
       );
     }
   }
@@ -66,7 +63,7 @@ class NotificationService {
 
   Future<void> showLocalNotification(RemoteMessage message) async {
     if (_isWeb) return;
-    
+
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'LocalTrade_channel',
@@ -76,9 +73,7 @@ class NotificationService {
     );
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
-    
-    // Correct version for flutter_local_notifications 21.0.0
-    // Signature: Future<void> show({required int id, String? title, String? body, NotificationDetails? notificationDetails, String? payload})
+
     await _localNotifications.show(
       id: message.hashCode,
       title: message.notification?.title,
@@ -90,11 +85,17 @@ class NotificationService {
 
   Future<Map<String, dynamic>> getNotifications() async {
     final token = await _authService.getToken();
+    if (token == null) return {'success': false, 'message': 'Not authenticated'};
     final response = await _apiService.get('/notifications', headers: {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -104,6 +105,7 @@ class NotificationService {
 
   Future<void> markAsRead(String id) async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     await _apiService.patch('/notifications/$id/read', headers: {
       'Authorization': 'Bearer $token',
     });
@@ -111,6 +113,7 @@ class NotificationService {
 
   Future<void> markAllRead() async {
     final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     await _apiService.patch('/notifications/mark-all-read', headers: {
       'Authorization': 'Bearer $token',
     });
