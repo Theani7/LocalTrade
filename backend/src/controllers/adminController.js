@@ -249,7 +249,8 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
   }
 
   if (search) {
-    const searchRegex = new RegExp(search, 'i');
+    const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const searchRegex = new RegExp(escapeRegex(search), 'i');
     filter.$or = [
       { 'shippingAddress.fullName': searchRegex },
       { 'shippingAddress.phone': searchRegex },
