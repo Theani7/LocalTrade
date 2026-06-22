@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../widgets/app_button.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -43,7 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
         final role = authProvider.user?['role'];
         final status = authProvider.user?['vendorApprovalStatus'];
         debugPrint('Login success: role=$role, status=$status');
-        debugPrint('Full user keys: ${authProvider.user?.keys.toList()}');
 
         if (role == 'admin') {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminDashboard()));
@@ -69,13 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _quickFill(String email, String password) {
-    setState(() {
-      _emailController.text = email;
-      _passwordController.text = password;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,7 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 40),
-                  // Logo
                   Center(
                     child: Container(
                       width: 72,
@@ -110,30 +102,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Center(
-                    child: Text(
-                      'Welcome back',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.ink,
-                      ),
-                    ),
+                  Text(
+                    'Welcome back',
+                    style: AppTextStyles.screenTitle,
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 6),
-                  const Center(
-                    child: Text(
-                      'Sign in to your account',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.muted,
-                      ),
-                    ),
+                  Text(
+                    'Sign in to your account',
+                    style: AppTextStyles.bodyMuted,
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
 
-                  // Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -150,11 +131,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Email
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: AppColors.ink, fontSize: 15),
+                          style: AppTextStyles.body,
                           decoration: const InputDecoration(
                             labelText: 'Email',
                             prefixIcon: Icon(Icons.email_outlined, color: AppColors.muted),
@@ -166,11 +146,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
-                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
-                          style: const TextStyle(color: AppColors.ink, fontSize: 15),
+                          style: AppTextStyles.body,
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outlined, color: AppColors.muted),
@@ -189,21 +168,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         const SizedBox(height: 8),
-                        // Forgot password
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
                             },
-                            child: const Text(
+                            child: Text(
                               'Forgot password?',
-                              style: TextStyle(fontSize: 13, color: AppColors.muted),
+                              style: AppTextStyles.caption,
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Login button
                         Consumer<AuthProvider>(
                           builder: (context, auth, _) {
                             return AppButton(
@@ -216,28 +193,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Quick fill
-                  _QuickFillSection(onFill: _quickFill),
                   const SizedBox(height: 24),
 
-                  // Register link
+                  _QuickFillSection(onFill: (email, password) {
+                    setState(() {
+                      _emailController.text = email;
+                      _passwordController.text = password;
+                    });
+                  }),
+                  const SizedBox(height: 24),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "Don't have an account? ",
-                        style: TextStyle(fontSize: 14, color: AppColors.muted),
+                        style: AppTextStyles.bodyMuted,
                       ),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
                         },
-                        child: const Text(
+                        child: Text(
                           'Create one',
-                          style: TextStyle(
-                            fontSize: 14,
+                          style: AppTextStyles.body.copyWith(
                             fontWeight: FontWeight.w500,
                             color: AppColors.coral,
                           ),
@@ -271,12 +250,7 @@ class _QuickFillSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
                 'Quick fill',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.muted.withValues(alpha: 0.6),
-                  letterSpacing: 0.5,
-                ),
+                style: AppTextStyles.caption,
               ),
             ),
             const Expanded(child: Divider(color: AppColors.divider)),
@@ -319,10 +293,9 @@ class _QuickFillButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+          style: AppTextStyles.caption.copyWith(
             color: AppColors.coralDark,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
