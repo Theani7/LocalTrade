@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/product_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -258,9 +257,8 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                 ),
                 child: Text(
                   label,
-                  style: GoogleFonts.inter(
+                  style: AppTextStyles.label.copyWith(
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
                     color: textColor,
                   ),
                 ),
@@ -371,11 +369,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                     const SizedBox(height: 2),
                     Text(
                       '$stock units',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.ink,
-                      ),
+                      style: AppTextStyles.cardTitle.copyWith(fontSize: 16),
                     ),
                   ],
                 ),
@@ -422,9 +416,8 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
             const SizedBox(width: 4),
             Text(
               'Available',
-              style: GoogleFonts.inter(
+              style: AppTextStyles.label.copyWith(
                 fontSize: 10,
-                fontWeight: FontWeight.w500,
                 color: AppColors.successDark,
               ),
             ),
@@ -455,9 +448,8 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
+        style: AppTextStyles.label.copyWith(
           fontSize: 10,
-          fontWeight: FontWeight.w500,
           color: textColor,
         ),
       ),
@@ -526,11 +518,11 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
         title: Text(
           'Delete product',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink),
+          style: AppTextStyles.cardTitle.copyWith(fontSize: 16),
         ),
         content: Text(
           'Are you sure you want to delete "$title"? This cannot be undone.',
-          style: const TextStyle(fontSize: 14, color: AppColors.muted, height: 1.5),
+          style: AppTextStyles.bodyMuted,
         ),
         actions: [
           TextButton(
@@ -585,9 +577,8 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
           Expanded(
             child: Text(
               'Mark products as unavailable when stock runs out so customers don\'t reserve items you can\'t fulfill.',
-              style: GoogleFonts.inter(
+              style: AppTextStyles.caption.copyWith(
                 fontSize: 12,
-                fontWeight: FontWeight.w400,
                 color: AppColors.coralDark,
                 height: 1.5,
               ),

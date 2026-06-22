@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../auth/login_screen.dart';
 
 class VendorPendingScreen extends StatelessWidget {
@@ -52,7 +53,7 @@ class VendorPendingScreen extends StatelessWidget {
               // Title
               Text(
                 status == 'suspended' ? 'Account suspended' : 'Approval pending',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: AppColors.ink),
+                style: AppTextStyles.screenTitle.copyWith(fontSize: 22),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -63,7 +64,7 @@ class VendorPendingScreen extends StatelessWidget {
                     ? 'Your account has been suspended by the administrator. Please contact support for more information.'
                     : 'Your vendor account is currently being reviewed by our team. You will be notified once it is approved.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: AppColors.muted, height: 1.5),
+                style: AppTextStyles.bodyMuted,
               ),
               const SizedBox(height: 40),
 

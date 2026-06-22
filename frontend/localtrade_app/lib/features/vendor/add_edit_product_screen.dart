@@ -371,20 +371,19 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           width: 1.5,
         ),
       ),
-      child: const Column(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.add_a_photo_outlined,
             size: 22,
             color: AppColors.coralDark,
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
             'Add photo',
-            style: TextStyle(
+            style: AppTextStyles.label.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w500,
               color: AppColors.coralDark,
             ),
           ),
@@ -764,7 +763,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   InputDecoration _noBorderDecoration({required String hint}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
+      hintStyle: AppTextStyles.bodyMuted.copyWith(fontSize: 14),
       isDense: true,
       border: InputBorder.none,
       enabledBorder: InputBorder.none,
