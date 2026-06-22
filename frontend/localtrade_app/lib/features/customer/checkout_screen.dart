@@ -58,8 +58,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _hasSavedAddress(Map<String, dynamic>? user) {
     if (user == null) return false;
     final addr = user['address'];
-    if (addr is Map && (addr['city'] ?? '').toString().isNotEmpty) {
-      return true;
+    if (addr is Map) {
+      return (addr['flatHouse'] ?? '').toString().isNotEmpty ||
+          (addr['street'] ?? '').toString().isNotEmpty ||
+          (addr['landmark'] ?? '').toString().isNotEmpty ||
+          (addr['city'] ?? '').toString().isNotEmpty ||
+          (addr['state'] ?? '').toString().isNotEmpty ||
+          (addr['zipCode'] ?? '').toString().isNotEmpty;
     }
     return false;
   }
@@ -128,15 +133,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     for (var entry in itemsByVendor.entries) {
       final vendorId = entry.key;
       final items = entry.value;
-      final total = items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+      final total =
+          items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
 
       final success = await orderProvider.placeOrder({
         'vendorId': vendorId,
-        'items': items.map((i) => {
-          'productId': i.id,
-          'quantity': i.quantity,
-          'price': i.price,
-        }).toList(),
+        'items': items
+            .map((i) => {
+                  'productId': i.id,
+                  'quantity': i.quantity,
+                  'price': i.price,
+                })
+            .toList(),
         'totalAmount': total,
         'shippingAddress': shippingAddress,
         'phone': _phoneController.text.trim(),
@@ -236,7 +244,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       if (hasAddress && !_isEditingAddress)
                         TextButton(
-                          onPressed: () => setState(() => _isEditingAddress = true),
+                          onPressed: () =>
+                              setState(() => _isEditingAddress = true),
                           child: const Text('Edit'),
                         ),
                     ],
@@ -270,10 +279,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       style: AppTextStyles.body,
                       decoration: InputDecoration(
                         hintText: 'e.g. call before delivery',
-                        hintStyle: AppTextStyles.bodyMuted.copyWith(fontSize: 14),
-                        prefixIcon: const Icon(Icons.notes_rounded, color: AppColors.muted, size: 20),
+                        hintStyle:
+                            AppTextStyles.bodyMuted.copyWith(fontSize: 14),
+                        prefixIcon: const Icon(Icons.notes_rounded,
+                            color: AppColors.muted, size: 20),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -310,54 +322,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ...items.values.map((item) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.gapSm),
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  color: AppColors.mutedLight,
-                                  child: item.imageUrl.isNotEmpty
-                                      ? Image.network(
-                                          item.imageUrl,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(
-                                            Icons.shopping_bag_outlined,
-                                            color: AppColors.muted,
-                                            size: 22,
-                                          ),
-                                        )
-                                      : const Icon(Icons.shopping_bag_outlined, color: AppColors.muted, size: 22),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.gapLg),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.title,
-                                      style: AppTextStyles.cardTitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.gapSm),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm),
+                                    child: Container(
+                                      width: 48,
+                                      height: 48,
+                                      color: AppColors.mutedLight,
+                                      child: item.imageUrl.isNotEmpty
+                                          ? Image.network(
+                                              item.imageUrl,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(
+                                                Icons.shopping_bag_outlined,
+                                                color: AppColors.muted,
+                                                size: 22,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.shopping_bag_outlined,
+                                              color: AppColors.muted,
+                                              size: 22),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${item.quantity} x Rs. ${item.price.toStringAsFixed(0)}',
-                                      style: AppTextStyles.caption,
+                                  ),
+                                  const SizedBox(width: AppSpacing.gapLg),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.title,
+                                          style: AppTextStyles.cardTitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${item.quantity} x Rs. ${item.price.toStringAsFixed(0)}',
+                                          style: AppTextStyles.caption,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  Text(
+                                    'Rs. ${(item.price * item.quantity).toStringAsFixed(0)}',
+                                    style: AppTextStyles.cardTitle,
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'Rs. ${(item.price * item.quantity).toStringAsFixed(0)}',
-                                style: AppTextStyles.cardTitle,
-                              ),
-                            ],
-                          ),
-                        )),
+                            )),
                         const SizedBox(height: AppSpacing.gapSm),
                         Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.gapSm),
@@ -376,7 +395,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ),
                         ),
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: AppSpacing.gapMd),
+                          padding:
+                              EdgeInsets.symmetric(vertical: AppSpacing.gapMd),
                           child: Divider(color: AppColors.divider, height: 1),
                         ),
                         Row(
@@ -388,7 +408,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                             Text(
                               'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
-                              style: AppTextStyles.price.copyWith(color: AppColors.coral),
+                              style: AppTextStyles.price
+                                  .copyWith(color: AppColors.coral),
                             ),
                           ],
                         ),
@@ -418,12 +439,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 child: Consumer<OrderProvider>(
                   builder: (context, order, _) {
-                    final canPlaceOrder = !order.isLoading && !_isEditingAddress && hasAddress;
+                    final canPlaceOrder =
+                        !order.isLoading && !_isEditingAddress && hasAddress;
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.gapMd),
+                          padding:
+                              const EdgeInsets.only(bottom: AppSpacing.gapMd),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -491,7 +514,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const CustomerProfileScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const CustomerProfileScreen()),
               );
               if (mounted) {
                 setState(() {
@@ -499,7 +523,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 });
               }
             },
-            icon: const Icon(Icons.add_location_alt_outlined, size: 18, color: AppColors.coral),
+            icon: const Icon(Icons.add_location_alt_outlined,
+                size: 18, color: AppColors.coral),
             label: const Text(
               'Add address in profile',
               style: TextStyle(fontSize: 13, color: AppColors.coral),
@@ -530,7 +555,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.person_outline, size: 16, color: AppColors.muted),
+              const Icon(Icons.person_outline,
+                  size: 16, color: AppColors.muted),
               const SizedBox(width: 8),
               Text(
                 _nameController.text,
@@ -541,7 +567,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.phone_outlined, size: 16, color: AppColors.muted),
+              const Icon(Icons.phone_outlined,
+                  size: 16, color: AppColors.muted),
               const SizedBox(width: 8),
               Text(
                 '+977 ${_phoneController.text}',
@@ -556,7 +583,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.location_on_outlined, size: 16, color: AppColors.coral),
+              const Icon(Icons.location_on_outlined,
+                  size: 16, color: AppColors.coral),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -575,7 +603,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final parts = <String>[
       if (_flatController.text.isNotEmpty) _flatController.text,
       if (_streetController.text.isNotEmpty) _streetController.text,
-      if (_landmarkController.text.isNotEmpty) 'Landmark: ${_landmarkController.text}',
+      if (_landmarkController.text.isNotEmpty)
+        'Landmark: ${_landmarkController.text}',
       if (_cityController.text.isNotEmpty) _cityController.text,
       if (_stateController.text.isNotEmpty) _stateController.text,
       if (_zipController.text.isNotEmpty) _zipController.text,
@@ -602,7 +631,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 'Delivery address',
                 style: AppTextStyles.sectionHeading,
               ),
-              if (_hasSavedAddress(Provider.of<AuthProvider>(context, listen: false).user))
+              if (_hasSavedAddress(
+                  Provider.of<AuthProvider>(context, listen: false).user))
                 TextButton(
                   onPressed: () => setState(() => _isEditingAddress = false),
                   child: const Text('Cancel'),
@@ -610,17 +640,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.gapLg),
-          _field(controller: _flatController, label: 'Flat / house number', icon: Icons.home_outlined),
+          _field(
+              controller: _flatController,
+              label: 'Flat / house number',
+              icon: Icons.home_outlined),
           const SizedBox(height: AppSpacing.gapMd),
-          _field(controller: _streetController, label: 'Street / area', icon: Icons.route_outlined),
+          _field(
+              controller: _streetController,
+              label: 'Street / area',
+              icon: Icons.route_outlined),
           const SizedBox(height: AppSpacing.gapMd),
-          _field(controller: _landmarkController, label: 'Landmark (optional)', icon: Icons.flag_outlined),
+          _field(
+              controller: _landmarkController,
+              label: 'Landmark (optional)',
+              icon: Icons.flag_outlined),
           const SizedBox(height: AppSpacing.gapMd),
           Row(
             children: [
-              Expanded(child: _field(controller: _cityController, label: 'City', icon: Icons.location_city_outlined)),
+              Expanded(
+                  child: _field(
+                      controller: _cityController,
+                      label: 'City',
+                      icon: Icons.location_city_outlined)),
               const SizedBox(width: AppSpacing.gapMd),
-              Expanded(child: _field(controller: _stateController, label: 'State', icon: Icons.map_outlined)),
+              Expanded(
+                  child: _field(
+                      controller: _stateController,
+                      label: 'State',
+                      icon: Icons.map_outlined)),
             ],
           ),
           const SizedBox(height: AppSpacing.gapMd),
