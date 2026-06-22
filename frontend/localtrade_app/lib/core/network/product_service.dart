@@ -26,10 +26,11 @@ class ProductService {
     if (vendorId != null) query += '&vendorId=$vendorId';
 
     final token = await _authService.getToken();
-    if (token == null) throw Exception('Not authenticated');
-    final response = await _apiService.get('/products$query', headers: {
-      'Authorization': 'Bearer $token',
-    });
+    final headers = <String, String>{};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    final response = await _apiService.get('/products$query', headers: headers);
     final Map<String, dynamic> data;
     try {
       data = json.decode(response.body);
@@ -45,10 +46,11 @@ class ProductService {
 
   Future<Map<String, dynamic>> getProduct(String id) async {
     final token = await _authService.getToken();
-    if (token == null) throw Exception('Not authenticated');
-    final response = await _apiService.get('/products/$id', headers: {
-      'Authorization': 'Bearer $token',
-    });
+    final headers = <String, String>{};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    final response = await _apiService.get('/products/$id', headers: headers);
     final Map<String, dynamic> data;
     try {
       data = json.decode(response.body);
