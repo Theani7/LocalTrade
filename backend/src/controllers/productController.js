@@ -1,6 +1,8 @@
 const Product = require('../models/productModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { sendNotification } = require('../utils/notificationUtils');
+const User = require('../models/userModel');
 
 // @desc    Get all products (with search, filter, pagination)
 // @route   GET /api/v1/products
@@ -136,6 +138,26 @@ exports.createProduct = catchAsync(async (req, res, next) => {
   }
 
   const product = await Product.create(productData);
+
+  // Send promotional notification to all customers
+  try {
+    const customers = await User.find({ role: 'customer' }).select('_id');
+    if (customers.length > 0) {
+      const shopName = req.user.shopName || req.user.fullName;
+      const notificationPromises = customers.map(customer =>
+        sendNotification(
+          customer._id,
+          'New item listed!',
+          `${shopName} just listed "${title}" in ${category || 'Local Goods'} — grab this offer before it runs out!`,
+          { productId: product._id.toString(), type: 'new_product' },
+          'Promotional'
+        )
+      );
+      await Promise.all(notificationPromises);
+    }
+  } catch (err) {
+    console.error('Promotional notification error:', err.message);
+  }
 
   res.status(201).json({
     success: true,

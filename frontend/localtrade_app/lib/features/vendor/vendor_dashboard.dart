@@ -210,12 +210,57 @@ class VendorOverviewTab extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          _iconButton(
-                            icon: Icons.notifications_outlined,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const NotificationScreen()),
-                            ),
+                          Consumer<NotificationProvider>(
+                            builder: (context, notifProv, _) {
+                              return GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                                ),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.ink.withValues(alpha: 0.06),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(Icons.notifications_outlined, size: 20, color: AppColors.ink),
+                                    ),
+                                    if (notifProv.unreadCount > 0)
+                                      Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.coral,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Text(
+                                            notifProv.unreadCount > 9 ? '9+' : '${notifProv.unreadCount}',
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                              height: 1,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(width: 8),
                           _iconButton(

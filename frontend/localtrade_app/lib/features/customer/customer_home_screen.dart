@@ -158,9 +158,47 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       ),
                     ],
                   ),
-                  _buildIconButton(
-                    icon: Icons.notifications_outlined,
-                    onTap: () => AuthGuard.requireAuthRoute(context, const NotificationScreen()),
+                  Consumer<NotificationProvider>(
+                    builder: (context, notifProv, _) {
+                      return GestureDetector(
+                        onTap: () => AuthGuard.requireAuthRoute(context, const NotificationScreen()),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: const BoxDecoration(
+                                color: AppColors.surface,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.notifications_outlined, size: 22, color: AppColors.ink),
+                            ),
+                            if (notifProv.unreadCount > 0)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.coral,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    notifProv.unreadCount > 9 ? '9+' : '${notifProv.unreadCount}',
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -328,21 +366,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           // Load more
           _buildLoadMoreIndicator(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildIconButton({required IconData icon, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, size: 22, color: AppColors.ink),
       ),
     );
   }
