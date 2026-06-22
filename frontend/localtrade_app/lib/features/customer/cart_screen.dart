@@ -310,6 +310,7 @@ class _VendorGroupCard extends StatelessWidget {
           ),
           ...items.map(
             (item) => _CartItemTile(
+              key: ValueKey(item.id),
               item: item,
               cart: cart,
               onRemove: () => cart.removeItem(item.id),
@@ -330,6 +331,7 @@ class _CartItemTile extends StatefulWidget {
   final VoidCallback onRemove;
 
   const _CartItemTile({
+    super.key,
     required this.item,
     required this.cart,
     required this.onRemove,
