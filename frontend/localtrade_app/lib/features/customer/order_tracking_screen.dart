@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/network/order_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../widgets/skeleton_loaders.dart';
 
@@ -51,7 +52,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Order Details'),
+        title: Text('Order Details', style: AppTextStyles.screenTitle),
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.ink,
         elevation: 0,
@@ -98,12 +99,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             children: [
               Text(
                 '#$shortId',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.ink,
-                  letterSpacing: 0.3,
-                ),
+                style: AppTextStyles.cardTitle.copyWith(letterSpacing: 0.3),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -143,26 +139,22 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         color: AppColors.dangerLight,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.cancel_rounded, color: AppColors.danger, size: 20),
-          SizedBox(width: AppSpacing.gapLg),
+          const Icon(Icons.cancel_rounded, color: AppColors.danger, size: 20),
+          const SizedBox(width: AppSpacing.gapLg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Order Cancelled',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.danger,
-                  ),
+                  style: AppTextStyles.cardTitle.copyWith(color: AppColors.danger),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'This order has been cancelled.',
-                  style: TextStyle(fontSize: 12, color: AppColors.muted),
+                  style: AppTextStyles.caption,
                 ),
               ],
             ),
@@ -268,13 +260,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Items',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.ink,
-            ),
+            style: AppTextStyles.cardTitle,
           ),
           const SizedBox(height: AppSpacing.gapLg),
           ...products.map((p) => _buildItemRow(p)),
@@ -288,11 +276,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ),
               Text(
                 'Rs. ${_order['totalAmount']}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.ink,
-                ),
+                style: AppTextStyles.price,
               ),
             ],
           ),
@@ -412,13 +396,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Delivery Details',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.ink,
-            ),
+            style: AppTextStyles.cardTitle,
           ),
           const SizedBox(height: AppSpacing.gapLg),
           Row(
@@ -437,21 +417,12 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                     if (displayName.isNotEmpty)
                       Text(
                         displayName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink,
-                          height: 1.4,
-                        ),
+                        style: AppTextStyles.cardTitle.copyWith(height: 1.4),
                       ),
                     if (displayAddress.isNotEmpty)
                       Text(
                         displayAddress,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.muted,
-                          height: 1.4,
-                        ),
+                        style: AppTextStyles.caption.copyWith(height: 1.4),
                       ),
                   ],
                 ),
@@ -472,11 +443,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 Expanded(
                   child: Text(
                     notes.toString(),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.muted,
-                      fontStyle: FontStyle.italic,
-                    ),
+                    style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic),
                   ),
                 ),
               ],
@@ -502,11 +469,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           ),
           Text(
             'Rs. ${_order['totalAmount']}',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.ink,
-            ),
+            style: AppTextStyles.screenTitle,
           ),
         ],
       ),

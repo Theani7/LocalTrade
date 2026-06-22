@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
 import '../../widgets/app_bottom_nav.dart';
@@ -148,20 +149,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     children: [
                       Text(
                         'Hello, $name',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.muted,
-                        ),
+                        style: AppTextStyles.bodyMuted,
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'Discover local products',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink,
-                        ),
+                        style: AppTextStyles.screenTitle,
                       ),
                     ],
                   ),
@@ -181,7 +174,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               child: TextField(
                 controller: _searchController,
                 onSubmitted: (_) => _fetchProducts(),
-                style: const TextStyle(color: AppColors.ink, fontSize: 14),
+                style: AppTextStyles.body.copyWith(color: AppColors.ink),
                 decoration: InputDecoration(
                   hintText: 'Search products, categories...',
                   hintStyle: TextStyle(color: AppColors.muted.withValues(alpha: 0.5)),
@@ -243,9 +236,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                         ),
                         child: Text(
                           cat,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                          style: AppTextStyles.label.copyWith(
                             color: isSelected ? AppColors.ink : AppColors.muted,
                           ),
                         ),
@@ -407,7 +398,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Filter by location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                Text('Filter by location', style: AppTextStyles.sectionHeading),
                 IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: AppColors.muted)),
               ],
             ),
@@ -452,7 +443,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Sort by', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
+            Text('Sort by', style: AppTextStyles.sectionHeading),
             const SizedBox(height: 16),
             ..._sortOptions.entries.map((entry) => ListTile(
                   title: Text(
@@ -612,11 +603,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           );
         }
         if (!provider.hasMore && provider.products.isNotEmpty) {
-          return const SliverToBoxAdapter(
+          return SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(
-                child: Text('You have reached the end', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+                child: Text('You have reached the end', style: AppTextStyles.caption),
               ),
             ),
           );
