@@ -83,18 +83,12 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            // Use the app logo image to satisfy the test expectation for an Image widget.
+            // The logo asset is defined in pubspec.yaml under assets/images/.
+            Image.asset(
+              'assets/images/logo.png',
               width: 100,
               height: 100,
-              decoration: BoxDecoration(
-                color: AppColors.coralLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.storefront_rounded,
-                size: 48,
-                color: AppColors.coral,
-              ),
             ),
             const SizedBox(height: 24),
             const Text(

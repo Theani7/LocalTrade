@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/theme/app_colors.dart';
+import '../../features/auth/forgot_password_screen.dart';
+import '../../features/auth/role_selection_screen.dart';
 import '../../widgets/app_button.dart';
+import '../../core/theme/app_colors.dart';
 
 class AuthGuard {
   static bool isAuthenticated(BuildContext context) {
@@ -41,6 +43,25 @@ class AuthGuard {
     bool isLoading = false;
     String? error;
 
+    // Helper to navigate to the registration flow
+    // Local function to navigate to the registration flow.
+    // Named without leading underscore to satisfy lint rule.
+    void navigateToRegister() {
+      // Close the bottom sheet first
+      Navigator.pop(context);
+      // Push the registration screen. If it returns true (successful registration),
+      // invoke the original onLoginSuccess callback so the original action proceeds.
+      // Navigate to the role selection screen which will subsequently push the
+      // registration form for the chosen role.
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const RoleSelectionScreen()))
+          .then((result) {
+        if (result == true) {
+          onLoginSuccess();
+        }
+      });
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -70,7 +91,7 @@ class AuthGuard {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Login required',
+                              'Sign in to continue',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
@@ -79,7 +100,7 @@ class AuthGuard {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'Sign in to continue',
+                              'Save your cart and track your orders.',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppColors.muted,
@@ -121,6 +142,21 @@ class AuthGuard {
                       ),
                     ),
                   ),
+                  // Forgot password link – right aligned below the password field
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        // Replace with actual forgot password navigation when available
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
+                      },
+                      child: const Text(
+                        'Forgot password?',
+                        style: TextStyle(color: AppColors.coral),
+                      ),
+                    ),
+                  ),
                   if (error != null) ...[
                     const SizedBox(height: 8),
                     Text(error!, style: const TextStyle(fontSize: 12, color: AppColors.danger)),
@@ -130,8 +166,7 @@ class AuthGuard {
                     label: 'Login',
                     isLoading: isLoading,
                     onPressed: () async {
-                      if (emailController.text.trim().isEmpty ||
-                          passwordController.text.isEmpty) {
+                      if (emailController.text.trim().isEmpty || passwordController.text.isEmpty) {
                         setModalState(() => error = 'Please fill in all fields');
                         return;
                       }
@@ -140,10 +175,7 @@ class AuthGuard {
                         error = null;
                       });
                       final auth = Provider.of<AuthProvider>(context, listen: false);
-                      final success = await auth.login(
-                        emailController.text.trim(),
-                        passwordController.text,
-                      );
+                      final success = await auth.login(emailController.text.trim(), passwordController.text);
                       if (!context.mounted) return;
                       if (success) {
                         Navigator.pop(context);
@@ -155,6 +187,31 @@ class AuthGuard {
                         });
                       }
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  // Create account path
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Don\'t have an account?', style: TextStyle(fontSize: 14, color: AppColors.muted)),
+                      const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: navigateToRegister,
+                        child: const Text(
+                          'Sign up',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.coral),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Continue as guest (optional)
+                  TextButton(
+                    onPressed: () {
+                      // Guest path – simply dismiss the sheet; calling code can decide what to do.
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Continue as guest', style: TextStyle(color: AppColors.coral)),
                   ),
                 ],
               ),
