@@ -7,10 +7,15 @@ import '../../core/theme/app_text_styles.dart';
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
-  static final Uri _emailUri = Uri(
-    scheme: 'mailto',
-    path: 'support@localtrade.com',
-  );
+  Future<void> _launchUri(Uri uri) async {
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
+    } catch (_) {
+      // url_launcher not available on web — fallback handled by caller
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,9 +116,12 @@ class HelpSupportScreen extends StatelessWidget {
           // Email
           GestureDetector(
             onTap: () async {
-              if (await canLaunchUrl(_emailUri)) {
-                await launchUrl(_emailUri);
-              }
+              final Uri mailto = Uri(
+                scheme: 'mailto',
+                path: 'support@localtrade.com',
+                queryParameters: {'subject': 'Support Request'},
+              );
+              await _launchUri(mailto);
             },
             child: Row(
               children: [
@@ -296,11 +304,9 @@ class HelpSupportScreen extends StatelessWidget {
               final Uri mailto = Uri(
                 scheme: 'mailto',
                 path: 'support@localtrade.com',
-                query: 'subject=Bug Report - LocalTrade App',
+                queryParameters: {'subject': 'Bug Report - LocalTrade App'},
               );
-              if (await canLaunchUrl(mailto)) {
-                await launchUrl(mailto);
-              }
+              await _launchUri(mailto);
             },
           ),
           const Divider(height: 1, indent: 52),
@@ -314,9 +320,7 @@ class HelpSupportScreen extends StatelessWidget {
               final Uri playStore = Uri.parse(
                 'https://play.google.com/store/apps/details?id=com.localtrade.app',
               );
-              if (await canLaunchUrl(playStore)) {
-                await launchUrl(playStore, mode: LaunchMode.externalApplication);
-              }
+              await _launchUri(playStore);
             },
           ),
           const Divider(height: 1, indent: 52),
