@@ -13,6 +13,9 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'order_tracking_screen.dart';
 
+// ═════════════════════════════════════════════════════════════════════════════
+// CustomerOrdersScreen — full-screen push route
+// ═════════════════════════════════════════════════════════════════════════════
 class CustomerOrdersScreen extends StatefulWidget {
   const CustomerOrdersScreen({super.key});
 
@@ -21,6 +24,33 @@ class CustomerOrdersScreen extends StatefulWidget {
 }
 
 class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text('Your Orders', style: AppTextStyles.screenTitle),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+        centerTitle: false,
+      ),
+      body: const CustomerOrdersBody(),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CustomerOrdersBody — reusable content widget (used by CustomerShell)
+// ═════════════════════════════════════════════════════════════════════════════
+class CustomerOrdersBody extends StatefulWidget {
+  const CustomerOrdersBody({super.key});
+
+  @override
+  State<CustomerOrdersBody> createState() => _CustomerOrdersBodyState();
+}
+
+class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
   @override
   void initState() {
     super.initState();
@@ -93,79 +123,61 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     if (!AuthGuard.isAuthenticated(context)) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          title: Text('Your Orders', style: AppTextStyles.screenTitle),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
-                child: const Icon(Icons.shopping_bag_outlined, size: 36, color: AppColors.coral),
-              ),
-              const SizedBox(height: 16),
-              Text('Login to view orders', style: AppTextStyles.sectionHeading),
-              const SizedBox(height: 8),
-              Text('Sign in to see your order history', style: AppTextStyles.bodyMuted),
-              const SizedBox(height: 20),
-              AppButton(
-                label: 'Login',
-                onPressed: () {
-                  AuthGuard.requireAuth(context, onAuthenticated: () {
-                    if (mounted) setState(() {});
-                  });
-                },
-              ),
-            ],
-          ),
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+              child: const Icon(Icons.shopping_bag_outlined, size: 36, color: AppColors.coral),
+            ),
+            const SizedBox(height: 16),
+            Text('Login to view orders', style: AppTextStyles.sectionHeading),
+            const SizedBox(height: 8),
+            Text('Sign in to see your order history', style: AppTextStyles.bodyMuted),
+            const SizedBox(height: 20),
+            AppButton(
+              label: 'Login',
+              onPressed: () {
+                AuthGuard.requireAuth(context, onAuthenticated: () {
+                  if (mounted) setState(() {});
+                });
+              },
+            ),
+          ],
         ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Your Orders', style: AppTextStyles.screenTitle),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-        centerTitle: false,
-      ),
-      body: Consumer<OrderProvider>(
-        builder: (context, orderProvider, _) {
-          if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
-            return const OrderCardSkeleton();
-          }
+    return Consumer<OrderProvider>(
+      builder: (context, orderProvider, _) {
+        if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
+          return const OrderCardSkeleton();
+        }
 
-          if (orderProvider.orders.isEmpty) {
-            return EmptyState(
-              icon: Icons.receipt_long_outlined,
-              title: 'No orders yet',
-              message: 'Place your first order to see it here.',
-              onAction: () => Navigator.pop(context),
-              actionLabel: 'Browse products',
-            );
-          }
+        if (orderProvider.orders.isEmpty) {
+          return EmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: 'No orders yet',
+            message: 'Place your first order to see it here.',
+            onAction: () {},
+            actionLabel: 'Browse products',
+          );
+        }
 
-          return RefreshIndicator(
-            onRefresh: () async => orderProvider.fetchMyOrders(),
-            color: AppColors.coral,
-            backgroundColor: AppColors.surface,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenPaddingH,
-                vertical: AppSpacing.screenPaddingTop,
-              ),
-              itemCount: orderProvider.orders.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+        return RefreshIndicator(
+          onRefresh: () async => orderProvider.fetchMyOrders(),
+          color: AppColors.coral,
+          backgroundColor: AppColors.surface,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.screenPaddingH,
+              vertical: AppSpacing.screenPaddingTop,
+            ),
+            itemCount: orderProvider.orders.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final order = orderProvider.orders[index];
                 final orderId = order['_id']?.toString() ?? 'unknown';
@@ -380,9 +392,8 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
             ),
           );
         },
-      ),
-    );
-  }
+      );
+    }
 
   Widget _buildStatusBadge(String status) {
     Color bgColor;

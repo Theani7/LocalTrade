@@ -24,6 +24,9 @@ String _toTitleCase(String text) {
   }).join(' ');
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// CustomerProfileScreen — full-screen push route
+// ═════════════════════════════════════════════════════════════════════════════
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
 
@@ -32,6 +35,33 @@ class CustomerProfileScreen extends StatefulWidget {
 }
 
 class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text('My Account', style: AppTextStyles.screenTitle),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: const CustomerProfileBody(),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CustomerProfileBody — reusable content widget (used by CustomerShell)
+// ═════════════════════════════════════════════════════════════════════════════
+class CustomerProfileBody extends StatefulWidget {
+  const CustomerProfileBody({super.key});
+
+  @override
+  State<CustomerProfileBody> createState() => _CustomerProfileBodyState();
+}
+
+class _CustomerProfileBodyState extends State<CustomerProfileBody> {
   final _formKey = GlobalKey<FormState>();
   final _addressFormKey = GlobalKey<FormState>();
 
@@ -175,43 +205,34 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (!AuthGuard.isAuthenticated(context)) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          title: Text('My Account', style: AppTextStyles.screenTitle),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: const BoxDecoration(
-                    color: AppColors.coralLight, shape: BoxShape.circle),
-                child: const Icon(Icons.person_outline_rounded,
-                    size: 36, color: AppColors.coral),
-              ),
-              const SizedBox(height: 16),
-              Text('Login to view your profile',
-                  style: AppTextStyles.sectionHeading),
-              const SizedBox(height: 8),
-              Text('Sign in to manage your account',
-                  style: AppTextStyles.bodyMuted),
-              const SizedBox(height: 20),
-              AppButton(
-                label: 'Login',
-                onPressed: () {
-                  AuthGuard.requireAuth(context, onAuthenticated: () {
-                    if (mounted) setState(() {});
-                  });
-                },
-              ),
-            ],
-          ),
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                  color: AppColors.coralLight, shape: BoxShape.circle),
+              child: const Icon(Icons.person_outline_rounded,
+                  size: 36, color: AppColors.coral),
+            ),
+            const SizedBox(height: 16),
+            Text('Login to view your profile',
+                style: AppTextStyles.sectionHeading),
+            const SizedBox(height: 8),
+            Text('Sign in to manage your account',
+                style: AppTextStyles.bodyMuted),
+            const SizedBox(height: 20),
+            AppButton(
+              label: 'Login',
+              onPressed: () {
+                AuthGuard.requireAuth(context, onAuthenticated: () {
+                  if (mounted) setState(() {});
+                });
+              },
+            ),
+          ],
         ),
       );
     }
@@ -236,52 +257,39 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             (user['address']['state'] ?? '').toString().isNotEmpty ||
             (user['address']['zipCode'] ?? '').toString().isNotEmpty);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'My Account',
-          style: AppTextStyles.screenTitle,
-        ),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Profile card ──
-            _buildProfileCard(user, name, email, initials, role),
-            const SizedBox(height: 16),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Profile card ──
+          _buildProfileCard(user, name, email, initials, role),
+          const SizedBox(height: 16),
 
-            // ── Quick stats ──
-            _buildQuickStats(),
-            const SizedBox(height: 24),
+          // ── Quick stats ──
+          _buildQuickStats(),
+          const SizedBox(height: 24),
 
-            // ── Profile edit form (expandable) ──
-            _buildProfileEditForm(),
-            _buildAddressEditForm(),
+          // ── Profile edit form (expandable) ──
+          _buildProfileEditForm(),
+          _buildAddressEditForm(),
 
-            // ── Account Settings ──
-            _buildSectionLabel('Account Settings'),
-            const SizedBox(height: 8),
-            _buildSettingsGroup(user, hasAddress),
-            const SizedBox(height: 24),
+          // ── Account Settings ──
+          _buildSectionLabel('Account Settings'),
+          const SizedBox(height: 8),
+          _buildSettingsGroup(user, hasAddress),
+          const SizedBox(height: 24),
 
-            // ── Support ──
-            _buildSectionLabel('Support'),
-            const SizedBox(height: 8),
-            _buildSupportGroup(),
-            const SizedBox(height: 24),
+          // ── Support ──
+          _buildSectionLabel('Support'),
+          const SizedBox(height: 8),
+          _buildSupportGroup(),
+          const SizedBox(height: 24),
 
-            // ── Logout (neutral row) ──
-            _buildLogoutRow(),
-            const SizedBox(height: 32),
-          ],
-        ),
+          // ── Logout (neutral row) ──
+          _buildLogoutRow(),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }

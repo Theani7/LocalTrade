@@ -29,6 +29,9 @@ String _vendorInitials(String name) {
   return name.substring(0, name.length.clamp(0, 2)).toUpperCase();
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// CartScreen — full-screen push route
+// ═════════════════════════════════════════════════════════════════════════════
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -37,6 +40,37 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        title: Text('Cart', style: AppTextStyles.screenTitle),
+      ),
+      body: CartBody(
+        onBrowseProducts: () => Navigator.pop(context),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CartBody — reusable content widget (used by CustomerShell)
+// ═════════════════════════════════════════════════════════════════════════════
+class CartBody extends StatefulWidget {
+  final VoidCallback? onBrowseProducts;
+
+  const CartBody({super.key, this.onBrowseProducts});
+
+  @override
+  State<CartBody> createState() => _CartBodyState();
+}
+
+class _CartBodyState extends State<CartBody> {
   final TextEditingController _noteController = TextEditingController();
 
   @override
@@ -50,49 +84,40 @@ class _CartScreenState extends State<CartScreen> {
     final isAuth = AuthGuard.isAuthenticated(context);
 
     if (!isAuth) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          title: Text('Cart', style: AppTextStyles.screenTitle),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: const BoxDecoration(
-                  color: AppColors.coralLight,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 36,
-                  color: AppColors.coralDark,
-                ),
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                color: AppColors.coralLight,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 16),
-              Text('Login to view your cart', style: AppTextStyles.cardTitle),
-              const SizedBox(height: 8),
-              Text(
-                'Sign in to add items and checkout',
-                style: AppTextStyles.bodyMuted,
+              child: const Icon(
+                Icons.shopping_bag_outlined,
+                size: 36,
+                color: AppColors.coralDark,
               ),
-              const SizedBox(height: 20),
-              AppButton(
-                label: 'Login',
-                onPressed: () {
-                  AuthGuard.requireAuth(context, onAuthenticated: () {
-                    if (mounted) setState(() {});
-                  });
-                },
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            Text('Login to view your cart', style: AppTextStyles.cardTitle),
+            const SizedBox(height: 8),
+            Text(
+              'Sign in to add items and checkout',
+              style: AppTextStyles.bodyMuted,
+            ),
+            const SizedBox(height: 20),
+            AppButton(
+              label: 'Login',
+              onPressed: () {
+                AuthGuard.requireAuth(context, onAuthenticated: () {
+                  if (mounted) setState(() {});
+                });
+              },
+            ),
+          ],
         ),
       );
     }
@@ -101,56 +126,53 @@ class _CartScreenState extends State<CartScreen> {
     final cartItems = cart.items.values.toList();
     final totalQty = cartItems.fold<int>(0, (s, i) => s + (i.quantity > 0 ? i.quantity : 0));
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        title: Text(
-          cartItems.isEmpty ? 'Cart' : 'Cart ($totalQty)',
-          style: AppTextStyles.screenTitle,
-        ),
-      ),
-      body: cartItems.isEmpty
-          ? _buildEmptyState(context)
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    children: [
-                      ...cart.itemsByVendor.entries.map((entry) {
-                        final rawName = entry.value.first.vendorName;
-                        final vendorName =
-                            rawName.isNotEmpty ? rawName : 'Local vendor';
-                        final vendorItems = entry.value;
-                        return _VendorGroupCard(
-                          vendorName: vendorName,
-                          items: vendorItems,
-                          cart: cart,
-                        );
-                      }),
-                      const SizedBox(height: 12),
-                      _VendorNoteCard(noteController: _noteController),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
-                _buildBottomBar(context, cart),
-              ],
-            ),
-    );
-  }
+    if (cartItems.isEmpty) {
+      return EmptyState(
+        icon: Icons.shopping_bag_outlined,
+        title: 'Your cart is empty',
+        message: 'Add items to get started',
+        onAction: widget.onBrowseProducts,
+        actionLabel: 'Browse products',
+      );
+    }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return EmptyState(
-      icon: Icons.shopping_bag_outlined,
-      title: 'Your cart is empty',
-      message: 'Add items to get started',
-      onAction: () => Navigator.pop(context),
-      actionLabel: 'Browse products',
+    return Column(
+      children: [
+        // Cart header with count
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              Text(
+                'Cart ($totalQty)',
+                style: AppTextStyles.screenTitle,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            children: [
+              ...cart.itemsByVendor.entries.map((entry) {
+                final rawName = entry.value.first.vendorName;
+                final vendorName =
+                    rawName.isNotEmpty ? rawName : 'Local vendor';
+                final vendorItems = entry.value;
+                return _VendorGroupCard(
+                  vendorName: vendorName,
+                  items: vendorItems,
+                  cart: cart,
+                );
+              }),
+              const SizedBox(height: 12),
+              _VendorNoteCard(noteController: _noteController),
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
+        _buildBottomBar(context, cart),
+      ],
     );
   }
 
