@@ -35,6 +35,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   final _picker = ImagePicker();
   List<String> _selectedCategories = [];
   final Set<String> _editingFields = {};
+  bool _hasChanges = false;
 
   final List<String> _allCategories = [
     'Vegetables',
@@ -78,6 +79,22 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     if (profile?['categories'] != null) {
       _selectedCategories = List<String>.from(profile!['categories']);
     }
+
+    _fullNameController.addListener(_onFieldChanged);
+    _shopNameController.addListener(_onFieldChanged);
+    _phoneController.addListener(_onFieldChanged);
+    _streetController.addListener(_onFieldChanged);
+    _cityController.addListener(_onFieldChanged);
+    _stateController.addListener(_onFieldChanged);
+    _zipController.addListener(_onFieldChanged);
+    _descriptionController.addListener(_onFieldChanged);
+    _hoursController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    if (!_hasChanges) {
+      setState(() => _hasChanges = true);
+    }
   }
 
   @override
@@ -102,22 +119,49 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       setState(() {
         _imageFile = pickedFile;
         _imageBytes = bytes;
+        _hasChanges = true;
       });
     }
   }
 
   void _toggleEdit(String field) {
     setState(() {
-      if (_editingFields.contains(field)) {
-        _editingFields.remove(field);
+      final addressFields = {'street', 'city', 'state', 'zip'};
+      if (addressFields.contains(field)) {
+        if (_editingFields.contains('street')) {
+          _editingFields.removeAll(addressFields);
+        } else {
+          _editingFields.addAll(addressFields);
+        }
       } else {
-        _editingFields.add(field);
+        if (_editingFields.contains(field)) {
+          _editingFields.remove(field);
+        } else {
+          _editingFields.add(field);
+        }
       }
     });
   }
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_streetController.text.trim().isEmpty ||
+        _cityController.text.trim().isEmpty ||
+        _stateController.text.trim().isEmpty ||
+        _zipController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('All address fields are required'),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+        ),
+      );
+      setState(() => _editingFields.addAll({'street', 'city', 'state', 'zip'}));
+      return;
+    }
 
     final provider =
         Provider.of<VendorProvider>(context, listen: false);
@@ -138,6 +182,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     };
 
     final success = await provider.updateProfile(fields, image: _imageFile);
+
+    if (mounted && success) {
+      setState(() => _hasChanges = false);
+    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -940,7 +988,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                               const SizedBox(width: 4),
                               GestureDetector(
                                 onTap: () {
-                                  setState(() => _selectedCategories.remove(cat));
+                                  setState(() {
+                                    _selectedCategories.remove(cat);
+                                    _hasChanges = true;
+                                  });
                                 },
                                 child: Icon(Icons.close_rounded,
                                     size: 12, color: AppColors.coralDark),
@@ -1011,7 +1062,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                   trailing: const Icon(Icons.add_rounded,
                       color: AppColors.coral, size: 20),
                   onTap: () {
-                    setState(() => _selectedCategories.add(cat));
+                    setState(() {
+                      _selectedCategories.add(cat);
+                      _hasChanges = true;
+                    });
                     Navigator.pop(context);
                   },
                 )),
@@ -1052,6 +1106,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   }
 
   Widget _buildStickySaveBar() {
+    if (!_hasChanges) return const SizedBox.shrink();
     return Consumer<VendorProvider>(
       builder: (context, provider, _) {
         return Container(
