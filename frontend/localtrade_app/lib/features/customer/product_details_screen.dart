@@ -849,16 +849,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ],
                         ),
                       ),
-                      Row(
-                        children: List.generate(5, (starIndex) {
-                          return Icon(
-                            starIndex < review['rating']
-                                ? Icons.star_rounded
-                                : Icons.star_border_rounded,
-                            color: AppColors.warning,
-                            size: 14,
-                          );
-                        }),
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(5, (starIndex) {
+                            return Icon(
+                              starIndex < review['rating']
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: AppColors.warning,
+                              size: 14,
+                            );
+                          }),
+                        ),
                       ),
                     ],
                   ),
