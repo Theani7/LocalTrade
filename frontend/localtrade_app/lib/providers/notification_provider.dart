@@ -1,23 +1,26 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../core/network/notification_service.dart';
 
 class NotificationProvider with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
   List<dynamic> _notifications = [];
   bool _isLoading = false;
+  String? _error;
 
   List<dynamic> get notifications => _notifications;
   bool get isLoading => _isLoading;
+  String? get error => _error;
   int get unreadCount => _notifications.where((n) => n['isRead'] != true).length;
 
   Future<void> fetchNotifications() async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
     try {
       final result = await _notificationService.getNotifications();
       _notifications = result['data']['notifications'];
     } catch (e) {
-      debugPrint('Error fetching notifications: $e');
+      _error = e.toString().replaceAll('Exception: ', '');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -33,14 +36,13 @@ class NotificationProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error marking notification as read: $e');
+      _error = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
     }
   }
 
   Future<void> markAllAsRead() async {
     try {
-      // 1. Aggressively update local state FIRST for instant UI feedback
-      debugPrint('MarkAllAsRead: Updating local state first...');
       _notifications = _notifications.map((n) {
         if (n is Map) {
           final updated = Map<String, dynamic>.from(n);
@@ -50,18 +52,17 @@ class NotificationProvider with ChangeNotifier {
         return n;
       }).toList();
       notifyListeners();
-      debugPrint('MarkAllAsRead: Local state updated. unreadCount should be 0 now.');
 
-      // 2. Send request to backend
       await _notificationService.markAllRead();
-      
-      // 3. Re-fetch from backend to ensure we are in sync with the actual server state
-      // (This handles cases where the local update might have missed something)
       await fetchNotifications();
     } catch (e) {
-      debugPrint('Error marking all notifications as read: $e');
-      // If backend fails, re-fetch to revert to actual state from server
+      _error = e.toString().replaceAll('Exception: ', '');
       await fetchNotifications();
     }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
   }
 }

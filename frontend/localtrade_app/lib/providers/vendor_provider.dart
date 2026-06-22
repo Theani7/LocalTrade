@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../core/network/vendor_service.dart';
 
 class VendorProvider with ChangeNotifier {

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import '../core/network/auth_service.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,13 +28,13 @@ class AuthProvider with ChangeNotifier {
   Future<bool> validateToken() async {
     try {
       final userData = await _authService.getMe();
-      debugPrint('validateToken success: role=${userData["role"]}, status=${userData["vendorApprovalStatus"]}, email=${userData["email"]}');
+
       _user = userData;
       await _saveUserToPrefs(_user!);
       notifyListeners();
       return true;
     } catch (e) {
-      debugPrint('validateToken failed (keeping cached user): $e');
+
       return _user != null;
     }
   }
@@ -43,10 +42,8 @@ class AuthProvider with ChangeNotifier {
   Future<void> _loadUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString(AppConstants.userKey);
-    debugPrint('AuthProvider _loadUserFromPrefs: ${userData != null ? "found user data" : "NO user data"}');
     if (userData != null) {
       _user = json.decode(userData);
-      debugPrint('AuthProvider loaded user: role=${_user?["role"]}, status=${_user?["vendorApprovalStatus"]}, email=${_user?["email"]}');
       notifyListeners();
     }
   }

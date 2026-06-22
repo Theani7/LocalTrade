@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../core/network/product_service.dart';
 
 class ProductProvider with ChangeNotifier {

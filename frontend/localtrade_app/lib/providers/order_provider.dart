@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../core/network/order_service.dart';
 
 class OrderProvider with ChangeNotifier {
