@@ -207,7 +207,7 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   }
 
   order.orderStatus = status;
-  await order.save();
+  await Order.findByIdAndUpdate(req.params.id, { orderStatus: status }, { new: true, runValidators: false });
 
   // Send notification to customer
   await sendNotification(
@@ -248,7 +248,15 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   order.orderStatus = 'Cancelled';
   order.cancellationReason = req.body.reason || undefined;
   order.cancellationFeedback = req.body.feedback || undefined;
-  await order.save();
+  await Order.findByIdAndUpdate(
+    req.params.id,
+    {
+      orderStatus: 'Cancelled',
+      cancellationReason: req.body.reason || undefined,
+      cancellationFeedback: req.body.feedback || undefined,
+    },
+    { new: true, runValidators: false }
+  );
 
   // Rollback stock for all products in this order
   for (const item of order.products) {
