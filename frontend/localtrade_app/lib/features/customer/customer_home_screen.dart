@@ -263,8 +263,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
                   if (_selectedLocation != null || _selectedSort != null || _showAll || _searchController.text.isNotEmpty || _selectedCategory != 'All')
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -322,6 +324,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     ),
                   ),
                 ],
+                ),
               ),
             ),
           ),
