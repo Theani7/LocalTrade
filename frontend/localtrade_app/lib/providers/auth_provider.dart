@@ -29,6 +29,7 @@ class AuthProvider with ChangeNotifier {
   Future<bool> validateToken() async {
     try {
       final userData = await _authService.getMe();
+      debugPrint('validateToken success: role=${userData["role"]}, status=${userData["vendorApprovalStatus"]}, email=${userData["email"]}');
       _user = userData;
       await _saveUserToPrefs(_user!);
       notifyListeners();

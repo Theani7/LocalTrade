@@ -61,6 +61,8 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigate() {
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
+    debugPrint('Splash _navigate: isAuthenticated=${auth.isAuthenticated}, role=${auth.user?["role"]}, keys=${auth.user?.keys.toList()}');
+
     if (auth.isAuthenticated) {
       final role = auth.user?['role'];
       final status = auth.user?['vendorApprovalStatus'];
