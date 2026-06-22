@@ -328,7 +328,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 12),
                         _field(
                           controller: _flatHouseController,
-                          label: 'Flat / House no.',
+                          label: 'Shop / Building name',
                           icon: Icons.home_outlined,
                         ),
                         const SizedBox(height: 12),
