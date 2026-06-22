@@ -10,6 +10,7 @@ class AuthProvider with ChangeNotifier {
   Map<String, dynamic>? _user;
   bool _isLoading = false;
   String? _error;
+  VoidCallback? onLogoutCallback;
 
   Map<String, dynamic>? get user => _user;
   bool get isLoading => _isLoading;
@@ -101,6 +102,9 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     await _authService.logout();
     _user = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('shopping_cart');
+    onLogoutCallback?.call();
     notifyListeners();
   }
 

@@ -49,6 +49,11 @@ class CartProvider with ChangeNotifier {
     _loadCart();
   }
 
+  void onLogout() {
+    _items = {};
+    notifyListeners();
+  }
+
   Map<String, CartItem> get items => {..._items};
 
   int get itemCount => _items.length;

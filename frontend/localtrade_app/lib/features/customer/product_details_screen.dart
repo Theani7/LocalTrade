@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/auth_guard.dart';
 import '../../providers/auth_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
@@ -39,6 +40,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   void _checkPurchaseStatus() {
+    if (!AuthGuard.isAuthenticated(context)) return;
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
     final productId = widget.product['_id'];
 
@@ -500,39 +502,41 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                 (requireSize && _selectedSize == null))
                             ? null
                             : () {
-                                Provider.of<CartProvider>(context,
-                                        listen: false)
-                                    .addItem(
-                                  widget.product['_id'],
-                                  widget.product['title'],
-                                  double.parse(
-                                      widget.product['price'].toString()),
-                                  widget.product['images'][0],
-                                  widget.product['vendorId']['_id'] ??
-                                      widget.product['vendorId'],
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    duration: const Duration(seconds: 2),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    backgroundColor: AppColors.ink,
-                                    content: const Row(
-                                      children: [
-                                        Icon(Icons.check_circle_rounded,
-                                            color: AppColors.success,
-                                            size: 18),
-                                        SizedBox(width: 10),
-                                        Text('Added to cart',
-                                            style: TextStyle(
-                                                fontSize: 13,
-                                                color: AppColors.surface)),
-                                      ],
+                                AuthGuard.requireAuth(context, onAuthenticated: () {
+                                  Provider.of<CartProvider>(context,
+                                          listen: false)
+                                      .addItem(
+                                    widget.product['_id'],
+                                    widget.product['title'],
+                                    double.parse(
+                                        widget.product['price'].toString()),
+                                    widget.product['images'][0],
+                                    widget.product['vendorId']['_id'] ??
+                                        widget.product['vendorId'],
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      duration: const Duration(seconds: 2),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12)),
+                                      backgroundColor: AppColors.ink,
+                                      content: const Row(
+                                        children: [
+                                          Icon(Icons.check_circle_rounded,
+                                              color: AppColors.success,
+                                              size: 18),
+                                          SizedBox(width: 10),
+                                          Text('Added to cart',
+                                              style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: AppColors.surface)),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                });
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: (isOutOfStock ||
@@ -1014,33 +1018,35 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     );
                                     return;
                                   }
-                                  final success =
-                                      await provider.submitReview(
-                                    widget.product['_id'],
-                                    rating,
-                                    reviewController.text.trim(),
-                                  );
-                                  if (success && context.mounted) {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                          content:
-                                              Text('Review submitted'),
-                                          backgroundColor:
-                                              AppColors.success),
+                                  AuthGuard.requireAuth(context, onAuthenticated: () async {
+                                    final success =
+                                        await provider.submitReview(
+                                      widget.product['_id'],
+                                      rating,
+                                      reviewController.text.trim(),
                                     );
-                                  } else if (context.mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              provider.error ??
-                                                  'Failed to submit'),
-                                          backgroundColor:
-                                              AppColors.danger),
-                                    );
-                                  }
+                                    if (success && context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('Review submitted'),
+                                            backgroundColor:
+                                                AppColors.success),
+                                      );
+                                    } else if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                provider.error ??
+                                                    'Failed to submit'),
+                                            backgroundColor:
+                                                AppColors.danger),
+                                      );
+                                    }
+                                  });
                                 },
                           child: provider.isLoading
                               ? const SizedBox(

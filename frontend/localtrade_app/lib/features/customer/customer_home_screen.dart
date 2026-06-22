@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/auth_guard.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -54,7 +55,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchProducts();
-      Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+      if (AuthGuard.isAuthenticated(context)) {
+        Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+      }
     });
   }
 
@@ -106,14 +109,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         child: BottomNavigationBar(
           currentIndex: _currentNavIndex,
           onTap: (i) {
-            if (i == 1) {
-              // Search/discover - same screen
+            if (i == 0 || i == 1) {
+              setState(() => _currentNavIndex = i);
             } else if (i == 2) {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerOrdersScreen()));
+              AuthGuard.requireAuthRoute(context, const CustomerOrdersScreen());
             } else if (i == 3) {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerProfileScreen()));
+              AuthGuard.requireAuthRoute(context, const CustomerProfileScreen());
             }
-            setState(() => _currentNavIndex = i);
           },
           backgroundColor: AppColors.surface,
           selectedItemColor: AppColors.coral,
@@ -176,7 +178,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     children: [
                       _buildIconButton(
                         icon: Icons.notifications_outlined,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+                        onTap: () => AuthGuard.requireAuthRoute(context, const NotificationScreen()),
                       ),
                       const SizedBox(width: 8),
                       _buildCartButton(),
@@ -367,7 +369,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   Widget _buildCartButton() {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen())),
+      onTap: () => AuthGuard.requireAuthRoute(context, const CartScreen()),
       child: Stack(
         children: [
           Container(
@@ -580,31 +582,33 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               (context, index) => ProductCard(
                 product: provider.products[index],
                 onAddToCart: () {
-                  final p = provider.products[index];
-                  final image = (p['images'] != null && p['images'].isNotEmpty) ? p['images'][0] : '';
-                  final vendorId = p['vendorId'] is Map ? (p['vendorId']['_id'] ?? '') : (p['vendorId'] ?? '');
-                  Provider.of<CartProvider>(context, listen: false).addItem(
-                    p['_id'],
-                    p['title'],
-                    double.parse(p['price'].toString()),
-                    image,
-                    vendorId,
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      duration: const Duration(seconds: 2),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      backgroundColor: AppColors.ink,
-                      content: const Row(
-                        children: [
-                          Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
-                          SizedBox(width: 10),
-                          Text('Added to cart', style: TextStyle(fontSize: 13, color: AppColors.surface)),
-                        ],
+                  AuthGuard.requireAuth(context, onAuthenticated: () {
+                    final p = provider.products[index];
+                    final image = (p['images'] != null && p['images'].isNotEmpty) ? p['images'][0] : '';
+                    final vendorId = p['vendorId'] is Map ? (p['vendorId']['_id'] ?? '') : (p['vendorId'] ?? '');
+                    Provider.of<CartProvider>(context, listen: false).addItem(
+                      p['_id'],
+                      p['title'],
+                      double.parse(p['price'].toString()),
+                      image,
+                      vendorId,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        duration: const Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        backgroundColor: AppColors.ink,
+                        content: const Row(
+                          children: [
+                            Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
+                            SizedBox(width: 10),
+                            Text('Added to cart', style: TextStyle(fontSize: 13, color: AppColors.surface)),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  });
                 },
               ),
               childCount: provider.products.length,

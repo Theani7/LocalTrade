@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/cloudinary_helper.dart';
+import '../../core/utils/auth_guard.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../widgets/product_card.dart';
@@ -281,37 +282,38 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                       return ProductCard(
                         product: product,
                         onAddToCart: () {
-                          final p = provider.products[index];
-                          final image =
-                              (p['images'] != null && p['images'].isNotEmpty)
-                                  ? p['images'][0]
-                                  : '';
-                          final vendorId = p['vendorId'] is Map
-                              ? (p['vendorId']['_id'] ?? '')
-                              : (p['vendorId'] ?? '');
-                          Provider.of<CartProvider>(context, listen: false)
-                              .addItem(
-                            p['_id'],
-                            p['title'],
-                            double.parse(p['price'].toString()),
-                            image,
-                            vendorId,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              duration: const Duration(seconds: 2),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              backgroundColor: AppColors.ink,
-                              content: const Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle_rounded,
-                                    color: AppColors.success,
-                                    size: 18,
-                                  ),
+                          AuthGuard.requireAuth(context, onAuthenticated: () {
+                            final p = provider.products[index];
+                            final image =
+                                (p['images'] != null && p['images'].isNotEmpty)
+                                    ? p['images'][0]
+                                    : '';
+                            final vendorId = p['vendorId'] is Map
+                                ? (p['vendorId']['_id'] ?? '')
+                                : (p['vendorId'] ?? '');
+                            Provider.of<CartProvider>(context, listen: false)
+                                .addItem(
+                              p['_id'],
+                              p['title'],
+                              double.parse(p['price'].toString()),
+                              image,
+                              vendorId,
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                backgroundColor: AppColors.ink,
+                                content: const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle_rounded,
+                                      color: AppColors.success,
+                                      size: 18,
+                                    ),
                                   SizedBox(width: 10),
                                   Text(
                                     'Added to cart',
@@ -324,6 +326,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                               ),
                             ),
                           );
+                          });
                         },
                       );
                     },

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../providers/order_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/auth_guard.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'order_tracking_screen.dart';
@@ -20,12 +21,53 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<OrderProvider>(context, listen: false).fetchMyOrders();
+      if (AuthGuard.isAuthenticated(context)) {
+        Provider.of<OrderProvider>(context, listen: false).fetchMyOrders();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!AuthGuard.isAuthenticated(context)) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Your Orders', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.ink)),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                child: const Icon(Icons.shopping_bag_outlined, size: 36, color: AppColors.coral),
+              ),
+              const SizedBox(height: 16),
+              const Text('Login to view orders', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+              const SizedBox(height: 8),
+              const Text('Sign in to see your order history', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  AuthGuard.requireAuth(context, onAuthenticated: () {
+                    if (mounted) setState(() {});
+                  });
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral, foregroundColor: AppColors.ink),
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

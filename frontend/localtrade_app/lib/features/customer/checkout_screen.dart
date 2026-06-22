@@ -6,6 +6,7 @@ import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/auth_guard.dart';
 import 'customer_orders_screen.dart';
 import 'customer_profile_screen.dart';
 
@@ -174,6 +175,49 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!AuthGuard.isAuthenticated(context)) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.ink),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text('Checkout', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: AppColors.ink)),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                child: const Icon(Icons.lock_outline_rounded, size: 36, color: AppColors.coral),
+              ),
+              const SizedBox(height: 16),
+              const Text('Login to checkout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+              const SizedBox(height: 8),
+              const Text('Sign in to place your order', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  AuthGuard.requireAuth(context, onAuthenticated: () {
+                    if (mounted) setState(() {});
+                  });
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral, foregroundColor: AppColors.ink),
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final cart = Provider.of<CartProvider>(context);
     final items = cart.items;
     final user = Provider.of<AuthProvider>(context).user;

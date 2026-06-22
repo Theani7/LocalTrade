@@ -53,7 +53,14 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FeedbackProvider()),
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
       ],
-      child: const LocalTradeApp(),
+      child: Builder(
+        builder: (context) {
+          final cart = Provider.of<CartProvider>(context, listen: false);
+          final auth = Provider.of<AuthProvider>(context, listen: false);
+          auth.onLogoutCallback = cart.onLogout;
+          return const LocalTradeApp();
+        },
+      ),
     ),
   );
 }

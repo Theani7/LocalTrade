@@ -5,7 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../auth/login_screen.dart';
+import '../../core/utils/auth_guard.dart';
+import 'customer_home_screen.dart';
 import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
 
@@ -143,6 +144,45 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!AuthGuard.isAuthenticated(context)) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('My Account', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.ink)),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                child: const Icon(Icons.person_outline_rounded, size: 36, color: AppColors.coral),
+              ),
+              const SizedBox(height: 16),
+              const Text('Login to view your profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+              const SizedBox(height: 8),
+              const Text('Sign in to manage your account', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  AuthGuard.requireAuth(context, onAuthenticated: () {
+                    if (mounted) setState(() {});
+                  });
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral, foregroundColor: AppColors.ink),
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final user = Provider.of<AuthProvider>(context).user;
     final name = user?['fullName'] ?? 'User';
     final email = user?['email'] ?? '';
@@ -550,7 +590,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             ),
             onPressed: () {
               Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const CustomerHomeScreen()), (route) => false);
             },
             child: const Text('Logout'),
           ),

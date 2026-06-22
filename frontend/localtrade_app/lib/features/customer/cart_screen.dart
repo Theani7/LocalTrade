@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/cloudinary_helper.dart';
+import '../../core/utils/auth_guard.dart';
 import 'checkout_screen.dart';
 
 final _priceFormat = NumberFormat('#,##0');
@@ -27,6 +28,50 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAuth = AuthGuard.isAuthenticated(context);
+
+    if (!isAuth) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'Cart',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: AppColors.ink),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                child: const Icon(Icons.shopping_bag_outlined, size: 36, color: AppColors.coral),
+              ),
+              const SizedBox(height: 16),
+              const Text('Login to view your cart', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+              const SizedBox(height: 8),
+              const Text('Sign in to add items and checkout', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  AuthGuard.requireAuth(context, onAuthenticated: () {
+                    if (mounted) setState(() {});
+                  });
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral, foregroundColor: AppColors.ink),
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final cart = Provider.of<CartProvider>(context);
     final cartItems = cart.items.values.toList();
     final totalQty = cartItems.fold<int>(0, (s, i) => s + i.quantity);

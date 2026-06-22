@@ -9,7 +9,7 @@ import '../admin/admin_dashboard.dart';
 import '../vendor/vendor_dashboard.dart';
 import '../vendor/vendor_pending_screen.dart';
 import '../customer/customer_home_screen.dart';
-import '../auth/login_screen.dart';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerHomeScreen()));
       }
     } else {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerHomeScreen()));
     }
   }
 
