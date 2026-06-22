@@ -227,18 +227,10 @@ class HelpSupportScreen extends StatelessWidget {
       ),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      elevation: 0,
       child: Column(
         children: List.generate(faqs.length, (index) {
           final faq = faqs[index];
