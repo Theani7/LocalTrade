@@ -44,6 +44,8 @@ class _SplashScreenState extends State<SplashScreen> {
     });
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
+    await auth.ready;
+
     final authFuture = auth.isAuthenticated ? auth.validateToken() : Future.value(false);
 
     await Future.wait([splashFuture, notificationFuture, authFuture]);

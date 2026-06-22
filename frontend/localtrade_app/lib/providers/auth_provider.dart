@@ -17,19 +17,16 @@ class AuthProvider with ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _user != null;
 
-  bool _tokenValidationInProgress = false;
+  /// Completes when initial prefs load is done.
+  late final Future<void> ready = _init();
 
-  AuthProvider() {
-    _init();
-  }
+  AuthProvider();
 
   Future<void> _init() async {
     await _loadUserFromPrefs();
   }
 
   Future<bool> validateToken() async {
-    if (_tokenValidationInProgress) return isAuthenticated;
-    _tokenValidationInProgress = true;
     try {
       final userData = await _authService.getMe();
       _user = userData;
@@ -37,10 +34,9 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      await logout();
+      _user = null;
+      notifyListeners();
       return false;
-    } finally {
-      _tokenValidationInProgress = false;
     }
   }
 
@@ -102,9 +98,9 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _authService.logout();
     _user = null;
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConstants.userKey);
     await prefs.remove('shopping_cart');
     onLogoutCallback?.call();
     notifyListeners();
