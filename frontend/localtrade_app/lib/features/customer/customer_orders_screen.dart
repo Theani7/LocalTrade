@@ -153,32 +153,69 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
 
     return Consumer<OrderProvider>(
       builder: (context, orderProvider, _) {
-        if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
-          return const OrderCardSkeleton();
-        }
+        final orderCount = orderProvider.orders.length;
 
-        if (orderProvider.orders.isEmpty) {
-          return EmptyState(
-            icon: Icons.receipt_long_outlined,
-            title: 'No orders yet',
-            message: 'Place your first order to see it here.',
-            onAction: () {},
-            actionLabel: 'Browse products',
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () async => orderProvider.fetchMyOrders(),
-          color: AppColors.coral,
-          backgroundColor: AppColors.surface,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenPaddingH,
-              vertical: AppSpacing.screenPaddingTop,
+        return Column(
+          children: [
+            // Orders header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Orders', style: AppTextStyles.screenTitle),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$orderCount order${orderCount == 1 ? '' : 's'} placed',
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            itemCount: orderProvider.orders.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
+
+            // Orders list
+            Expanded(
+              child: _buildOrderList(context, orderProvider),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderList(BuildContext context, OrderProvider orderProvider) {
+    if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
+      return const OrderCardSkeleton();
+    }
+
+    if (orderProvider.orders.isEmpty) {
+      return EmptyState(
+        icon: Icons.receipt_long_outlined,
+        title: 'No orders yet',
+        message: 'Place your first order to see it here.',
+        onAction: () {},
+        actionLabel: 'Browse products',
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async => orderProvider.fetchMyOrders(),
+      color: AppColors.coral,
+      backgroundColor: AppColors.surface,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPaddingH,
+          vertical: AppSpacing.screenPaddingTop,
+        ),
+        itemCount: orderProvider.orders.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
                 final order = orderProvider.orders[index];
                 final orderId = order['_id']?.toString() ?? 'unknown';
                 final shortId = orderId.length > 6
@@ -391,9 +428,7 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
               },
             ),
           );
-        },
-      );
-    }
+  }
 
   Widget _buildStatusBadge(String status) {
     Color bgColor;

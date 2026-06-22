@@ -141,12 +141,21 @@ class _CartBodyState extends State<CartBody> {
       children: [
         // Cart header with count
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
           child: Row(
             children: [
-              Text(
-                'Cart ($totalQty)',
-                style: AppTextStyles.screenTitle,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Cart', style: AppTextStyles.screenTitle),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$totalQty item${totalQty == 1 ? '' : 's'} in your cart',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

@@ -262,6 +262,28 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Profile header ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 4, 0, 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('My Account', style: AppTextStyles.screenTitle),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Manage your profile and settings',
+                        style: AppTextStyles.caption,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // ── Profile card ──
           _buildProfileCard(user, name, email, initials, role),
           const SizedBox(height: 16),
