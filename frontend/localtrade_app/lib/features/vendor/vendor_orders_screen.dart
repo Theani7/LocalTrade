@@ -4,6 +4,7 @@ import '../../providers/order_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/cloudinary_helper.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 
@@ -43,17 +44,21 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
             );
           }
 
+          final allOrders = orderProvider.vendorOrders;
           final filtered = _activeFilter == 'All'
-              ? orderProvider.vendorOrders
-              : orderProvider.vendorOrders
+              ? allOrders
+              : allOrders
                   .where((o) => o['orderStatus'] == _activeFilter)
                   .toList();
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Filter chips ──────────────────────────────────
-              _buildFilterChips(orderProvider.vendorOrders),
-              // ── Order list ────────────────────────────────────
+              // ── Header ─────────────────────────────────────
+              _buildHeader(allOrders.length),
+              // ── Filter chips ───────────────────────────────
+              _buildFilterChips(allOrders),
+              // ── Order list ─────────────────────────────────
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () async => orderProvider.fetchVendorOrders(),
@@ -72,10 +77,8 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                       : ListView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                           itemCount: filtered.length,
-                          itemBuilder: (context, index) {
-                            final order = filtered[index];
-                            return _buildOrderCard(order);
-                          },
+                          itemBuilder: (context, index) =>
+                              _buildOrderCard(filtered[index]),
                         ),
                 ),
               ),
@@ -87,7 +90,58 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // Filter chips — horizontal scrolling row
+  // Header — "Orders" + count + Filter button
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildHeader(int totalCount) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Orders', style: AppTextStyles.screenTitle),
+                const SizedBox(height: 2),
+                Text(
+                  '$totalCount orders total',
+                  style: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(color: AppColors.divider),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.tune_rounded, size: 18, color: AppColors.ink),
+                SizedBox(width: 6),
+                Text(
+                  'Filter',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Filter chips — rounded rects, colored fill for active, light bg for inactive
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildFilterChips(List allOrders) {
     int countForStatus(String status) {
@@ -96,89 +150,45 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     }
 
     final chips = [
-      ('All', AppColors.coral, AppColors.coralLight, AppColors.coralDark),
-      ('Pending', AppColors.warningDark, AppColors.warningLight, AppColors.warningDark),
-      ('Confirmed', AppColors.blueDark, AppColors.blueLight, AppColors.blueDark),
-      ('Delivered', AppColors.successDark, AppColors.successLight, AppColors.successDark),
+      ('All', AppColors.coral, AppColors.coralDark),
+      ('Pending', AppColors.warningLight, AppColors.warningDark),
+      ('Confirmed', AppColors.blueLight, AppColors.blueDark),
+      ('Delivered', AppColors.successLight, AppColors.successDark),
     ];
 
     return SizedBox(
-      height: 52,
+      height: 56,
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
         scrollDirection: Axis.horizontal,
         itemCount: chips.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final (label, activeFill, activeBg, activeText) = chips[index];
+          final (label, chipBg, chipText) = chips[index];
           final isActive = _activeFilter == label;
           final count = countForStatus(label);
 
           return GestureDetector(
             onTap: () => setState(() => _activeFilter = label),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isActive ? activeBg : AppColors.surface,
-                borderRadius: BorderRadius.circular(100),
-                border: Border.all(
-                  color: isActive ? activeBg : AppColors.divider,
-                ),
+                color: isActive ? chipBg : chipBg.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isActive)
-                    Icon(Icons.check_rounded, size: 14, color: activeText)
-                  else
-                    Icon(_chipIcon(label), size: 14, color: AppColors.muted),
-                  const SizedBox(width: 4),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isActive ? activeText : AppColors.muted,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? activeText.withValues(alpha: 0.12)
-                          : AppColors.mutedLight,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      '$count',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: isActive ? activeText : AppColors.muted,
-                      ),
-                    ),
-                  ),
-                ],
+              child: Text(
+                '$label ($count)',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isActive ? chipText : chipText.withValues(alpha: 0.7),
+                ),
               ),
             ),
           );
         },
       ),
     );
-  }
-
-  IconData _chipIcon(String status) {
-    switch (status) {
-      case 'Pending':
-        return Icons.schedule_outlined;
-      case 'Confirmed':
-        return Icons.check_circle_outline_rounded;
-      case 'Delivered':
-        return Icons.local_shipping_outlined;
-      default:
-        return Icons.tune_rounded;
-    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -194,9 +204,13 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     final totalAmount = order['totalAmount'] ?? 0;
     final products = order['products'] as List? ?? [];
     final notes = order['notes'];
+    final orderIdStr = order['_id'].toString();
+    final shortId = orderIdStr.length > 6
+        ? orderIdStr.substring(orderIdStr.length - 6).toUpperCase()
+        : orderIdStr.toUpperCase();
 
     return Opacity(
-      opacity: isCancelled ? 0.75 : 1.0,
+      opacity: isCancelled ? 0.6 : 1.0,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
@@ -219,19 +233,19 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '#${order['_id'].toString().substring(18).toUpperCase()}',
-                  style: TextStyle(
-                    fontSize: 12,
+                  '#$shortId',
+                  style: const TextStyle(
+                    fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isCancelled ? AppColors.muted : AppColors.muted,
+                    color: AppColors.muted,
                   ),
                 ),
                 _buildStatusBadge(status),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
-            // ── Row 2: customer avatar + name ────────────────
+            // ── Row 2: customer avatar + name + phone ────────
             Row(
               children: [
                 _buildInitialsAvatar(customerName),
@@ -243,7 +257,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                       Text(
                         customerName,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w500,
                           color: isCancelled ? AppColors.muted : AppColors.ink,
                         ),
@@ -253,11 +267,9 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                       if (phone.isNotEmpty)
                         Text(
                           phone,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
-                            color: isCancelled
-                                ? AppColors.muted
-                                : AppColors.muted,
+                            color: AppColors.muted,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -272,31 +284,27 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
             // ── Row 3: address ───────────────────────────────
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.location_on_outlined,
                   size: 16,
-                  color: isCancelled ? AppColors.muted : AppColors.muted,
+                  color: AppColors.muted,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: address.isEmpty
-                      ? Text(
+                      ? const Text(
                           'No address provided',
                           style: TextStyle(
                             fontSize: 13,
-                            color: isCancelled
-                                ? AppColors.muted
-                                : AppColors.muted,
+                            color: AppColors.muted,
                             fontStyle: FontStyle.italic,
                           ),
                         )
                       : Text(
                           address,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
-                            color: isCancelled
-                                ? AppColors.muted
-                                : AppColors.muted,
+                            color: AppColors.muted,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -304,51 +312,127 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
             // ── Products list ────────────────────────────────
             const Divider(color: AppColors.divider, height: 1),
-            const SizedBox(height: 10),
             ...products.map((p) {
               final productData = p['product'];
               String title = 'Product';
+              String? imageUrl;
+              int qty = p['quantity'] ?? 1;
+              int price = p['price'] ?? 0;
+
               if (productData is Map) {
                 title = productData['title'] ?? 'Product';
+                final images = productData['images'];
+                if (images is List && images.isNotEmpty) {
+                  imageUrl = images[0]?.toString();
+                } else if (images is String && images.isNotEmpty) {
+                  imageUrl = images;
+                }
               } else if (productData is String) {
                 title =
                     'Product #${productData.substring(productData.length - 6).toUpperCase()}';
               }
+
               return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '$title x ${p['quantity']}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isCancelled ? AppColors.muted : AppColors.ink,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                padding: const EdgeInsets.only(top: 10),
+                child: Row(
+                  children: [
+                    // Product image thumbnail
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.coralLight,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: imageUrl != null && imageUrl.isNotEmpty
+                          ? Image.network(
+                              CloudinaryHelper.getOptimizedUrl(
+                                imageUrl,
+                                width: 88,
+                                height: 88,
+                              ),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Center(
+                                child: Icon(
+                                  Icons.shopping_bag_outlined,
+                                  color: AppColors.coralDark,
+                                  size: 20,
+                                ),
+                              ),
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.shopping_bag_outlined,
+                                color: AppColors.coralDark,
+                                size: 20,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Product title + qty
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isCancelled
+                                  ? AppColors.muted
+                                  : AppColors.ink,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Qty: $qty',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Price
+                    Text(
+                      'Rs. $price',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: isCancelled ? AppColors.muted : AppColors.ink,
+                      ),
+                    ),
+                  ],
                 ),
               );
             }),
 
             // ── Notes ────────────────────────────────────────
             if (notes != null && notes.toString().isNotEmpty) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
                 'Note: $notes',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
-                  color: isCancelled ? AppColors.muted : AppColors.muted,
+                  color: AppColors.muted,
                   fontStyle: FontStyle.italic,
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
 
             // ── Order total row ──────────────────────────────
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             const Divider(color: AppColors.divider, height: 1),
             const SizedBox(height: 10),
             Row(
@@ -375,11 +459,57 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildRejectButton(order['_id']),
+                    child: SizedBox(
+                      height: 42,
+                      child: OutlinedButton(
+                        onPressed: () =>
+                            _updateStatus(order['_id'], 'Cancelled'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.muted,
+                          side: const BorderSide(color: AppColors.divider),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: const Text(
+                          'Reject',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _buildConfirmButton(order['_id']),
+                    flex: 2,
+                    child: SizedBox(
+                      height: 42,
+                      child: ElevatedButton(
+                        onPressed: () =>
+                            _updateStatus(order['_id'], 'Confirmed'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.coral,
+                          foregroundColor: AppColors.ink,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: const Text(
+                          'Confirm order',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -459,8 +589,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
   // Initials avatar — coral-light circle with coral-dark initial
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildInitialsAvatar(String name) {
-    final initial =
-        name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
     return Container(
       width: 36,
       height: 36,
@@ -476,52 +605,6 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
             fontWeight: FontWeight.w500,
             color: AppColors.coralDark,
           ),
-        ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // Action buttons — Reject (outline) + Confirm (coral)
-  // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildRejectButton(String orderId) {
-    return SizedBox(
-      height: 40,
-      child: OutlinedButton(
-        onPressed: () => _updateStatus(orderId, 'Cancelled'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.muted,
-          side: const BorderSide(color: AppColors.divider),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          ),
-          padding: EdgeInsets.zero,
-        ),
-        child: const Text(
-          'Reject',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildConfirmButton(String orderId) {
-    return SizedBox(
-      height: 40,
-      child: ElevatedButton(
-        onPressed: () => _updateStatus(orderId, 'Confirmed'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.coral,
-          foregroundColor: AppColors.ink,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          ),
-          padding: EdgeInsets.zero,
-        ),
-        child: const Text(
-          'Confirm order',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
         ),
       ),
     );
