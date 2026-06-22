@@ -9,7 +9,6 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
-import '../../widgets/empty_state.dart';
 import '../../widgets/app_button.dart';
 import 'checkout_screen.dart';
 
@@ -63,8 +62,13 @@ class _CartScreenState extends State<CartScreen> {
 // ═════════════════════════════════════════════════════════════════════════════
 class CartBody extends StatefulWidget {
   final VoidCallback? onBrowseProducts;
+  final ValueChanged<String>? onCategoryTap;
 
-  const CartBody({super.key, this.onBrowseProducts});
+  const CartBody({
+    super.key,
+    this.onBrowseProducts,
+    this.onCategoryTap,
+  });
 
   @override
   State<CartBody> createState() => _CartBodyState();
@@ -127,12 +131,9 @@ class _CartBodyState extends State<CartBody> {
     final totalQty = cartItems.fold<int>(0, (s, i) => s + (i.quantity > 0 ? i.quantity : 0));
 
     if (cartItems.isEmpty) {
-      return EmptyState(
-        icon: Icons.shopping_bag_outlined,
-        title: 'Your cart is empty',
-        message: 'Add items to get started',
-        onAction: widget.onBrowseProducts,
-        actionLabel: 'Browse products',
+      return _EmptyCartBody(
+        onBrowseProducts: widget.onBrowseProducts,
+        onCategoryTap: widget.onCategoryTap,
       );
     }
 
@@ -666,6 +667,225 @@ class _VendorNoteCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Empty cart body — illustration card, heading, CTA, category suggestions
+// ---------------------------------------------------------------------------
+class _EmptyCartBody extends StatelessWidget {
+  final VoidCallback? onBrowseProducts;
+  final ValueChanged<String>? onCategoryTap;
+
+  const _EmptyCartBody({this.onBrowseProducts, this.onCategoryTap});
+
+  static const _categories = [
+    {'label': 'Vegetables', 'emoji': '🥬'},
+    {'label': 'Dairy', 'emoji': '🥛'},
+    {'label': 'Handicrafts', 'emoji': '🎨'},
+    {'label': 'Clothing', 'emoji': '👕'},
+    {'label': 'Local goods', 'emoji': '🏠'},
+    {'label': 'Tailoring', 'emoji': '🧵'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // ── Illustration card ──
+            SizedBox(
+              width: 100,
+              height: 100,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // White card
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x142B2620),
+                          blurRadius: 16,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 42,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                  // Top-right chip: "0 items"
+                  Positioned(
+                    right: -10,
+                    top: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.coralLight,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '0 items',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.coralDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Bottom-left chip: "Rs. 0"
+                  Positioned(
+                    left: -10,
+                    bottom: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.blueLight,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Rs. 0',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.blueDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // ── Heading ──
+            const Text(
+              'Your cart is empty',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: AppColors.ink,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+
+            // ── Subtext ──
+            const Text(
+              'Browse local vendors and add products you love',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: AppColors.muted,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+
+            // ── Primary CTA ──
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onBrowseProducts,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.coral,
+                  foregroundColor: AppColors.ink,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  'Browse products',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // ── Category suggestions ──
+            const Text(
+              'Popular categories',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: AppColors.muted,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: _categories.map((cat) {
+                return GestureDetector(
+                  onTap: () => onCategoryTap?.call(cat['label']!),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x0D2B2620),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          cat['emoji']!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          cat['label']!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }

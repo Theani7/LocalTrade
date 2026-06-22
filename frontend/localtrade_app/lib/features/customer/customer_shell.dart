@@ -20,9 +20,21 @@ class CustomerShell extends StatefulWidget {
 class _CustomerShellState extends State<CustomerShell> {
   int _currentIndex = 0;
   final GlobalKey _cartIconKey = GlobalKey();
+  final GlobalKey _homeKey = GlobalKey();
 
   void _switchTab(int index) {
     setState(() => _currentIndex = index);
+  }
+
+  void _onCategoryTap(String category) {
+    // Switch to home tab first, then set category after build
+    _switchTab(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = _homeKey.currentState;
+      if (state != null) {
+        (state as dynamic).setCategory(category);
+      }
+    });
   }
 
   @override
@@ -35,6 +47,7 @@ class _CustomerShellState extends State<CustomerShell> {
         index: _currentIndex,
         children: [
           CustomerHomeBody(
+            key: _homeKey,
             onNotificationTap: () => AuthGuard.requireAuthRoute(
               context,
               const NotificationScreen(),
@@ -43,6 +56,7 @@ class _CustomerShellState extends State<CustomerShell> {
           ),
           CartBody(
             onBrowseProducts: () => _switchTab(0),
+            onCategoryTap: _onCategoryTap,
           ),
           const CustomerOrdersBody(),
           const CustomerProfileBody(),
@@ -214,7 +228,7 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
                 Text(
                   item.label,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
                     color: isActive ? AppColors.coralDark : AppColors.muted,
                   ),

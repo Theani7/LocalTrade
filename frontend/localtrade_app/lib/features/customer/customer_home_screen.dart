@@ -83,6 +83,14 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
     'availability': 'Availability',
   };
 
+  /// Public method to set category from outside (e.g. cart empty state chips)
+  void setCategory(String category) {
+    if (_selectedCategory != category) {
+      setState(() => _selectedCategory = category);
+      _fetchProducts();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
