@@ -23,6 +23,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _originalPriceController;
 
   int _stockQuantity = 0;
+  late TextEditingController _stockController;
   bool _availableForPickup = true;
 
   String _selectedCategory = 'Vegetables';
@@ -56,9 +57,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       text: widget.product?['originalPrice']?.toString() ?? '',
     );
 
+    _stockQuantity = widget.product?['stock'] ?? 0;
+    _stockController = TextEditingController(text: '$_stockQuantity');
+
     if (widget.product != null) {
       _selectedCategory = widget.product['category'] ?? 'Vegetables';
-      _stockQuantity = widget.product['stock'] ?? 0;
       _availableForPickup = widget.product['availableForPickup'] ?? true;
     }
   }
@@ -69,6 +72,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _descController.dispose();
     _priceController.dispose();
     _originalPriceController.dispose();
+    _stockController.dispose();
     super.dispose();
   }
 
@@ -112,7 +116,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         'originalPrice': _originalPriceController.text.isEmpty
             ? null
             : _originalPriceController.text,
-        'stock': _stockQuantity.toString(),
+        'stock': _stockController.text.isEmpty
+            ? '0'
+            : _stockController.text,
         'category': _selectedCategory,
         'availableForPickup': _availableForPickup,
       };
@@ -606,43 +612,40 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 _stepperButton(
                   icon: Icons.remove_rounded,
                   onTap: () {
-                    if (_stockQuantity > 0) {
-                      setState(() => _stockQuantity--);
+                    final current = int.tryParse(_stockController.text) ?? 0;
+                    if (current > 0) {
+                      _stockController.text = '${current - 1}';
                     }
                   },
                 ),
                 SizedBox(
-                  width: 48,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, anim) {
-                      final prevVal =
-                          (child.key as ValueKey<int>?)?.value ?? 0;
-                      final isNewGreater = _stockQuantity > prevVal;
-                      return FadeTransition(
-                        opacity: anim,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: isNewGreater
-                                ? const Offset(0, 0.4)
-                                : const Offset(0, -0.4),
-                            end: Offset.zero,
-                          ).animate(anim),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Text(
-                      '$_stockQuantity',
-                      key: ValueKey(_stockQuantity),
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
+                  width: 56,
+                  child: TextFormField(
+                    controller: _stockController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 8),
                     ),
+                    onChanged: (v) {
+                      final parsed = int.tryParse(v);
+                      if (parsed != null && parsed < 0) {
+                        _stockController.text = '0';
+                      }
+                    },
                   ),
                 ),
                 _stepperButton(
                   icon: Icons.add_rounded,
-                  onTap: () => setState(() => _stockQuantity++),
+                  onTap: () {
+                    final current = int.tryParse(_stockController.text) ?? 0;
+                    _stockController.text = '${current + 1}';
+                  },
                 ),
               ],
             ),
