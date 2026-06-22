@@ -109,7 +109,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
             Icon(
               icon,
               size: 22,
-              color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+              color: isActive ? AppColors.coralDark : AppColors.muted,
             ),
             const SizedBox(height: 4),
             Container(
@@ -150,8 +150,8 @@ class VendorOverviewTab extends StatelessWidget {
         }
 
         if (provider.analytics == null) {
-          return const Center(
-            child: Text('No data available', style: TextStyle(color: AppColors.muted)),
+          return Center(
+            child: Text('No data available', style: AppTextStyles.bodyMuted),
           );
         }
 
@@ -247,10 +247,9 @@ class VendorOverviewTab extends StatelessWidget {
                                           ),
                                           child: Text(
                                             notifProv.unreadCount > 9 ? '9+' : '${notifProv.unreadCount}',
-                                            style: const TextStyle(
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.w600,
+                                            style: AppTextStyles.badge.copyWith(
                                               color: Colors.white,
+                                              fontSize: 9,
                                               height: 1,
                                             ),
                                           ),
@@ -298,29 +297,29 @@ class VendorOverviewTab extends StatelessWidget {
                         icon: Icons.schedule_outlined,
                         value: pending,
                         label: 'Pending',
-                        bgColor: const Color(0xFFFBEEDA),
-                        iconColor: const Color(0xFF8A5F18),
+                        bgColor: AppColors.warningLight,
+                        iconColor: AppColors.warningDark,
                       ),
                       _VendorStatCard(
                         icon: Icons.check_circle_outline_rounded,
                         value: confirmed,
                         label: 'Confirmed',
-                        bgColor: const Color(0xFFDEE9FE),
-                        iconColor: const Color(0xFF1A3E8C),
+                        bgColor: AppColors.blueLight,
+                        iconColor: AppColors.blueDark,
                       ),
                       _VendorStatCard(
                         icon: Icons.local_shipping_outlined,
                         value: delivered,
                         label: 'Delivered',
-                        bgColor: const Color(0xFFE0F2E6),
-                        iconColor: const Color(0xFF1F5C38),
+                        bgColor: AppColors.successLight,
+                        iconColor: AppColors.successDark,
                       ),
                       _VendorStatCard(
                         icon: Icons.inventory_2_outlined,
                         value: products,
                         label: 'Products',
-                        bgColor: const Color(0xFFFCE0D6),
-                        iconColor: const Color(0xFF9A3318),
+                        bgColor: AppColors.coralLight,
+                        iconColor: AppColors.coralDark,
                       ),
                     ],
                   ),
@@ -510,20 +509,20 @@ class VendorOverviewTab extends StatelessWidget {
 
     switch (status) {
       case 'Pending':
-        bgColor = const Color(0xFFFBEEDA);
-        textColor = const Color(0xFF8A5F18);
+        bgColor = AppColors.warningLight;
+        textColor = AppColors.warningDark;
         label = 'Pending';
         icon = Icons.schedule_outlined;
         break;
       case 'Confirmed':
-        bgColor = const Color(0xFFDEE9FE);
-        textColor = const Color(0xFF1A3E8C);
+        bgColor = AppColors.blueLight;
+        textColor = AppColors.blueDark;
         label = 'Confirmed';
         icon = Icons.check_circle_outline_rounded;
         break;
       case 'Delivered':
-        bgColor = const Color(0xFFE0F2E6);
-        textColor = const Color(0xFF1F5C38);
+        bgColor = AppColors.successLight;
+        textColor = AppColors.successDark;
         label = 'Delivered';
         icon = Icons.check_circle_outline_rounded;
         break;
@@ -534,8 +533,8 @@ class VendorOverviewTab extends StatelessWidget {
         icon = Icons.cancel_outlined;
         break;
       default:
-        bgColor = const Color(0xFFFBEEDA);
-        textColor = const Color(0xFF8A5F18);
+        bgColor = AppColors.warningLight;
+        textColor = AppColors.warningDark;
         label = status;
         icon = Icons.schedule_outlined;
     }
@@ -553,11 +552,7 @@ class VendorOverviewTab extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
+            style: AppTextStyles.badge.copyWith(color: textColor, fontSize: 10),
           ),
         ],
       ),
@@ -645,20 +640,12 @@ class _VendorStatCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w500,
-              color: AppColors.ink,
-            ),
+            style: AppTextStyles.price.copyWith(fontSize: 22),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: AppColors.muted,
-            ),
+            style: AppTextStyles.caption,
           ),
         ],
       ),
