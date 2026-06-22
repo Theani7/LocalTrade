@@ -36,6 +36,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   List<String> _selectedCategories = [];
   final Set<String> _editingFields = {};
   bool _hasChanges = false;
+  Map<String, dynamic> _savedValues = {};
 
   final List<String> _allCategories = [
     'Vegetables',
@@ -80,21 +81,56 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       _selectedCategories = List<String>.from(profile!['categories']);
     }
 
-    _fullNameController.addListener(_onFieldChanged);
-    _shopNameController.addListener(_onFieldChanged);
-    _phoneController.addListener(_onFieldChanged);
-    _streetController.addListener(_onFieldChanged);
-    _cityController.addListener(_onFieldChanged);
-    _stateController.addListener(_onFieldChanged);
-    _zipController.addListener(_onFieldChanged);
-    _descriptionController.addListener(_onFieldChanged);
-    _hoursController.addListener(_onFieldChanged);
+    _snapshotValues();
   }
 
-  void _onFieldChanged() {
-    if (!_hasChanges) {
-      setState(() => _hasChanges = true);
+  void _snapshotValues() {
+    _savedValues = {
+      'fullName': _fullNameController.text,
+      'shopName': _shopNameController.text,
+      'phone': _phoneController.text,
+      'street': _streetController.text,
+      'city': _cityController.text,
+      'state': _stateController.text,
+      'zip': _zipController.text,
+      'description': _descriptionController.text,
+      'hours': _hoursController.text,
+      'categories': List<String>.from(_selectedCategories),
+      'imageFile': null,
+    };
+  }
+
+  void _checkChanges() {
+    final current = {
+      'fullName': _fullNameController.text,
+      'shopName': _shopNameController.text,
+      'phone': _phoneController.text,
+      'street': _streetController.text,
+      'city': _cityController.text,
+      'state': _stateController.text,
+      'zip': _zipController.text,
+      'description': _descriptionController.text,
+      'hours': _hoursController.text,
+      'categories': _selectedCategories,
+    };
+    final hasFieldChanges = current.keys.any(
+      (k) => current[k] is List
+          ? !_listEquals(current[k] as List, _savedValues[k])
+          : current[k] != _savedValues[k],
+    );
+    final changed = hasFieldChanges || _imageFile != null;
+    if (changed != _hasChanges) {
+      setState(() => _hasChanges = changed);
     }
+  }
+
+  bool _listEquals(List a, dynamic b) {
+    if (b is! List) return true;
+    if (a.length != b.length) return true;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return true;
+    }
+    return false;
   }
 
   @override
@@ -119,8 +155,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       setState(() {
         _imageFile = pickedFile;
         _imageBytes = bytes;
-        _hasChanges = true;
       });
+      _checkChanges();
     }
   }
 
@@ -141,6 +177,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         }
       }
     });
+    _checkChanges();
   }
 
   void _submit() async {
@@ -184,7 +221,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     final success = await provider.updateProfile(fields, image: _imageFile);
 
     if (mounted && success) {
-      setState(() => _hasChanges = false);
+      _snapshotValues();
+      setState(() {
+        _hasChanges = false;
+        _imageFile = null;
+        _imageBytes = null;
+      });
     }
 
     if (mounted) {
@@ -990,8 +1032,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                                 onTap: () {
                                   setState(() {
                                     _selectedCategories.remove(cat);
-                                    _hasChanges = true;
                                   });
+                                  _checkChanges();
                                 },
                                 child: Icon(Icons.close_rounded,
                                     size: 12, color: AppColors.coralDark),
@@ -1064,8 +1106,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                   onTap: () {
                     setState(() {
                       _selectedCategories.add(cat);
-                      _hasChanges = true;
                     });
+                    _checkChanges();
                     Navigator.pop(context);
                   },
                 )),
