@@ -5,7 +5,7 @@ const AppError = require('../utils/appError');
 const { notifyAdmins } = require('../utils/notificationUtils');
 
 exports.register = catchAsync(async (req, res, next) => {
-  const { fullName, email, phone, password, role } = req.body;
+  const { fullName, email, phone, password, role, shopName, businessDescription, categories, openingHours } = req.body;
 
   // Security: Allow registering only as customer or vendor
   if (role && !['customer', 'vendor'].includes(role)) {
@@ -18,19 +18,35 @@ exports.register = catchAsync(async (req, res, next) => {
     return next(new AppError('User with this email or phone already exists', 400));
   }
 
-  const newUser = await User.create({
+  const userData = {
     fullName,
     email,
     phone,
     password,
     role,
-  });
+  };
+
+  // Store vendor-specific fields during registration
+  if (role === 'vendor') {
+    if (shopName) userData.shopName = shopName;
+    if (businessDescription) userData.businessDescription = businessDescription;
+    if (openingHours) userData.openingHours = openingHours;
+    if (categories) {
+      try {
+        userData.categories = Array.isArray(categories) ? categories : JSON.parse(categories);
+      } catch (e) {
+        userData.categories = [];
+      }
+    }
+  }
+
+  const newUser = await User.create(userData);
 
   // Notify Admins if a new vendor registers
   if (role === 'vendor') {
     await notifyAdmins(
       'New Vendor Registration',
-      `${fullName} has registered as a vendor and is awaiting approval.`,
+      `${fullName} (${shopName || 'No shop name'}) has registered as a vendor and is awaiting approval.`,
       { userId: newUser._id.toString(), type: 'vendor_approval' }
     );
   }
@@ -105,7 +121,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   console.log('Body:', req.body);
   console.log('File:', req.file ? 'Attached' : 'None');
   
-  const { fullName, phone, address } = req.body;
+  const { fullName, phone, address, shopName, businessDescription, openingHours, categories } = req.body;
   
   const updateData = {};
   if (fullName !== undefined) updateData.fullName = fullName;
@@ -131,6 +147,18 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     } catch (e) {
       console.log('Parse error for address:', e);
       // If parse fails, skip address update
+    }
+  }
+
+  // Vendor-specific fields
+  if (shopName !== undefined) updateData.shopName = shopName;
+  if (businessDescription !== undefined) updateData.businessDescription = businessDescription;
+  if (openingHours !== undefined) updateData.openingHours = openingHours;
+  if (categories !== undefined) {
+    try {
+      updateData.categories = Array.isArray(categories) ? categories : JSON.parse(categories);
+    } catch (e) {
+      updateData.categories = [];
     }
   }
   

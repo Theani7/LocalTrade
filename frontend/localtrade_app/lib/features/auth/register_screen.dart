@@ -20,6 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _shopNameController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   String _selectedRole = 'customer';
   bool _isPasswordVisible = false;
@@ -38,6 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _shopNameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -45,13 +49,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.register({
+    final userData = <String, dynamic>{
       'fullName': _nameController.text.trim(),
       'email': _emailController.text.trim(),
       'phone': _phoneController.text.trim(),
       'password': _passwordController.text,
       'role': _selectedRole,
-    });
+    };
+
+    // Include vendor-specific fields when registering as vendor
+    if (_selectedRole == 'vendor') {
+      userData['shopName'] = _shopNameController.text.trim();
+      if (_descriptionController.text.trim().isNotEmpty) {
+        userData['businessDescription'] = _descriptionController.text.trim();
+      }
+    }
+
+    final success = await authProvider.register(userData);
 
     if (!mounted) return;
 
@@ -221,6 +235,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return null;
                         },
                       ),
+
+                      // ── Vendor-only fields ──────────────────
+                      if (_selectedRole == 'vendor') ...[
+                        const SizedBox(height: 18),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.coralLight.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.storefront_outlined, size: 16, color: AppColors.coralDark),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Business information',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.coralDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _field(
+                          controller: _shopNameController,
+                          label: 'Shop name',
+                          icon: Icons.storefront_outlined,
+                          textCapitalization: TextCapitalization.words,
+                        ),
+                        const SizedBox(height: 12),
+                        _field(
+                          controller: _descriptionController,
+                          label: 'Business description (optional)',
+                          icon: Icons.description_outlined,
+                          maxLines: 3,
+                          textCapitalization: TextCapitalization.sentences,
+                        ),
+                      ],
                       const SizedBox(height: 24),
 
                       // Submit
@@ -313,11 +368,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     TextCapitalization textCapitalization = TextCapitalization.none,
+    int maxLines = 1,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
+      maxLines: maxLines,
       style: const TextStyle(fontSize: 14, color: AppColors.ink),
       decoration: InputDecoration(
         labelText: label,
