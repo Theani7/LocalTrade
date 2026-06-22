@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
-import 'dart:convert';
 import '../../providers/vendor_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -23,33 +22,14 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   late TextEditingController _fullNameController;
   late TextEditingController _shopNameController;
   late TextEditingController _phoneController;
-  late TextEditingController _streetController;
-  late TextEditingController _cityController;
-  late TextEditingController _stateController;
-  late TextEditingController _zipController;
-  late TextEditingController _descriptionController;
-  late TextEditingController _hoursController;
+  late TextEditingController _addressController;
 
   XFile? _imageFile;
   Uint8List? _imageBytes;
   final _picker = ImagePicker();
-  List<String> _selectedCategories = [];
   final Set<String> _editingFields = {};
   bool _hasChanges = false;
   Map<String, dynamic> _savedValues = {};
-
-  final List<String> _allCategories = [
-    'Vegetables',
-    'Dairy',
-    'Handicrafts',
-    'Clothing',
-    'Local Goods',
-    'Tailoring',
-    'Groceries',
-    'Bakery',
-    'Meat',
-    'Others',
-  ];
 
   @override
   void initState() {
@@ -64,22 +44,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     _phoneController =
         TextEditingController(text: profile?['phone'] ?? '');
     final rawAddr = profile?['address'];
-    _streetController = TextEditingController(
-        text: (rawAddr is Map) ? (rawAddr['street'] ?? '') : '');
-    _cityController = TextEditingController(
-        text: (rawAddr is Map) ? (rawAddr['city'] ?? '') : '');
-    _stateController = TextEditingController(
-        text: (rawAddr is Map) ? (rawAddr['state'] ?? '') : '');
-    _zipController = TextEditingController(
-        text: (rawAddr is Map) ? (rawAddr['zipCode'] ?? '') : '');
-    _descriptionController =
-        TextEditingController(text: profile?['businessDescription'] ?? '');
-    _hoursController = TextEditingController(
-        text: profile?['openingHours'] ?? '9:00 AM - 6:00 PM');
-
-    if (profile?['categories'] != null) {
-      _selectedCategories = List<String>.from(profile!['categories']);
-    }
+    _addressController = TextEditingController(
+        text: (rawAddr is Map)
+            ? [rawAddr['street'], rawAddr['city'], rawAddr['state'], rawAddr['zipCode']]
+                .where((s) => s != null && s.toString().isNotEmpty)
+                .join(', ')
+            : (rawAddr?.toString() ?? ''));
 
     _snapshotValues();
   }
@@ -89,14 +59,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       'fullName': _fullNameController.text,
       'shopName': _shopNameController.text,
       'phone': _phoneController.text,
-      'street': _streetController.text,
-      'city': _cityController.text,
-      'state': _stateController.text,
-      'zip': _zipController.text,
-      'description': _descriptionController.text,
-      'hours': _hoursController.text,
-      'categories': List<String>.from(_selectedCategories),
-      'imageFile': null,
+      'address': _addressController.text,
     };
   }
 
@@ -105,18 +68,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       'fullName': _fullNameController.text,
       'shopName': _shopNameController.text,
       'phone': _phoneController.text,
-      'street': _streetController.text,
-      'city': _cityController.text,
-      'state': _stateController.text,
-      'zip': _zipController.text,
-      'description': _descriptionController.text,
-      'hours': _hoursController.text,
-      'categories': _selectedCategories,
+      'address': _addressController.text,
     };
     final hasFieldChanges = current.keys.any(
-      (k) => current[k] is List
-          ? !_listEquals(current[k] as List, _savedValues[k])
-          : current[k] != _savedValues[k],
+      (k) => current[k] != _savedValues[k],
     );
     final changed = hasFieldChanges || _imageFile != null;
     if (changed != _hasChanges) {
@@ -124,26 +79,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     }
   }
 
-  bool _listEquals(List a, dynamic b) {
-    if (b is! List) return true;
-    if (a.length != b.length) return true;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return true;
-    }
-    return false;
-  }
-
   @override
   void dispose() {
     _fullNameController.dispose();
     _shopNameController.dispose();
     _phoneController.dispose();
-    _streetController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _zipController.dispose();
-    _descriptionController.dispose();
-    _hoursController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -162,19 +103,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
   void _toggleEdit(String field) {
     setState(() {
-      final addressFields = {'street', 'city', 'state', 'zip'};
-      if (addressFields.contains(field)) {
-        if (_editingFields.contains('street')) {
-          _editingFields.removeAll(addressFields);
-        } else {
-          _editingFields.addAll(addressFields);
-        }
+      if (_editingFields.contains(field)) {
+        _editingFields.remove(field);
       } else {
-        if (_editingFields.contains(field)) {
-          _editingFields.remove(field);
-        } else {
-          _editingFields.add(field);
-        }
+        _editingFields.add(field);
       }
     });
     _checkChanges();
@@ -183,20 +115,17 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_streetController.text.trim().isEmpty ||
-        _cityController.text.trim().isEmpty ||
-        _stateController.text.trim().isEmpty ||
-        _zipController.text.trim().isEmpty) {
+    if (_addressController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('All address fields are required'),
+          content: const Text('Address is required'),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
         ),
       );
-      setState(() => _editingFields.addAll({'street', 'city', 'state', 'zip'}));
+      setState(() => _editingFields.add('address'));
       return;
     }
 
@@ -207,15 +136,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       'fullName': _fullNameController.text.trim(),
       'shopName': _shopNameController.text.trim(),
       'phone': _phoneController.text.trim(),
-      'address': jsonEncode({
-        'street': _streetController.text.trim(),
-        'city': _cityController.text.trim(),
-        'state': _stateController.text.trim(),
-        'zipCode': _zipController.text.trim(),
-      }),
-      'businessDescription': _descriptionController.text.trim(),
-      'openingHours': _hoursController.text.trim(),
-      'categories': json.encode(_selectedCategories),
+      'address': _addressController.text.trim(),
     };
 
     final success = await provider.updateProfile(fields, image: _imageFile);
@@ -300,35 +221,15 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                       placeholder: "e.g. Maya's Dairy, Hari Crafts",
                     ),
                     _buildFieldRow(
-                      field: 'street',
-                      label: 'Street / Area',
+                      field: 'address',
+                      label: 'Address',
                       required: true,
-                      icon: Icons.signpost_outlined,
+                      icon: Icons.location_on_outlined,
                       iconBg: AppColors.blueLight,
                       iconColor: AppColors.blueDark,
-                      controller: _streetController,
+                      controller: _addressController,
+                      placeholder: 'Thamel, Kathmandu...',
                     ),
-                    _buildFieldRow(
-                      field: 'city',
-                      label: 'City',
-                      required: true,
-                      icon: Icons.location_city_outlined,
-                      iconBg: AppColors.coralLight,
-                      iconColor: AppColors.coralDark,
-                      controller: _cityController,
-                    ),
-                    _buildAddressRowPair(),
-                    _buildFieldRow(
-                      field: 'hours',
-                      label: 'Opening hours',
-                      required: false,
-                      icon: Icons.access_time_rounded,
-                      iconBg: AppColors.coralLight,
-                      iconColor: AppColors.coralDark,
-                      controller: _hoursController,
-                    ),
-                    _buildDescriptionRow(),
-                    _buildCategoriesRow(),
                   ]),
                   const SizedBox(height: 16),
                   _buildInfoBanner(),
@@ -491,151 +392,6 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         ],
       ),
       child: Column(children: children),
-    );
-  }
-
-  Widget _buildAddressRowPair() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildCompactField(
-              field: 'state',
-              label: 'State',
-              required: true,
-              icon: Icons.map_outlined,
-              iconBg: AppColors.blueLight,
-              iconColor: AppColors.blueDark,
-              controller: _stateController,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildCompactField(
-              field: 'zip',
-              label: 'ZIP code',
-              required: true,
-              icon: Icons.pin_drop_outlined,
-              iconBg: AppColors.coralLight,
-              iconColor: AppColors.coralDark,
-              controller: _zipController,
-              keyboardType: TextInputType.number,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactField({
-    required String field,
-    required String label,
-    required bool required,
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-    required TextEditingController controller,
-    TextInputType? keyboardType,
-  }) {
-    final isEditing = _editingFields.contains(field);
-    final hasValue = controller.text.isNotEmpty;
-
-    if (isEditing) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text.rich(
-            TextSpan(
-              text: label,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: required ? AppColors.coralDark : AppColors.muted,
-              ),
-              children: required
-                  ? const [
-                      TextSpan(
-                          text: ' *',
-                          style: TextStyle(color: AppColors.coralDark)),
-                    ]
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 36,
-            child: TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: keyboardType,
-              style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.ink),
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide:
-                      const BorderSide(color: AppColors.coral, width: 1.5),
-                ),
-              ),
-              onSubmitted: (_) => _toggleEdit(field),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return GestureDetector(
-      onTap: () => _toggleEdit(field),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text.rich(
-            TextSpan(
-              text: label,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: required ? AppColors.coralDark : AppColors.muted,
-              ),
-              children: required
-                  ? const [
-                      TextSpan(
-                          text: ' *',
-                          style: TextStyle(color: AppColors.coralDark)),
-                    ]
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            hasValue ? controller.text : label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
-              color: hasValue ? AppColors.ink : AppColors.muted,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 
@@ -821,300 +577,6 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDescriptionRow() {
-    const field = 'description';
-    final isEditing = _editingFields.contains(field);
-    final hasValue = _descriptionController.text.isNotEmpty;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 1),
-        ),
-      ),
-      child: isEditing
-          ? _buildEditingDescription()
-          : GestureDetector(
-              onTap: () => _toggleEdit(field),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.blueLight,
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: const Icon(Icons.description_outlined,
-                        size: 15, color: AppColors.blueDark),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Description',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          hasValue
-                              ? _descriptionController.text
-                              : 'Tell customers what you sell and what makes your store special...',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: hasValue ? FontWeight.w500 : FontWeight.w400,
-                            color: hasValue ? AppColors.ink : AppColors.muted,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: Icon(Icons.edit_outlined,
-                        size: 14, color: AppColors.divider),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildEditingDescription() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: AppColors.blueLight,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: const Icon(Icons.description_outlined,
-              size: 15, color: AppColors.blueDark),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Description',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.muted,
-                ),
-              ),
-              const SizedBox(height: 4),
-              TextField(
-                controller: _descriptionController,
-                autofocus: true,
-                maxLines: 3,
-                style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.ink),
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.all(10),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide:
-                        const BorderSide(color: AppColors.coral, width: 1.5),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => _toggleEdit('description'),
-          child: Container(
-            width: 28,
-            height: 28,
-            margin: const EdgeInsets.only(top: 18),
-            decoration: BoxDecoration(
-              color: AppColors.successLight,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.check_rounded,
-                size: 14, color: AppColors.successDark),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoriesRow() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: AppColors.coralLight,
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: const Icon(Icons.tag, size: 15, color: AppColors.coralDark),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    text: 'Categories',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.coralDark,
-                    ),
-                    children: const [
-                      TextSpan(
-                        text: ' *',
-                        style: TextStyle(color: AppColors.coralDark),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    ..._selectedCategories.map((cat) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.coralLight,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                cat,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.coralDark,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedCategories.remove(cat);
-                                  });
-                                  _checkChanges();
-                                },
-                                child: Icon(Icons.close_rounded,
-                                    size: 12, color: AppColors.coralDark),
-                              ),
-                            ],
-                          ),
-                        )),
-                    GestureDetector(
-                      onTap: () => _showCategoryPickerDialog(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: AppColors.divider),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_rounded,
-                                size: 12, color: AppColors.muted),
-                            const SizedBox(width: 2),
-                            Text(
-                              'Add',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: AppColors.muted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCategoryPickerDialog() {
-    final available =
-        _allCategories.where((c) => !_selectedCategories.contains(c)).toList();
-
-    if (available.isEmpty) return;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Add category', style: AppTextStyles.sectionHeading),
-            const SizedBox(height: 12),
-            ...available.map((cat) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(cat, style: AppTextStyles.body),
-                  trailing: const Icon(Icons.add_rounded,
-                      color: AppColors.coral, size: 20),
-                  onTap: () {
-                    setState(() {
-                      _selectedCategories.add(cat);
-                    });
-                    _checkChanges();
-                    Navigator.pop(context);
-                  },
-                )),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
     );
   }
 
