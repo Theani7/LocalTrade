@@ -118,7 +118,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             }
           },
           backgroundColor: AppColors.surface,
-          selectedItemColor: AppColors.coral,
+          selectedItemColor: AppColors.coralDark,
           unselectedItemColor: AppColors.muted,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
@@ -234,36 +234,36 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           SliverToBoxAdapter(
             child: SizedBox(
               height: 44,
-              child: ListView.builder(
+              child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 itemCount: _categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final cat = _categories[index];
                   final isSelected = _selectedCategory == cat;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _selectedCategory = cat);
-                        _fetchProducts();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.coral : AppColors.surface,
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(
-                            color: isSelected ? AppColors.coral : AppColors.divider,
-                          ),
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedCategory = cat);
+                      _fetchProducts();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.coral : AppColors.surface,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(
+                          color: isSelected ? AppColors.coral : AppColors.divider,
                         ),
-                        child: Text(
-                          cat,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected ? AppColors.ink : AppColors.muted,
-                          ),
+                      ),
+                      child: Text(
+                        cat,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? AppColors.ink : AppColors.muted,
                         ),
                       ),
                     ),

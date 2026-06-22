@@ -8,6 +8,11 @@ import '../features/customer/product_details_screen.dart';
 
 final _priceFormat = NumberFormat('#,##0');
 
+String _sentenceCase(String text) {
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1).toLowerCase();
+}
+
 class ProductCard extends StatelessWidget {
   final dynamic product;
   final VoidCallback? onAddToCart;
@@ -194,7 +199,7 @@ class ProductCard extends StatelessWidget {
 
                   // Product title
                   Text(
-                    title,
+                    _sentenceCase(title),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,

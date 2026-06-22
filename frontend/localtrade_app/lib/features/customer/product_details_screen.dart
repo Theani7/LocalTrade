@@ -12,6 +12,11 @@ import 'package:intl/intl.dart';
 
 final _priceFormat = NumberFormat('#,##0');
 
+String _sentenceCase(String text) {
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1).toLowerCase();
+}
+
 const _sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -211,7 +216,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
                     // Title
                     Text(
-                      widget.product['title'] ?? '',
+                      _sentenceCase(widget.product['title'] ?? ''),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w500,
