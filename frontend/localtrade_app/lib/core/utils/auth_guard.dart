@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../features/auth/forgot_password_screen.dart';
-import '../../features/auth/role_selection_screen.dart';
+import '../../features/auth/register_screen.dart';
 import '../../widgets/app_button.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -54,7 +54,7 @@ class AuthGuard {
       // Navigate to the role selection screen which will subsequently push the
       // registration form for the chosen role.
       Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const RoleSelectionScreen()))
+          .push(MaterialPageRoute(builder: (_) => const RegisterScreen()))
           .then((result) {
         if (result == true) {
           onLoginSuccess();
