@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/feedback_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'package:intl/intl.dart';
@@ -27,48 +28,85 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Feedback results'),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-      ),
-      body: Consumer<FeedbackProvider>(
-        builder: (context, provider, _) {
-          if (provider.isLoading && provider.feedbackList.isEmpty) {
-            return const ListSkeleton(itemCount: 3);
-          }
+      body: SafeArea(
+        child: Consumer<FeedbackProvider>(
+          builder: (context, provider, _) {
+            return Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            border: Border.all(color: AppColors.divider),
+                          ),
+                          child: const Icon(Icons.arrow_back_rounded, size: 18, color: AppColors.ink),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Feedback results', style: AppTextStyles.screenTitle),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${provider.feedbackList.length} submission${provider.feedbackList.length == 1 ? '' : 's'}',
+                              style: AppTextStyles.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-          if (provider.feedbackList.isEmpty) {
-            return const EmptyState(
-              icon: Icons.rate_review_outlined,
-              title: 'No feedback yet',
-              message: 'Share the app with users to start collecting UAT feedback.',
+                // Content
+                Expanded(
+                  child: provider.isLoading && provider.feedbackList.isEmpty
+                      ? const ListSkeleton(itemCount: 3)
+                      : provider.feedbackList.isEmpty
+                          ? const EmptyState(
+                              icon: Icons.rate_review_outlined,
+                              title: 'No feedback yet',
+                              message: 'Share the app with users to start collecting UAT feedback.',
+                            )
+                          : RefreshIndicator(
+                              onRefresh: provider.fetchAllFeedback,
+                              color: AppColors.coral,
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Stats
+                                    Text('Analytics summary', style: AppTextStyles.sectionHeading),
+                                    const SizedBox(height: 10),
+                                    _buildStatsGrid(provider.stats),
+                                    const SizedBox(height: 24),
+
+                                    // Feedback list
+                                    Text('Feedback comments', style: AppTextStyles.sectionHeading),
+                                    const SizedBox(height: 10),
+                                    _buildFeedbackList(provider.feedbackList),
+                                    const SizedBox(height: 32),
+                                  ],
+                                ),
+                              ),
+                            ),
+                ),
+              ],
             );
-          }
-
-          final stats = provider.stats;
-
-          return RefreshIndicator(
-            onRefresh: provider.fetchAllFeedback,
-            color: AppColors.coral,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Analytics summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
-                  const SizedBox(height: 10),
-                  _buildStatsGrid(stats),
-                  const SizedBox(height: 24),
-                  const Text('Feedback comments', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
-                  const SizedBox(height: 10),
-                  _buildFeedbackList(provider.feedbackList),
-                ],
-              ),
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -102,7 +140,7 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
+            boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -114,7 +152,7 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
               const SizedBox(height: 4),
               Text(
                 item['label'] as String,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.muted),
+                style: AppTextStyles.caption,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -140,7 +178,7 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
+            boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +188,7 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
                   Expanded(
                     child: Text(
                       item['userId']?['fullName'] ?? 'Anonymous',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
+                      style: AppTextStyles.cardTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -169,7 +207,7 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
                 ],
               ),
               const SizedBox(height: 4),
-              Text(formattedDate, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+              Text(formattedDate, style: AppTextStyles.caption),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -177,14 +215,14 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
                   const SizedBox(width: 4),
                   Text(
                     '${item['rating']} / 5',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
+                    style: AppTextStyles.label,
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Text(
                 item['comment'],
-                style: const TextStyle(fontSize: 14, color: AppColors.muted, height: 1.5),
+                style: AppTextStyles.bodyMuted.copyWith(height: 1.5),
               ),
             ],
           ),

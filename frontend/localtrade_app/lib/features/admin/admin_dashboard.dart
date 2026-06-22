@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -54,77 +55,117 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Admin dashboard'),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
-                icon: const Icon(Icons.notifications_outlined, size: 22),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            _buildTabBar(),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: const [
+                  AdminAnalyticsTab(),
+                  AdminUsersTab(),
+                  AdminVendorsTab(),
+                  AdminProductsTab(),
+                  AdminOrdersTab(),
+                ],
               ),
-              Consumer<NotificationProvider>(
-                builder: (context, provider, _) => provider.unreadCount > 0
-                    ? Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(color: AppColors.danger, shape: BoxShape.circle),
-                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                          child: Text(
-                            '${provider.unreadCount}',
-                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      )
-                    : const SizedBox(),
-              ),
-            ],
-          ),
-          IconButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminFeedbackResultsScreen())),
-            icon: const Icon(Icons.rate_review_outlined, size: 22),
-          ),
-          IconButton(
-            onPressed: _refreshData,
-            icon: const Icon(Icons.refresh_rounded, size: 22),
-          ),
-          IconButton(
-            onPressed: () => _showLogoutDialog(context),
-            icon: const Icon(Icons.logout_rounded, size: 22),
-          ),
-          const SizedBox(width: 4),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: AppColors.coral,
-          unselectedLabelColor: AppColors.muted,
-          indicatorColor: AppColors.coral,
-          indicatorWeight: 2,
-          labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          tabs: const [
-            Tab(text: 'Analytics'),
-            Tab(text: 'Users'),
-            Tab(text: 'Vendors'),
-            Tab(text: 'Products'),
-            Tab(text: 'Orders'),
+            ),
           ],
         ),
       ),
-      body: TabBarView(
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Admin dashboard', style: AppTextStyles.screenTitle),
+                const SizedBox(height: 2),
+                Consumer<NotificationProvider>(
+                  builder: (_, provider, __) {
+                    final unread = provider.unreadCount;
+                    return Text(
+                      unread > 0 ? '$unread unread notification${unread == 1 ? '' : 's'}' : 'System overview',
+                      style: AppTextStyles.caption,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          _buildHeaderButton(
+            icon: Icons.notifications_outlined,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+          ),
+          const SizedBox(width: 8),
+          _buildHeaderButton(
+            icon: Icons.rate_review_outlined,
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminFeedbackResultsScreen())),
+          ),
+          const SizedBox(width: 8),
+          _buildHeaderButton(
+            icon: Icons.refresh_rounded,
+            onTap: _refreshData,
+          ),
+          const SizedBox(width: 8),
+          _buildHeaderButton(
+            icon: Icons.logout_rounded,
+            onTap: () => _showLogoutDialog(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderButton({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: Icon(icon, size: 18, color: AppColors.ink),
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: TabBar(
         controller: _tabController,
-        children: const [
-          AdminAnalyticsTab(),
-          AdminUsersTab(),
-          AdminVendorsTab(),
-          AdminProductsTab(),
-          AdminOrdersTab(),
+        isScrollable: true,
+        labelColor: AppColors.coralDark,
+        unselectedLabelColor: AppColors.muted,
+        indicatorColor: AppColors.coralDark,
+        indicatorWeight: 2,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+        dividerHeight: 0,
+        tabs: const [
+          Tab(text: 'Analytics'),
+          Tab(text: 'Users'),
+          Tab(text: 'Vendors'),
+          Tab(text: 'Products'),
+          Tab(text: 'Orders'),
         ],
       ),
     );
@@ -135,12 +176,20 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: const Text('Logout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
-        content: const Text('Are you sure you want to log out?', style: TextStyle(fontSize: 14, color: AppColors.muted)),
+        title: Text('Logout', style: AppTextStyles.sectionHeading),
+        content: Text('Are you sure you want to log out?', style: AppTextStyles.bodyMuted),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: AppColors.muted))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: AppTextStyles.bodyMuted),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, minimumSize: const Size(100, 40)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(100, 40),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+            ),
             onPressed: () {
               Provider.of<AuthProvider>(context, listen: false).logout();
               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
@@ -205,12 +254,12 @@ class AdminAnalyticsTab extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                    boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
+                    boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Total revenue', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.muted)),
+                      Text('Total revenue', style: AppTextStyles.label),
                       const SizedBox(height: 8),
                       Text(
                         'Rs. ${totalRevenue.toStringAsFixed(0)}',
@@ -222,7 +271,7 @@ class AdminAnalyticsTab extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Stat cards
-                const Text('Platform statistics', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                Text('Platform statistics', style: AppTextStyles.sectionHeading),
                 const SizedBox(height: 10),
                 GridView.count(
                   crossAxisCount: 2,
@@ -242,7 +291,7 @@ class AdminAnalyticsTab extends StatelessWidget {
 
                 // Revenue by category chart
                 if (revenueByCategory.isNotEmpty) ...[
-                  const Text('Revenue by category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                  Text('Revenue by category', style: AppTextStyles.sectionHeading),
                   const SizedBox(height: 10),
                   Container(
                     height: 200,
@@ -250,7 +299,7 @@ class AdminAnalyticsTab extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                      boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
+                      boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
                     ),
                     child: PieChart(
                       PieChartData(
@@ -274,21 +323,24 @@ class AdminAnalyticsTab extends StatelessWidget {
                 ],
 
                 // Recent orders
-                const Text('Recent orders', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                Text('Recent orders', style: AppTextStyles.sectionHeading),
                 const SizedBox(height: 10),
                 if (recent.isEmpty)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-                    child: const Center(child: Text('No recent orders', style: TextStyle(fontSize: 14, color: AppColors.muted))),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    ),
+                    child: Center(child: Text('No recent orders', style: AppTextStyles.bodyMuted)),
                   )
                 else
                   Container(
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                      boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
+                      boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
                     ),
                     child: Column(
                       children: recent.take(5).map((order) {
@@ -304,14 +356,14 @@ class AdminAnalyticsTab extends StatelessWidget {
                                 child: const Icon(Icons.receipt_long_rounded, size: 18, color: AppColors.coralDark),
                               ),
                               title: Text(
-                                'Order #${(() { final id = order['_id'].toString(); return id.length > 18 ? id.substring(18) : id; })().toUpperCase()}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
+                                'Order #${(() { final id = order['_id'].toString(); return id.length > 6 ? id.substring(id.length - 6) : id; })().toUpperCase()}',
+                                style: AppTextStyles.label,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               subtitle: Text(
                                 order['customerId']?['fullName'] ?? 'Customer',
-                                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                                style: AppTextStyles.caption,
                               ),
                               trailing: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -319,7 +371,7 @@ class AdminAnalyticsTab extends StatelessWidget {
                                 children: [
                                   Text(
                                     'Rs. ${order['totalAmount']}',
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
+                                    style: AppTextStyles.label,
                                   ),
                                   const SizedBox(height: 2),
                                   StatusBadge(status: _mapStatus(order['orderStatus'])),
@@ -363,71 +415,100 @@ class AdminUsersTab extends StatelessWidget {
         if (provider.isLoading && provider.users.isEmpty) return const ListSkeleton(itemCount: 5);
         if (provider.users.isEmpty) return const EmptyState(icon: Icons.people_outline_rounded, title: 'No users', message: 'No users registered yet.');
 
-        return RefreshIndicator(
-          onRefresh: provider.fetchUsers,
-          color: AppColors.coral,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.users.length,
-            itemBuilder: (context, index) {
-              final user = provider.users[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
-                      child: const Icon(Icons.person_rounded, size: 20, color: AppColors.coralDark),
+        return Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Users', style: AppTextStyles.screenTitle),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${provider.users.length} registered user${provider.users.length == 1 ? '' : 's'}',
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                ],
+              ),
+            ),
+
+            // List
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: provider.fetchUsers,
+                color: AppColors.coral,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: provider.users.length,
+                  itemBuilder: (context, index) {
+                    final user = provider.users[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            user['fullName'] ?? '',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                            child: const Icon(Icons.person_rounded, size: 20, color: AppColors.coralDark),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            user['email'] ?? '',
-                            style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user['fullName'] ?? '',
+                                  style: AppTextStyles.cardTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  user['email'] ?? '',
+                                  style: AppTextStyles.caption,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: user['role'] == 'admin' ? AppColors.blueLight : AppColors.mutedLight,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              user['role'] ?? '',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: user['role'] == 'admin' ? AppColors.blueDark : AppColors.muted,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: user['role'] == 'admin' ? AppColors.blueLight : AppColors.background,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        user['role'] ?? '',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: user['role'] == 'admin' ? AppColors.blueDark : AppColors.muted,
-                        ),
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -445,55 +526,84 @@ class AdminVendorsTab extends StatelessWidget {
         if (provider.isLoading && provider.vendors.isEmpty) return const ListSkeleton(itemCount: 5);
         if (provider.vendors.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
 
-        return RefreshIndicator(
-          onRefresh: provider.fetchVendors,
-          color: AppColors.coral,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.vendors.length,
-            itemBuilder: (context, index) {
-              final vendor = provider.vendors[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
-                      child: const Icon(Icons.storefront_rounded, size: 20, color: AppColors.coralDark),
+        return Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Vendors', style: AppTextStyles.screenTitle),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${provider.vendors.length} registered vendor${provider.vendors.length == 1 ? '' : 's'}',
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                ],
+              ),
+            ),
+
+            // List
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: provider.fetchVendors,
+                color: AppColors.coral,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: provider.vendors.length,
+                  itemBuilder: (context, index) {
+                    final vendor = provider.vendors[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            vendor['shopName'] ?? vendor['fullName'] ?? '',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+                            child: const Icon(Icons.storefront_rounded, size: 20, color: AppColors.coralDark),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            vendor['vendorApprovalStatus'] ?? 'pending',
-                            style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  vendor['shopName'] ?? vendor['fullName'] ?? '',
+                                  style: AppTextStyles.cardTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  vendor['vendorApprovalStatus'] ?? 'pending',
+                                  style: AppTextStyles.caption,
+                                ),
+                              ],
+                            ),
                           ),
+                          _buildApprovalActions(context, vendor, provider),
                         ],
                       ),
-                    ),
-                    _buildApprovalActions(context, vendor, provider),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -524,7 +634,7 @@ class AdminVendorsTab extends StatelessWidget {
                 border: Border.all(color: AppColors.divider),
                 borderRadius: BorderRadius.circular(100),
               ),
-              child: const Text('Reject', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted)),
+              child: Text('Reject', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
             ),
           ),
         ],
@@ -560,63 +670,92 @@ class AdminProductsTab extends StatelessWidget {
         if (provider.isLoading && provider.products.isEmpty) return const ListSkeleton(itemCount: 5);
         if (provider.products.isEmpty) return const EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.');
 
-        return RefreshIndicator(
-          onRefresh: provider.fetchProducts,
-          color: AppColors.coral,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.products.length,
-            itemBuilder: (context, index) {
-              final product = provider.products[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
-                ),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        color: AppColors.background,
-                        child: product['images'] != null && product['images'].isNotEmpty
-                            ? Image.network(product['images'][0], fit: BoxFit.cover)
-                            : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 20),
-                      ),
+        return Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Products', style: AppTextStyles.screenTitle),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${provider.products.length} product${provider.products.length == 1 ? '' : 's'} listed',
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                ],
+              ),
+            ),
+
+            // List
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: provider.fetchProducts,
+                color: AppColors.coral,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: provider.products.length,
+                  itemBuilder: (context, index) {
+                    final product = provider.products[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            product['title'] ?? '',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                            child: Container(
+                              width: 56,
+                              height: 56,
+                              color: AppColors.background,
+                              child: product['images'] != null && product['images'].isNotEmpty
+                                  ? Image.network(product['images'][0], fit: BoxFit.cover)
+                                  : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 20),
+                            ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product['title'] ?? '',
+                                  style: AppTextStyles.cardTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Rs. ${product['price']}  •  ${product['category'] ?? ''}',
+                                  style: AppTextStyles.caption,
+                                ),
+                              ],
+                            ),
+                          ),
                           Text(
-                            'Rs. ${product['price']}  •  ${product['category'] ?? ''}',
-                            style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                            'Stock: ${product['stockQuantity'] ?? 0}',
+                            style: AppTextStyles.label,
                           ),
                         ],
                       ),
-                    ),
-                    Text(
-                      'Stock: ${product['stockQuantity'] ?? 0}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.ink),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -634,84 +773,113 @@ class AdminOrdersTab extends StatelessWidget {
         if (provider.isLoading && provider.orders.isEmpty) return const OrderCardSkeleton();
         if (provider.orders.isEmpty) return const EmptyState(icon: Icons.receipt_long_outlined, title: 'No orders', message: 'No orders placed yet.');
 
-        return RefreshIndicator(
-          onRefresh: provider.fetchOrders,
-          color: AppColors.coral,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.orders.length,
-            itemBuilder: (context, index) {
-              final order = provider.orders[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text('Orders', style: AppTextStyles.screenTitle),
+                        const SizedBox(height: 2),
                         Text(
-                          '#${(() { final id = order['_id'].toString(); return id.length > 18 ? id.substring(18) : id; })().toUpperCase()}',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted),
+                          '${provider.orders.length} order${provider.orders.length == 1 ? '' : 's'} placed',
+                          style: AppTextStyles.caption,
                         ),
-                        StatusBadge(status: _mapStatus(order['orderStatus'])),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.muted),
-                        const SizedBox(width: 6),
-                          Expanded(
-                          child: Text(
-                            order['customerId']?['fullName'] ?? 'Customer',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+
+            // List
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: provider.fetchOrders,
+                color: AppColors.coral,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: provider.orders.length,
+                  itemBuilder: (context, index) {
+                    final order = provider.orders[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '#${(() { final id = order['_id'].toString(); return id.length > 6 ? id.substring(id.length - 6) : id; })().toUpperCase()}',
+                                style: AppTextStyles.label.copyWith(color: AppColors.muted),
+                              ),
+                              StatusBadge(status: _mapStatus(order['orderStatus'])),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.storefront_rounded, size: 16, color: AppColors.muted),
-                        const SizedBox(width: 6),
-                          Expanded(
-                          child: Text(
-                            order['vendorId']?['shopName'] ?? 'Vendor',
-                            style: const TextStyle(fontSize: 13, color: AppColors.muted),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.muted),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  order['customerId']?['fullName'] ?? 'Customer',
+                                  style: AppTextStyles.cardTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${order['products']?.length ?? 0} items',
-                          style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                        ),
-                        Text(
-                          'Rs. ${order['totalAmount']}',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.coral),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.storefront_rounded, size: 16, color: AppColors.muted),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  order['vendorId']?['shopName'] ?? 'Vendor',
+                                  style: AppTextStyles.bodyMuted,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${order['products']?.length ?? 0} items',
+                                style: AppTextStyles.caption,
+                              ),
+                              Text(
+                                'Rs. ${order['totalAmount']}',
+                                style: AppTextStyles.price,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         );
       },
     );
