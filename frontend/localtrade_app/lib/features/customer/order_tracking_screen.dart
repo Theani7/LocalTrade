@@ -734,58 +734,31 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Contact vendor coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.chat_outlined, size: 18),
-                label: Text('Contact Vendor', style: AppTextStyles.cardTitle.copyWith(fontSize: 13)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.ink,
-                  side: const BorderSide(color: AppColors.divider),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        if (status == 'Delivered')
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Reorder coming soon'),
+                    behavior: SnackBarBehavior.floating,
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                );
+              },
+              icon: const Icon(Icons.replay_rounded, size: 18),
+              label: Text('Reorder', style: AppTextStyles.cardTitle.copyWith(fontSize: 13, color: AppColors.ink)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.coral,
+                foregroundColor: AppColors.ink,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
               ),
             ),
-            if (status == 'Delivered') ...[
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Reorder coming soon'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.replay_rounded, size: 18),
-                  label: Text('Reorder', style: AppTextStyles.cardTitle.copyWith(fontSize: 13, color: AppColors.ink)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.coral,
-                    foregroundColor: AppColors.ink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+          ),
         if (canCancel) ...[
           const SizedBox(height: 12),
           SizedBox(
