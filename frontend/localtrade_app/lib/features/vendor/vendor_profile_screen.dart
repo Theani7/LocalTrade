@@ -256,38 +256,15 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        titleTextStyle: AppTextStyles.screenTitle.copyWith(fontSize: 16),
-        toolbarHeight: 56,
-        leading: canGoBack
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
-                onPressed: () => Navigator.pop(context),
-              )
-            : const SizedBox.shrink(),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Vendor profile', style: AppTextStyles.screenTitle),
-            const SizedBox(height: 2),
-            Text(
-              'How customers see your store',
-              style: AppTextStyles.caption.copyWith(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-      body: Form(
+      body: SafeArea(
+        child: Form(
       key: _formKey,
       child: Column(
         children: [
+          _buildHeader(canGoBack),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -369,6 +346,46 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           _buildStickySaveBar(),
         ],
       ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(bool canGoBack) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: Row(
+        children: [
+          if (canGoBack) ...[
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.divider),
+                ),
+                child: const Icon(Icons.arrow_back_rounded, size: 20, color: AppColors.ink),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Vendor profile', style: AppTextStyles.screenTitle),
+                const SizedBox(height: 2),
+                Text(
+                  'How customers see your store',
+                  style: AppTextStyles.caption,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
