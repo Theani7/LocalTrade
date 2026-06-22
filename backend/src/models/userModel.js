@@ -53,14 +53,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '9:00 AM - 6:00 PM',
     },
-    businessLocation: {
-      type: {
-        type: String,
-        enum: ['Point'],
-        default: 'Point',
-      },
-      coordinates: [Number], // [longitude, latitude]
-    },
     categories: {
       type: [String],
       default: [],

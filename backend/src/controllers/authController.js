@@ -174,9 +174,6 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'localtrade/profiles');
   }
 
-  // Remove undefined fields
-  Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
-
   const user = await User.findByIdAndUpdate(
     req.user.id,
     updateData,

@@ -3,6 +3,7 @@ const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
 
 // @desc    Get vendor analytics
 // @route   GET /api/v1/vendors/analytics
@@ -142,7 +143,6 @@ exports.updateVendorProfile = catchAsync(async (req, res, next) => {
   }
 
   if (req.file) {
-    const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
     updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'localtrade/profiles');
   }
 

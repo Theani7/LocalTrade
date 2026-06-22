@@ -2,6 +2,7 @@ const Product = require('../models/productModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const { sendNotification } = require('../utils/notificationUtils');
+const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
 const User = require('../models/userModel');
 
 // @desc    Get all products (with search, filter, pagination)
@@ -116,13 +117,18 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 exports.createProduct = catchAsync(async (req, res, next) => {
   const { title, description, category, price, originalPrice, stock, stockQuantity } = req.body;
   
+  const resolvedStock = stockQuantity !== undefined ? Number(stockQuantity) : (stock !== undefined ? Number(stock) : 0);
+  if (resolvedStock < 0) {
+    return next(new AppError('Stock quantity cannot be negative', 400));
+  }
+
   const productData = {
     title,
     description,
     category,
     price: Number(price),
     originalPrice: originalPrice ? Number(originalPrice) : null,
-    stockQuantity: stockQuantity !== undefined ? Number(stockQuantity) : (stock !== undefined ? Number(stock) : 0),
+    stockQuantity: resolvedStock,
     vendorId: req.user.id,
     vendorName: req.user.shopName || req.user.fullName,
     location: req.user.address
@@ -130,7 +136,6 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 
   // Handle Image Uploads
   if (req.files && req.files.length > 0) {
-    const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
     const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, 'localtrade/products'));
     productData.images = await Promise.all(uploadPromises);
   } else if (req.body.images) {
@@ -198,7 +203,6 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
   }
 
   if (req.files && req.files.length > 0) {
-    const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
     const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, 'localtrade/products'));
     updateData.images = await Promise.all(uploadPromises);
   }
@@ -231,7 +235,12 @@ exports.updateProductStock = catchAsync(async (req, res, next) => {
     return next(new AppError('Unauthorized', 403));
   }
 
-  if (stockQuantity !== undefined) product.stockQuantity = stockQuantity;
+  if (stockQuantity !== undefined) {
+    if (stockQuantity < 0) {
+      return next(new AppError('Stock quantity cannot be negative', 400));
+    }
+    product.stockQuantity = stockQuantity;
+  }
   if (productStatus !== undefined) product.productStatus = productStatus;
 
   await product.save();

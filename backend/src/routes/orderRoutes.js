@@ -11,6 +11,6 @@ router.get('/my-orders', restrictTo('customer'), orderController.getMyOrders);
 router.get('/vendor-orders', restrictTo('vendor'), isApprovedVendor, orderController.getVendorOrders);
 router.get('/:id', orderController.getOrder);
 router.patch('/:id/status', restrictTo('vendor', 'admin'), isApprovedVendor, orderController.updateOrderStatus);
-router.patch('/:id/cancel', orderController.cancelOrder);
+router.patch('/:id/cancel', restrictTo('customer', 'admin'), orderController.cancelOrder);
 
 module.exports = router;
