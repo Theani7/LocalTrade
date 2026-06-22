@@ -11,48 +11,82 @@ class AppBottomNav extends StatelessWidget {
     required this.onTap,
   });
 
+  static const List<_NavItem> _items = [
+    _NavItem(icon: Icons.home_outlined, label: 'Home'),
+    _NavItem(icon: Icons.shopping_bag_outlined, label: 'Orders'),
+    _NavItem(icon: Icons.person_outline_rounded, label: 'Profile'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.divider, width: 1),
-        ),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: onTap,
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.coral,
-        unselectedItemColor: AppColors.muted,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-        selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-        unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_rounded),
-            activeIcon: Icon(Icons.search_rounded),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag_outlined),
-            activeIcon: Icon(Icons.shopping_bag_rounded),
-            label: 'Orders',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded),
-            activeIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0D2B2620),
+            offset: Offset(0, -2),
+            blurRadius: 10,
           ),
         ],
       ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(_items.length, (index) {
+          final item = _items[index];
+          final isActive = index == currentIndex;
+
+          return GestureDetector(
+            onTap: () => onTap(index),
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.coralLight : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedScale(
+                    scale: isActive ? 1.05 : 1.0,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: Icon(
+                      item.icon,
+                      size: 26,
+                      color: isActive ? AppColors.coralDark : AppColors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+                      color: isActive ? AppColors.coralDark : AppColors.muted,
+                    ),
+                    child: Text(item.label),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+
+  const _NavItem({required this.icon, required this.label});
 }

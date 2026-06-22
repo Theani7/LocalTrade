@@ -6,6 +6,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -101,37 +102,18 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: _currentNavIndex == 0 ? _buildHomeBody() : const SizedBox(),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
-        ),
-        child: BottomNavigationBar(
+      bottomNavigationBar: AppBottomNav(
           currentIndex: _currentNavIndex,
           onTap: (i) {
-            if (i == 0 || i == 1) {
+            if (i == 0) {
               setState(() => _currentNavIndex = i);
-            } else if (i == 2) {
+            } else if (i == 1) {
               AuthGuard.requireAuthRoute(context, const CustomerOrdersScreen());
-            } else if (i == 3) {
+            } else if (i == 2) {
               AuthGuard.requireAuthRoute(context, const CustomerProfileScreen());
             }
           },
-          backgroundColor: AppColors.surface,
-          selectedItemColor: AppColors.coralDark,
-          unselectedItemColor: AppColors.muted,
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-          unselectedLabelStyle: const TextStyle(fontSize: 11),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home_rounded), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.search_rounded), label: 'Discover'),
-            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag_outlined), activeIcon: Icon(Icons.shopping_bag_rounded), label: 'Orders'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), activeIcon: Icon(Icons.person_rounded), label: 'Profile'),
-          ],
         ),
-      ),
     );
   }
 
