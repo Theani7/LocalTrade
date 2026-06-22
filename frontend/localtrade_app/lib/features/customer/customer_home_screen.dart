@@ -230,6 +230,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ),
           ),
 
+          const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
           // Categories
           SliverToBoxAdapter(
             child: SingleChildScrollView(
@@ -269,6 +271,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               ),
             ),
           ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
           // Filter bar
           SliverToBoxAdapter(
