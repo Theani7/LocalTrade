@@ -42,8 +42,10 @@ class AuthProvider with ChangeNotifier {
   Future<void> _loadUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString(AppConstants.userKey);
+    debugPrint('AuthProvider _loadUserFromPrefs: ${userData != null ? "found user data" : "NO user data"}');
     if (userData != null) {
       _user = json.decode(userData);
+      debugPrint('AuthProvider loaded user: role=${_user?["role"]}, status=${_user?["vendorApprovalStatus"]}, email=${_user?["email"]}');
       notifyListeners();
     }
   }

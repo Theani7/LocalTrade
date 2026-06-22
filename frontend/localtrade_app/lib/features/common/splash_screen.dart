@@ -44,11 +44,15 @@ class _SplashScreenState extends State<SplashScreen> {
     });
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
+    debugPrint('Splash: waiting for auth.ready...');
     await auth.ready;
+    debugPrint('Splash: auth.ready done. isAuthenticated=${auth.isAuthenticated}, userRole=${auth.user?["role"]}, userId=${auth.user?["_id"]}');
 
     final authFuture = auth.isAuthenticated ? auth.validateToken() : Future.value(false);
+    debugPrint('Splash: calling validateToken=${auth.isAuthenticated}');
 
     await Future.wait([splashFuture, notificationFuture, authFuture]);
+    debugPrint('Splash: all futures done. isAuthenticated=${auth.isAuthenticated}, userRole=${auth.user?["role"]}, userId=${auth.user?["_id"]}');
 
     if (!mounted) return;
     _navigate();
