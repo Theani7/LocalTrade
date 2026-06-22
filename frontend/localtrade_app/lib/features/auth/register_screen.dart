@@ -22,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _shopNameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _flatHouseController = TextEditingController();
   final _streetController = TextEditingController();
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
@@ -47,7 +46,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _shopNameController.dispose();
     _descriptionController.dispose();
-    _flatHouseController.dispose();
     _streetController.dispose();
     _cityController.dispose();
     _stateController.dispose();
@@ -74,15 +72,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         userData['businessDescription'] = _descriptionController.text.trim();
       }
       // Build address object if any address field is filled
-      if (_flatHouseController.text.trim().isNotEmpty ||
-          _streetController.text.trim().isNotEmpty ||
+      if (_streetController.text.trim().isNotEmpty ||
           _cityController.text.trim().isNotEmpty ||
           _stateController.text.trim().isNotEmpty ||
           _zipController.text.trim().isNotEmpty) {
         userData['address'] = {
           'fullName': _nameController.text.trim(),
           'phone': _phoneController.text.trim(),
-          'flatHouse': _flatHouseController.text.trim(),
+          'flatHouse': '',
           'street': _streetController.text.trim(),
           'city': _cityController.text.trim(),
           'state': _stateController.text.trim(),
@@ -324,12 +321,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        _field(
-                          controller: _flatHouseController,
-                          label: 'Shop / Building name',
-                          icon: Icons.home_outlined,
                         ),
                         const SizedBox(height: 12),
                         _field(
