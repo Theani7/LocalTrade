@@ -120,18 +120,14 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               border: Border.all(color: AppColors.divider),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.tune_rounded, size: 18, color: AppColors.ink),
-                SizedBox(width: 6),
+                const Icon(Icons.tune_rounded, size: 18, color: AppColors.ink),
+                const SizedBox(width: 6),
                 Text(
                   'Filter',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.ink,
-                  ),
+                  style: AppTextStyles.label.copyWith(color: AppColors.ink),
                 ),
               ],
             ),
@@ -179,9 +175,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               ),
               child: Text(
                 '$label ($count)',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                style: AppTextStyles.label.copyWith(
                   color: isActive ? chipText : chipText.withValues(alpha: 0.7),
                 ),
               ),
@@ -236,11 +230,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               children: [
                 Text(
                   '#$shortId',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.muted,
-                  ),
+                  style: AppTextStyles.label.copyWith(color: AppColors.muted),
                 ),
                 _buildStatusBadge(status),
               ],
@@ -258,9 +248,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                     children: [
                       Text(
                         customerName,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
+                        style: AppTextStyles.cardTitle.copyWith(
                           color: isCancelled ? AppColors.muted : AppColors.ink,
                         ),
                         maxLines: 1,
@@ -269,10 +257,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                       if (phone.isNotEmpty)
                         Text(
                           phone,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.muted,
-                          ),
+                          style: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -294,20 +279,16 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: address.isEmpty
-                      ? const Text(
+                      ? Text(
                           'No address provided',
-                          style: TextStyle(
+                          style: AppTextStyles.bodyMuted.copyWith(
                             fontSize: 13,
-                            color: AppColors.muted,
                             fontStyle: FontStyle.italic,
                           ),
                         )
                       : Text(
                           address,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.muted,
-                          ),
+                          style: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -383,12 +364,8 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                         children: [
                           Text(
                             title,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: isCancelled
-                                  ? AppColors.muted
-                                  : AppColors.ink,
+                            style: AppTextStyles.cardTitle.copyWith(
+                              color: isCancelled ? AppColors.muted : AppColors.ink,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -396,10 +373,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                           const SizedBox(height: 2),
                           Text(
                             'Qty: $qty',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.muted,
-                            ),
+                            style: AppTextStyles.caption,
                           ),
                         ],
                       ),
@@ -407,9 +381,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                     // Price
                     Text(
                       'Rs. $price',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                      style: AppTextStyles.cardTitle.copyWith(
                         color: isCancelled ? AppColors.muted : AppColors.ink,
                       ),
                     ),
@@ -423,11 +395,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               const SizedBox(height: 8),
               Text(
                 'Note: $notes',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.muted,
-                  fontStyle: FontStyle.italic,
-                ),
+                style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -446,9 +414,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                 ),
                 Text(
                   'Rs. $totalAmount',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.cardTitle.copyWith(
                     color: isCancelled ? AppColors.muted : AppColors.ink,
                   ),
                 ),
@@ -488,12 +454,9 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                                   color: AppColors.muted,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Reject',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: AppTextStyles.label.copyWith(color: AppColors.ink),
                               ),
                       ),
                     ),
@@ -529,12 +492,9 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                                   color: AppColors.ink,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Confirm order',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: AppTextStyles.label.copyWith(color: AppColors.ink),
                               ),
                       ),
                     ),
@@ -564,12 +524,9 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                           ),
                         )
                       : const Icon(Icons.local_shipping_outlined, size: 18),
-                  label: const Text(
+                  label: Text(
                     'Mark as delivered',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: AppTextStyles.label.copyWith(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.successDark,
@@ -647,11 +604,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
+            style: AppTextStyles.badge.copyWith(color: textColor),
           ),
         ],
       ),
@@ -673,11 +626,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
       child: Center(
         child: Text(
           initial,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.coralDark,
-          ),
+          style: AppTextStyles.cardTitle.copyWith(color: AppColors.coralDark),
         ),
       ),
     );
