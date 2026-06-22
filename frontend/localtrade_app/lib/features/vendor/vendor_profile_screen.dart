@@ -252,7 +252,29 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
             'pending';
     final shopName = profile?['shopName'] ?? 'Your store';
 
-    return Form(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Vendor profile', style: AppTextStyles.screenTitle),
+            const SizedBox(height: 2),
+            Text(
+              'How customers see your store',
+              style: AppTextStyles.caption.copyWith(fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+      body: Form(
       key: _formKey,
       child: Column(
         children: [
@@ -339,6 +361,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           ),
           _buildStickySaveBar(),
         ],
+      ),
       ),
     );
   }
