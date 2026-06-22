@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import '../../providers/order_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../widgets/app_button.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'order_tracking_screen.dart';
@@ -36,7 +38,7 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
           backgroundColor: AppColors.background,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Your Orders', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.ink)),
+          title: Text('Your Orders', style: AppTextStyles.screenTitle),
         ),
         body: Center(
           child: Column(
@@ -49,18 +51,17 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                 child: const Icon(Icons.shopping_bag_outlined, size: 36, color: AppColors.coral),
               ),
               const SizedBox(height: 16),
-              const Text('Login to view orders', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+              Text('Login to view orders', style: AppTextStyles.sectionHeading),
               const SizedBox(height: 8),
-              const Text('Sign in to see your order history', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              Text('Sign in to see your order history', style: AppTextStyles.bodyMuted),
               const SizedBox(height: 20),
-              ElevatedButton(
+              AppButton(
+                label: 'Login',
                 onPressed: () {
                   AuthGuard.requireAuth(context, onAuthenticated: () {
                     if (mounted) setState(() {});
                   });
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral, foregroundColor: AppColors.ink),
-                child: const Text('Login'),
               ),
             ],
           ),
@@ -71,13 +72,9 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Your Orders',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.ink,
-          ),
+          style: AppTextStyles.screenTitle,
         ),
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.ink,
@@ -154,11 +151,7 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                             children: [
                               Text(
                                 DateFormat('MMM d, yyyy').format(date),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.muted,
-                                ),
+                                style: AppTextStyles.label,
                               ),
                               _buildStatusBadge(status),
                             ],
@@ -195,11 +188,7 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                               Expanded(
                                 child: Text(
                                   vendorName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.ink,
-                                  ),
+                                  style: AppTextStyles.cardTitle,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -271,19 +260,12 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                             children: [
                               Text(
                                 '${products.length} item${products.length == 1 ? '' : 's'}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.muted,
-                                ),
+                                style: AppTextStyles.caption,
                               ),
                               const Spacer(),
                               Text(
                                 'Rs. ${order['totalAmount'] ?? 0}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.ink,
-                                ),
+                                style: AppTextStyles.cardTitle,
                               ),
                             ],
                           ),

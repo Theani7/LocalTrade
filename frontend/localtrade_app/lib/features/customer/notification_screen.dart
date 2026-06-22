@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../widgets/app_button.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 
@@ -35,7 +37,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           backgroundColor: AppColors.background,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Notifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.ink)),
+          title: Text('Notifications', style: AppTextStyles.screenTitle),
         ),
         body: Center(
           child: Column(
@@ -48,18 +50,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 child: const Icon(Icons.notifications_outlined, size: 36, color: AppColors.coral),
               ),
               const SizedBox(height: 16),
-              const Text('Login to view notifications', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+              Text('Login to view notifications', style: AppTextStyles.sectionHeading),
               const SizedBox(height: 8),
-              const Text('Sign in to see your updates', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+              Text('Sign in to see your updates', style: AppTextStyles.bodyMuted),
               const SizedBox(height: 20),
-              ElevatedButton(
+              AppButton(
+                label: 'Login',
                 onPressed: () {
                   AuthGuard.requireAuth(context, onAuthenticated: () {
                     if (mounted) setState(() {});
                   });
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral, foregroundColor: AppColors.ink),
-                child: const Text('Login'),
               ),
             ],
           ),
@@ -70,13 +71,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Notifications',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.ink,
-          ),
+          style: AppTextStyles.screenTitle,
         ),
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.ink,
@@ -173,7 +170,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight:
-                                      isRead ? FontWeight.w400 : FontWeight.w600,
+                                      isRead ? FontWeight.w400 : FontWeight.w500,
                                   color: AppColors.ink,
                                   height: 1.3,
                                 ),
@@ -195,11 +192,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 _formatDate(notification['createdAt']),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: AppColors.muted,
-                                ),
+                                style: AppTextStyles.caption,
                               ),
                             ],
                           ),
