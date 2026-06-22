@@ -252,16 +252,20 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
             'pending';
     final shopName = profile?['shopName'] ?? 'Your store';
 
+    final canGoBack = Navigator.canPop(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: canGoBack
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+                onPressed: () => Navigator.pop(context),
+              )
+            : const SizedBox.shrink(),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
