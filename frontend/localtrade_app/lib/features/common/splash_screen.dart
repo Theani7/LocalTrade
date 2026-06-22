@@ -60,6 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (auth.isAuthenticated) {
       final role = auth.user?['role'];
       final status = auth.user?['vendorApprovalStatus'];
+      debugPrint('Splash routing: role=$role, status=$status, user=${auth.user != null}');
 
       if (role == 'admin') {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminDashboard()));

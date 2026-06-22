@@ -34,9 +34,8 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _user = null;
-      notifyListeners();
-      return false;
+      debugPrint('validateToken failed (keeping cached user): $e');
+      return _user != null;
     }
   }
 
