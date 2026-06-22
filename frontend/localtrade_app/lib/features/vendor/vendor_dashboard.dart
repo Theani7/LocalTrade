@@ -253,7 +253,7 @@ class VendorOverviewTab extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.3,
                     children: [
                       _VendorStatCard(
                         icon: Icons.schedule_outlined,
@@ -772,7 +772,7 @@ class _OverviewSkeleton extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: 1.5,
+            childAspectRatio: 1.3,
             children: List.generate(4, (_) => const ShimmerSkeleton(height: 90, radius: 16)),
           ),
         ],
