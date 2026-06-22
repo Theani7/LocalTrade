@@ -99,7 +99,7 @@ class _CartScreenState extends State<CartScreen> {
 
     final cart = Provider.of<CartProvider>(context);
     final cartItems = cart.items.values.toList();
-    final totalQty = cartItems.fold<int>(0, (s, i) => s + i.quantity);
+    final totalQty = cartItems.fold<int>(0, (s, i) => s + (i.quantity > 0 ? i.quantity : 0));
 
     return Scaffold(
       backgroundColor: AppColors.background,

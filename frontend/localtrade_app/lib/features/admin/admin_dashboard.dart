@@ -304,13 +304,13 @@ class AdminAnalyticsTab extends StatelessWidget {
                                 child: const Icon(Icons.receipt_long_rounded, size: 18, color: AppColors.coralDark),
                               ),
                               title: Text(
-                                'Order #${order['_id'].toString().substring(18).toUpperCase()}',
+                                'Order #${(() { final id = order['_id'].toString(); return id.length > 18 ? id.substring(18) : id; })().toUpperCase()}',
                                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.ink),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               subtitle: Text(
-                                order['customerId']['fullName'] ?? 'Customer',
+                                order['customerId']?['fullName'] ?? 'Customer',
                                 style: const TextStyle(fontSize: 12, color: AppColors.muted),
                               ),
                               trailing: Column(
@@ -657,7 +657,7 @@ class AdminOrdersTab extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '#${order['_id'].toString().substring(18).toUpperCase()}',
+                          '#${(() { final id = order['_id'].toString(); return id.length > 18 ? id.substring(18) : id; })().toUpperCase()}',
                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.muted),
                         ),
                         StatusBadge(status: _mapStatus(order['orderStatus'])),
@@ -668,9 +668,9 @@ class AdminOrdersTab extends StatelessWidget {
                       children: [
                         const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.muted),
                         const SizedBox(width: 6),
-                        Expanded(
+                          Expanded(
                           child: Text(
-                            order['customerId']['fullName'] ?? 'Customer',
+                            order['customerId']?['fullName'] ?? 'Customer',
                             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.ink),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -683,9 +683,9 @@ class AdminOrdersTab extends StatelessWidget {
                       children: [
                         const Icon(Icons.storefront_rounded, size: 16, color: AppColors.muted),
                         const SizedBox(width: 6),
-                        Expanded(
+                          Expanded(
                           child: Text(
-                            order['vendorId']['shopName'] ?? 'Vendor',
+                            order['vendorId']?['shopName'] ?? 'Vendor',
                             style: const TextStyle(fontSize: 13, color: AppColors.muted),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

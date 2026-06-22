@@ -8,17 +8,14 @@ const signToken = (id) => {
 
 const sendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
-
-  // Remove password from output
-  user.password = undefined;
+  const userObj = user.toObject();
+  delete userObj.password;
 
   res.status(statusCode).json({
     success: true,
     status: 'success',
     token,
-    data: {
-      user,
-    },
+    data: { user: userObj },
   });
 };
 

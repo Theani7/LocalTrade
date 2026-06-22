@@ -8,10 +8,11 @@ const dotenv = require('dotenv');
 // Custom NoSQL query injection sanitizer middleware for Express 5 compatibility
 const sanitizeObject = (obj) => {
   if (obj && typeof obj === 'object') {
+    const dangerousKeys = ['$__proto__', 'constructor', 'prototype'];
     for (const key in obj) {
-      if (key.startsWith('$')) {
+      if (key.startsWith('$') || dangerousKeys.includes(key)) {
         delete obj[key];
-      } else {
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
         sanitizeObject(obj[key]);
       }
     }
@@ -59,7 +60,7 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1 && process.env.NODE_ENV === 'production') {
+    if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }

@@ -1,5 +1,6 @@
 const Feedback = require('../models/feedbackModel');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 // @desc    Submit feedback
 // @route   POST /api/v1/feedback
@@ -13,6 +14,11 @@ exports.submitFeedback = catchAsync(async (req, res, next) => {
     featureCompletenessRating, 
     comment 
   } = req.body;
+
+  const existing = await Feedback.findOne({ userId: req.user.id });
+  if (existing) {
+    return next(new AppError('You have already submitted feedback', 400));
+  }
 
   const feedback = await Feedback.create({
     userId: req.user.id,

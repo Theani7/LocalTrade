@@ -9,8 +9,8 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
   const filter = { recipient: req.user.id };
 
   if (req.query.page || req.query.limit) {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
 
     const [notifications, totalResults] = await Promise.all([

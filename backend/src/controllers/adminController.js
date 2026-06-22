@@ -139,7 +139,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     .select('-password')
     .sort('-createdAt')
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit, 10));
 
   const totalCount = await User.countDocuments(filter);
 
@@ -147,7 +147,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     totalCount,
-    page: parseInt(page),
+    page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: users.length,
     data: { users }
@@ -181,7 +181,7 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
     .select('-password')
     .sort('-createdAt')
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit, 10));
 
   const totalCount = await User.countDocuments(filter);
 
@@ -189,7 +189,7 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     totalCount,
-    page: parseInt(page),
+    page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: vendors.length,
     data: { vendors }
@@ -222,7 +222,7 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     .populate('vendorId', 'fullName shopName')
     .sort('-createdAt')
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit, 10));
 
   const totalCount = await Product.countDocuments(filter);
 
@@ -230,7 +230,7 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     totalCount,
-    page: parseInt(page),
+    page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: products.length,
     data: { products }
@@ -248,13 +248,21 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
     filter.orderStatus = status;
   }
 
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    filter.$or = [
+      { 'shippingAddress.fullName': searchRegex },
+      { 'shippingAddress.phone': searchRegex },
+    ];
+  }
+
   const skip = (page - 1) * limit;
   const orders = await Order.find(filter)
     .populate('customerId', 'fullName')
     .populate('vendorId', 'fullName shopName')
     .sort('-createdAt')
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit, 10));
 
   const totalCount = await Order.countDocuments(filter);
 
@@ -262,7 +270,7 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     totalCount,
-    page: parseInt(page),
+    page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: orders.length,
     data: { orders }
@@ -320,8 +328,23 @@ exports.toggleUserStatus = catchAsync(async (req, res, next) => {
     return next(new AppError('No user found with that ID', 404));
   }
 
+  if (user._id.toString() === req.user.id) {
+    return next(new AppError('You cannot deactivate your own account', 400));
+  }
+  if (user.role === 'admin') {
+    return next(new AppError('Cannot toggle admin account status', 400));
+  }
+
   user.isActive = !user.isActive;
   await user.save();
+
+  await sendNotification(
+    user._id,
+    `Your account has been ${user.isActive ? 'activated' : 'deactivated'}`,
+    `If you have questions, please contact support.`,
+    null,
+    'Account'
+  );
 
   res.status(200).json({
     success: true,

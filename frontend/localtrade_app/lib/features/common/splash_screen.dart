@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -21,6 +23,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final NotificationService _notificationService = NotificationService();
+  StreamSubscription<RemoteMessage>? _messageSubscription;
 
   @override
   void initState() {
@@ -32,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final splashFuture = Future.delayed(const Duration(seconds: 2));
 
     final notificationFuture = _notificationService.init().then((_) {
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _messageSubscription = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         _notificationService.showLocalNotification(message);
         if (mounted) {
           Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
@@ -82,6 +85,12 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerHomeScreen()));
     }
+  }
+
+  @override
+  void dispose() {
+    _messageSubscription?.cancel();
+    super.dispose();
   }
 
   @override

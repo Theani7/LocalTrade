@@ -188,8 +188,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
       if (success && mounted) {
         setState(() => _hasChanges = false);
+        final messenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               widget.product == null ? 'Product listed' : 'Product updated',

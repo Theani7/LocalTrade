@@ -77,8 +77,22 @@ exports.updateReview = catchAsync(async (req, res, next) => {
     return next(new AppError('Review not found or you are not authorized to update it', 404));
   }
 
-  if (req.body.rating) review.rating = req.body.rating;
-  if (req.body.reviewText) review.reviewText = req.body.reviewText;
+  if (req.body.rating !== undefined) {
+    const rating = Number(req.body.rating);
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+      return next(new AppError('Rating must be between 1 and 5', 400));
+    }
+    review.rating = rating;
+  }
+  if (req.body.reviewText !== undefined) {
+    if (typeof req.body.reviewText !== 'string' || req.body.reviewText.trim().length === 0) {
+      return next(new AppError('Review text cannot be empty', 400));
+    }
+    if (req.body.reviewText.length > 1000) {
+      return next(new AppError('Review text must be under 1000 characters', 400));
+    }
+    review.reviewText = req.body.reviewText;
+  }
 
   await review.save(); // triggers post save hook
 

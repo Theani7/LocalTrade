@@ -225,6 +225,7 @@ class ListSkeleton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemBuilder: (context, index) {
           return Container(
+            key: ValueKey(index),
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(

@@ -473,17 +473,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             ? null
                             : () {
                                 AuthGuard.requireAuth(context, onAuthenticated: () {
-                                  Provider.of<CartProvider>(context,
+                                    Provider.of<CartProvider>(context,
                                           listen: false)
-                                      .addItem(
-                                    widget.product['_id'],
-                                    widget.product['title'],
-                                    double.parse(
-                                        widget.product['price'].toString()),
-                                    widget.product['images'][0],
-                                    widget.product['vendorId']['_id'] ??
-                                        widget.product['vendorId'],
-                                  );
+                                        .addItem(
+                                      widget.product['_id'],
+                                      widget.product['title'],
+                                      double.parse(
+                                          widget.product['price'].toString()),
+                                      (widget.product['images'] != null && (widget.product['images'] as List).isNotEmpty)
+                                          ? widget.product['images'][0]
+                                          : '',
+                                      (widget.product['vendorId'] is Map)
+                                          ? (widget.product['vendorId']['_id'] ??
+                                              widget.product['vendorId'])
+                                          : (widget.product['vendorId'] ?? ''),
+                                    );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       duration: const Duration(seconds: 2),
@@ -648,12 +652,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildVendorCard() {
-    final vendorData = widget.product['vendorId'];
-    final vendorName = vendorData?['shopName'] ??
-        vendorData?['fullName'] ??
+        final vendorData = widget.product['vendorId'];
+    final vendorName = (vendorData is Map ? vendorData['shopName'] : null) ??
+        (vendorData is Map ? vendorData['fullName'] : null) ??
         'Local vendor';
-    final vendorPhone = vendorData?['phone'] ?? '';
-    final vendorPhoto = vendorData?['photoUrl'];
+    final vendorPhone = vendorData is Map ? (vendorData['phone'] ?? '') : '';
+    final vendorPhoto = vendorData is Map ? vendorData['photoUrl'] : null;
     final vendorInitial =
         vendorName.isNotEmpty ? vendorName[0].toUpperCase() : 'V';
 
@@ -866,7 +870,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Text(review['reviewText'],
+                  Text(review['reviewText'] ?? '',
                       style: AppTextStyles.body.copyWith(height: 1.5)),
                 ],
               ),

@@ -19,6 +19,30 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('No order items provided. Expected "items" or "products" array.', 400));
   }
 
+  // Validate all quantities are positive integers
+  for (const item of items) {
+    if (!item.quantity || item.quantity < 1 || !Number.isInteger(item.quantity)) {
+      return next(new AppError('Each item quantity must be a positive integer', 400));
+    }
+  }
+
+  // Validate all products are from the same vendor
+  const vendorIds = new Set();
+  for (const item of items) {
+    const productId = item.productId || item.product;
+    if (!productId) {
+      return next(new AppError('Invalid item format: Missing product ID', 400));
+    }
+    const product = await Product.findById(productId);
+    if (!product) {
+      return next(new AppError(`Product ${productId} not found`, 404));
+    }
+    vendorIds.add(product.vendorId.toString());
+  }
+  if (vendorIds.size > 1) {
+    return next(new AppError('All products in an order must be from the same vendor', 400));
+  }
+
   // 1) Process each item
   let totalAmount = 0;
   const orderProducts = [];
@@ -103,11 +127,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     // ROLLBACK STOCK FOR PROCESSED ITEMS
     for (const processed of processedProducts) {
       try {
-        const prod = await Product.findById(processed.id);
-        if (prod) {
-          prod.stockQuantity += processed.quantity;
-          await prod.save();
-        }
+        await Product.findByIdAndUpdate(processed.id, { $inc: { stockQuantity: processed.quantity } });
       } catch (rollbackErr) {
         console.error('Failed to rollback stock for product:', processed.id, rollbackErr);
       }
@@ -129,7 +149,8 @@ exports.getOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('No order found with that ID', 404));
   }
 
-  // Check if authorized
+  // Authorization: customer, vendor, or admin may access. Route-level restrictTo
+  // middleware is not needed here since ownership is verified below.
   if (
     order.customerId._id.toString() !== req.user.id &&
     order.vendorId._id.toString() !== req.user.id &&
@@ -152,8 +173,8 @@ exports.getMyOrders = catchAsync(async (req, res, next) => {
   const filter = { customerId: req.user.id };
 
   if (req.query.page || req.query.limit) {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
 
     const [orders, totalResults] = await Promise.all([
@@ -195,8 +216,8 @@ exports.getVendorOrders = catchAsync(async (req, res, next) => {
   const filter = { vendorId: req.user.id };
 
   if (req.query.page || req.query.limit) {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
 
     const [orders, totalResults] = await Promise.all([
@@ -259,6 +280,9 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   }
 
   const statusValues = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+  if (!statusValues.includes(status)) {
+    return next(new AppError(`Invalid status: ${status}`, 400));
+  }
   const currentIndex = statusValues.indexOf(order.orderStatus);
   const targetIndex = statusValues.indexOf(status);
 
@@ -267,7 +291,10 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   }
 
   order.orderStatus = status;
-  await Order.findByIdAndUpdate(req.params.id, { orderStatus: status }, { new: true, runValidators: false });
+  const updatedOrder = await Order.findByIdAndUpdate(req.params.id, { orderStatus: status }, { new: true, runValidators: false })
+    .populate('customerId', 'fullName phone')
+    .populate('vendorId', 'shopName')
+    .populate('products.product', 'title images');
 
   // Send notification to customer
   await sendNotification(
@@ -281,7 +308,7 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     status: 'success',
-    data: { order },
+    data: { order: updatedOrder },
   });
 });
 
@@ -308,7 +335,7 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   order.orderStatus = 'Cancelled';
   order.cancellationReason = req.body.reason || undefined;
   order.cancellationFeedback = req.body.feedback || undefined;
-  await Order.findByIdAndUpdate(
+  const updatedOrder = await Order.findByIdAndUpdate(
     req.params.id,
     {
       orderStatus: 'Cancelled',
@@ -316,16 +343,15 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
       cancellationFeedback: req.body.feedback || undefined,
     },
     { new: true, runValidators: false }
-  );
+  )
+    .populate('customerId', 'fullName phone')
+    .populate('vendorId', 'shopName')
+    .populate('products.product', 'title images');
 
   // Rollback stock for all products in this order
   for (const item of order.products) {
     try {
-      const prod = await Product.findById(item.product);
-      if (prod) {
-        prod.stockQuantity += item.quantity;
-        await prod.save();
-      }
+      await Product.findByIdAndUpdate(item.product, { $inc: { stockQuantity: item.quantity } });
     } catch (err) {
       console.error('Failed to restore stock on cancel:', item.product, err);
     }
@@ -343,6 +369,6 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     status: 'success',
-    data: { order },
+    data: { order: updatedOrder },
   });
 });

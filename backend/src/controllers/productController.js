@@ -4,6 +4,7 @@ const AppError = require('../utils/appError');
 const { sendNotification } = require('../utils/notificationUtils');
 const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
 const User = require('../models/userModel');
+const Order = require('../models/orderModel');
 
 // @desc    Get all products (with search, filter, pagination)
 // @route   GET /api/v1/products
@@ -69,8 +70,8 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   }
 
   // 7) Pagination
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
   const skip = (page - 1) * limit;
 
   // Execute query and count in parallel
@@ -117,6 +118,17 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 exports.createProduct = catchAsync(async (req, res, next) => {
   const { title, description, category, price, originalPrice, stock, stockQuantity } = req.body;
   
+  const priceNum = Number(price);
+  if (isNaN(priceNum) || priceNum <= 0) {
+    return next(new AppError('Price must be a positive number', 400));
+  }
+  if (originalPrice) {
+    const origNum = Number(originalPrice);
+    if (isNaN(origNum) || origNum <= 0) {
+      return next(new AppError('Original price must be a positive number', 400));
+    }
+  }
+
   const resolvedStock = stockQuantity !== undefined ? Number(stockQuantity) : (stock !== undefined ? Number(stock) : 0);
   if (resolvedStock < 0) {
     return next(new AppError('Stock quantity cannot be negative', 400));
@@ -267,6 +279,15 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('You are not authorized to delete this product', 403));
   }
 
+  // Check if product is referenced in any active orders
+  const activeOrder = await Order.findOne({
+    'products.product': req.params.id,
+    orderStatus: { $nin: ['Delivered', 'Cancelled'] }
+  });
+  if (activeOrder) {
+    return next(new AppError('Cannot delete product that has active orders', 400));
+  }
+
   await Product.findByIdAndDelete(req.params.id);
 
   res.status(204).json({
@@ -283,8 +304,8 @@ exports.getMyProducts = catchAsync(async (req, res, next) => {
   const filter = { vendorId: req.user.id };
 
   if (req.query.page || req.query.limit) {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
 
     const [products, totalResults] = await Promise.all([

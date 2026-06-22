@@ -675,25 +675,35 @@ class _MiniBarChart extends StatelessWidget {
 
     return SizedBox(
       height: 40,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(barCount, (i) {
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOut,
-                height: 40 * bars[i],
-                decoration: BoxDecoration(
-                  color: AppColors.blue,
-                  borderRadius: BorderRadius.circular(3),
+      child: orderCount <= 0 || revenue <= 0
+          ? Center(
+              child: Text(
+                'No data',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.muted.withValues(alpha: 0.6),
                 ),
               ),
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(barCount, (i) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOut,
+                      height: 40 * bars[i],
+                      decoration: BoxDecoration(
+                        color: AppColors.blue,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
-          );
-        }),
-      ),
     );
   }
 }

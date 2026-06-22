@@ -44,14 +44,27 @@ class CartItem {
 
 class CartProvider with ChangeNotifier {
   Map<String, CartItem> _items = {};
+  bool _disposed = false;
 
   CartProvider() {
     _loadCart();
   }
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
   void onLogout() {
     _items = {};
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   Map<String, CartItem> get items => {..._items};
@@ -73,12 +86,24 @@ class CartProvider with ChangeNotifier {
   }
 
   Future<void> _loadCart() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey('shopping_cart')) return;
-    
-    final cartData = json.decode(prefs.getString('shopping_cart')!) as Map<String, dynamic>;
-    _items = cartData.map((key, value) => MapEntry(key, CartItem.fromJson(value)));
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!prefs.containsKey('shopping_cart')) return;
+
+      final cartJson = prefs.getString('shopping_cart');
+      if (cartJson == null || cartJson.isEmpty) return;
+
+      final cartData = json.decode(cartJson) as Map<String, dynamic>;
+      _items = cartData.map((key, value) => MapEntry(key, CartItem.fromJson(value)));
+      _safeNotifyListeners();
+    } catch (e) {
+      // Clear corrupted cart data
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('shopping_cart');
+      } catch (_) {}
+      _items = {};
+    }
   }
 
   void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = ''}) {
@@ -109,7 +134,7 @@ class CartProvider with ChangeNotifier {
       );
     }
     _saveCart();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void updateQuantity(String productId, int quantity) {
@@ -119,20 +144,20 @@ class CartProvider with ChangeNotifier {
     } else {
       _items[productId]!.quantity = quantity;
       _saveCart();
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
   void removeItem(String productId) {
     _items.remove(productId);
     _saveCart();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void clear() {
     _items.clear();
     _saveCart();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   // Group items by vendor since orders are per vendor
