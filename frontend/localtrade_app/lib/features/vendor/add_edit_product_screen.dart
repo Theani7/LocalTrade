@@ -41,6 +41,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final List<Uint8List?> _imageBytes = [];
   final ImagePicker _picker = ImagePicker();
 
+  bool _hasChanges = false;
+
+  void _markChanged() {
+    if (!_hasChanges) setState(() => _hasChanges = true);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -64,10 +70,21 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       _selectedCategory = widget.product['category'] ?? 'Vegetables';
       _availableForPickup = widget.product['availableForPickup'] ?? true;
     }
+
+    _titleController.addListener(_markChanged);
+    _descController.addListener(_markChanged);
+    _priceController.addListener(_markChanged);
+    _originalPriceController.addListener(_markChanged);
+    _stockController.addListener(_markChanged);
   }
 
   @override
   void dispose() {
+    _titleController.removeListener(_markChanged);
+    _descController.removeListener(_markChanged);
+    _priceController.removeListener(_markChanged);
+    _originalPriceController.removeListener(_markChanged);
+    _stockController.removeListener(_markChanged);
     _titleController.dispose();
     _descController.dispose();
     _priceController.dispose();
@@ -77,15 +94,41 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   Future<void> _pickImages() async {
+    final remaining = 4 - _selectedImages.length;
+    if (remaining <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Maximum 4 images allowed'),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+      return;
+    }
     final List<XFile> images = await _picker.pickMultiImage();
     if (images.isNotEmpty) {
-      for (var img in images) {
+      final toAdd = images.take(remaining).toList();
+      for (var img in toAdd) {
         final bytes = await img.readAsBytes();
         _imageBytes.add(bytes);
       }
       setState(() {
-        _selectedImages.addAll(images);
+        _selectedImages.addAll(toAdd);
+        _hasChanges = true;
       });
+      if (images.length > remaining && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Only $remaining more images accepted (max 4)'),
+            backgroundColor: AppColors.warningDark,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
     }
   }
 
@@ -95,6 +138,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (index < _imageBytes.length) {
         _imageBytes.removeAt(index);
       }
+      _hasChanges = true;
     });
   }
 
@@ -143,6 +187,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       }
 
       if (success && mounted) {
+        setState(() => _hasChanges = false);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -173,69 +218,106 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !_hasChanges) return;
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: Text('Unsaved changes', style: AppTextStyles.sectionHeading),
+            content: Text(
+              'You have unsaved changes. Discard?',
+              style: AppTextStyles.bodyMuted,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel', style: AppTextStyles.bodyMuted),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.coral,
+                  minimumSize: const Size(100, 40),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: Text('Discard', style: AppTextStyles.buttonPrimary),
+              ),
+            ],
+          ),
+        );
+      },
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.product == null ? 'Add product' : 'Edit product',
-              style: AppTextStyles.screenTitle,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Fill in the details below',
-              style: AppTextStyles.caption.copyWith(fontSize: 11),
-            ),
-          ],
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.ink,
+          elevation: 0,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.product == null ? 'Add product' : 'Edit product',
+                style: AppTextStyles.screenTitle,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Fill in the details below',
+                style: AppTextStyles.caption.copyWith(fontSize: 11),
+              ),
+            ],
+          ),
         ),
-      ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildImageSection(),
-                    const SizedBox(height: 28),
+        body: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildImageSection(),
+                      const SizedBox(height: 28),
 
-                    // ── Basic info ───────────────────────────────
-                    _buildSectionLabel('BASIC INFO'),
-                    const SizedBox(height: 10),
-                    _buildBasicInfoCard(),
-                    const SizedBox(height: 28),
+                      // ── Basic info ───────────────────────────────
+                      _buildSectionLabel('BASIC INFO'),
+                      const SizedBox(height: 10),
+                      _buildBasicInfoCard(),
+                      const SizedBox(height: 28),
 
-                    // ── Pricing ──────────────────────────────────
-                    _buildSectionLabel('PRICING'),
-                    const SizedBox(height: 10),
-                    _buildPricingCard(),
-                    const SizedBox(height: 28),
+                      // ── Pricing ──────────────────────────────────
+                      _buildSectionLabel('PRICING'),
+                      const SizedBox(height: 10),
+                      _buildPricingCard(),
+                      const SizedBox(height: 28),
 
-                    // ── Stock ────────────────────────────────────
-                    _buildSectionLabel('STOCK'),
-                    const SizedBox(height: 10),
-                    _buildStockCard(),
-                    const SizedBox(height: 28),
+                      // ── Stock ────────────────────────────────────
+                      _buildSectionLabel('STOCK'),
+                      const SizedBox(height: 10),
+                      _buildStockCard(),
+                      const SizedBox(height: 28),
 
-                    // ── Tip banner ───────────────────────────────
-                    _buildTipBanner(),
-                    const SizedBox(height: 24),
-                  ],
+                      // ── Tip banner ───────────────────────────────
+                      _buildTipBanner(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // ── Sticky bottom bar ───────────────────────────────
-            _buildBottomBar(),
-          ],
+              // ── Sticky bottom bar ───────────────────────────────
+              _buildBottomBar(),
+            ],
+          ),
         ),
       ),
     );
@@ -506,7 +588,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         child: Text(c, style: AppTextStyles.body),
                       ))
                   .toList(),
-              onChanged: (v) => setState(() => _selectedCategory = v!),
+              onChanged: (v) => setState(() {
+                    _selectedCategory = v!;
+                    _hasChanges = true;
+                  }),
             ),
           ),
           const _HairlineDivider(),
@@ -691,8 +776,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   scale: 0.85,
                   child: Switch(
                     value: _availableForPickup,
-                    onChanged: (v) =>
-                        setState(() => _availableForPickup = v),
+                    onChanged: (v) => setState(() {
+                          _availableForPickup = v;
+                          _hasChanges = true;
+                        }),
                     activeThumbColor: AppColors.surface,
                     activeTrackColor: AppColors.coral,
                     inactiveTrackColor: AppColors.divider,

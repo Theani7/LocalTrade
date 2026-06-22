@@ -254,10 +254,46 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
     final canGoBack = Navigator.canPop(context);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Form(
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !_hasChanges) return;
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: Text('Unsaved changes', style: AppTextStyles.sectionHeading),
+            content: Text(
+              'You have unsaved changes. Discard?',
+              style: AppTextStyles.bodyMuted,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel', style: AppTextStyles.bodyMuted),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.coral,
+                  minimumSize: const Size(100, 40),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: Text('Discard', style: AppTextStyles.buttonPrimary),
+              ),
+            ],
+          ),
+        );
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Form(
       key: _formKey,
       child: Column(
         children: [
@@ -349,6 +385,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         ],
       ),
         ),
+      ),
       ),
     );
   }

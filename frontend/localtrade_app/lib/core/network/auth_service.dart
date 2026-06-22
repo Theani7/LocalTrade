@@ -68,6 +68,8 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> updateProfile(Map<String, String> fields, {dynamic profileImage}) async {
+    final token = await getToken();
+    if (token == null) throw Exception('Not authenticated');
     final response = await _apiService.multipartPatch(
       '/auth/profile',
       fields: fields,

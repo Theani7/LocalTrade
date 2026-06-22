@@ -25,7 +25,11 @@ class ProductService {
     if (page != null) query += '&page=$page';
     if (vendorId != null) query += '&vendorId=$vendorId';
 
-    final response = await _apiService.get('/products$query');
+    final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
+    final response = await _apiService.get('/products$query', headers: {
+      'Authorization': 'Bearer $token',
+    });
     final Map<String, dynamic> data;
     try {
       data = json.decode(response.body);
@@ -40,7 +44,11 @@ class ProductService {
   }
 
   Future<Map<String, dynamic>> getProduct(String id) async {
-    final response = await _apiService.get('/products/$id');
+    final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
+    final response = await _apiService.get('/products/$id', headers: {
+      'Authorization': 'Bearer $token',
+    });
     final Map<String, dynamic> data;
     try {
       data = json.decode(response.body);
@@ -75,6 +83,8 @@ class ProductService {
   }
 
   Future<Map<String, dynamic>> createProduct(Map<String, dynamic> productData, List<dynamic> images) async {
+    final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
     final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
     final response = await _apiService.multipartPost('/products', fields: fields, files: images);
 
@@ -93,6 +103,8 @@ class ProductService {
 
   Future<Map<String, dynamic>> updateProduct(String id, Map<String, dynamic> productData, {List<dynamic>? images}) async {
     if (images != null && images.isNotEmpty) {
+       final token = await _authService.getToken();
+       if (token == null) throw Exception('Not authenticated');
        final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
        final response = await _apiService.multipartPatch('/products/$id', fields: fields, files: images);
        final Map<String, dynamic> data;
