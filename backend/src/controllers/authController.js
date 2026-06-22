@@ -5,7 +5,7 @@ const AppError = require('../utils/appError');
 const { notifyAdmins } = require('../utils/notificationUtils');
 
 exports.register = catchAsync(async (req, res, next) => {
-  const { fullName, email, phone, password, role, shopName, businessDescription, categories, openingHours } = req.body;
+  const { fullName, email, phone, password, role, shopName, businessDescription, categories, openingHours, address } = req.body;
 
   // Security: Allow registering only as customer or vendor
   if (role && !['customer', 'vendor'].includes(role)) {
@@ -37,6 +37,19 @@ exports.register = catchAsync(async (req, res, next) => {
       } catch (e) {
         userData.categories = [];
       }
+    }
+    // Parse and store address
+    if (address && typeof address === 'object') {
+      userData.address = {
+        fullName: address.fullName || fullName || '',
+        phone: address.phone || phone || '',
+        flatHouse: address.flatHouse || '',
+        street: address.street || '',
+        landmark: address.landmark || '',
+        city: address.city || '',
+        state: address.state || '',
+        zipCode: address.zipCode || '',
+      };
     }
   }
 

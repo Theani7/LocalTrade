@@ -22,6 +22,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _shopNameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _flatHouseController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _zipController = TextEditingController();
 
   String _selectedRole = 'customer';
   bool _isPasswordVisible = false;
@@ -42,6 +47,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _shopNameController.dispose();
     _descriptionController.dispose();
+    _flatHouseController.dispose();
+    _streetController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _zipController.dispose();
     super.dispose();
   }
 
@@ -62,6 +72,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       userData['shopName'] = _shopNameController.text.trim();
       if (_descriptionController.text.trim().isNotEmpty) {
         userData['businessDescription'] = _descriptionController.text.trim();
+      }
+      // Build address object if any address field is filled
+      if (_flatHouseController.text.trim().isNotEmpty ||
+          _streetController.text.trim().isNotEmpty ||
+          _cityController.text.trim().isNotEmpty ||
+          _stateController.text.trim().isNotEmpty ||
+          _zipController.text.trim().isNotEmpty) {
+        userData['address'] = {
+          'fullName': _nameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'flatHouse': _flatHouseController.text.trim(),
+          'street': _streetController.text.trim(),
+          'city': _cityController.text.trim(),
+          'state': _stateController.text.trim(),
+          'zipCode': _zipController.text.trim(),
+        };
       }
     }
 
@@ -274,6 +300,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           icon: Icons.description_outlined,
                           maxLines: 3,
                           textCapitalization: TextCapitalization.sentences,
+                        ),
+
+                        // ── Address section ─────────────────
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.coralLight.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.location_on_outlined, size: 16, color: AppColors.coralDark),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Business address',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.coralDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _field(
+                          controller: _flatHouseController,
+                          label: 'Flat / House no.',
+                          icon: Icons.home_outlined,
+                        ),
+                        const SizedBox(height: 12),
+                        _field(
+                          controller: _streetController,
+                          label: 'Street / Area',
+                          icon: Icons.signpost_outlined,
+                        ),
+                        const SizedBox(height: 12),
+                        _field(
+                          controller: _cityController,
+                          label: 'City',
+                          icon: Icons.location_city_outlined,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _field(
+                                controller: _stateController,
+                                label: 'State',
+                                icon: Icons.map_outlined,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _field(
+                                controller: _zipController,
+                                label: 'ZIP code',
+                                icon: Icons.pin_drop_outlined,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                       const SizedBox(height: 24),
