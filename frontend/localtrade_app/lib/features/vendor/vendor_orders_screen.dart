@@ -17,6 +17,7 @@ class VendorOrdersScreen extends StatefulWidget {
 
 class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
   String _activeFilter = 'All';
+  String? _updatingOrderId;
 
   @override
   void initState() {
@@ -462,10 +463,14 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                     child: SizedBox(
                       height: 42,
                       child: OutlinedButton(
-                        onPressed: () =>
-                            _updateStatus(order['_id'], 'Cancelled'),
+                        onPressed: _updatingOrderId != null
+                            ? null
+                            : () => _updateStatus(
+                                order['_id'], 'Cancelled', context),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.muted,
+                          disabledForegroundColor: AppColors.muted
+                              .withValues(alpha: 0.5),
                           side: const BorderSide(color: AppColors.divider),
                           shape: RoundedRectangleBorder(
                             borderRadius:
@@ -473,13 +478,22 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                           ),
                           padding: EdgeInsets.zero,
                         ),
-                        child: const Text(
-                          'Reject',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        child: _updatingOrderId == order['_id']
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.muted,
+                                ),
+                              )
+                            : const Text(
+                                'Reject',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -489,10 +503,14 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                     child: SizedBox(
                       height: 42,
                       child: ElevatedButton(
-                        onPressed: () =>
-                            _updateStatus(order['_id'], 'Confirmed'),
+                        onPressed: _updatingOrderId != null
+                            ? null
+                            : () => _updateStatus(
+                                order['_id'], 'Confirmed', context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.coral,
+                          disabledBackgroundColor:
+                              AppColors.coral.withValues(alpha: 0.5),
                           foregroundColor: AppColors.ink,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -501,13 +519,22 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                           ),
                           padding: EdgeInsets.zero,
                         ),
-                        child: const Text(
-                          'Confirm order',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        child: _updatingOrderId == order['_id']
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.ink,
+                                ),
+                              )
+                            : const Text(
+                                'Confirm order',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -610,9 +637,51 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     );
   }
 
-  void _updateStatus(String orderId, String status) {
-    Provider.of<OrderProvider>(context, listen: false)
-        .updateOrderStatus(orderId, status);
+  Future<void> _updateStatus(
+      String orderId, String status, BuildContext context) async {
+    if (_updatingOrderId != null) return;
+
+    setState(() => _updatingOrderId = orderId.toString());
+
+    final messenger = ScaffoldMessenger.of(context);
+    final orderProvider =
+        Provider.of<OrderProvider>(context, listen: false);
+    final success = await orderProvider.updateOrderStatus(
+      orderId.toString(),
+      status,
+    );
+
+    if (!mounted) return;
+
+    setState(() => _updatingOrderId = null);
+
+    if (success) {
+      final label = status == 'Confirmed' ? 'confirmed' : 'rejected';
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Order $label successfully'),
+          backgroundColor: AppColors.successDark,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      final msg = orderProvider.error ?? 'Failed to update order';
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

@@ -86,7 +86,8 @@ exports.createOrder = catchAsync(async (req, res, next) => {
       order.vendorId,
       'New Order Received!',
       `You have a new order (#${order._id.toString().substring(18)}) for Rs. ${totalAmount}`,
-      { orderId: order._id.toString(), type: 'new_order' }
+      { orderId: order._id.toString(), type: 'new_order' },
+      'Order'
     );
 
     res.status(201).json({
@@ -213,7 +214,8 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
     order.customerId,
     'Order Status Updated',
     `Your order (#${order._id.toString().substring(18)}) is now ${status}.`,
-    { orderId: order._id.toString(), type: 'order_update' }
+    { orderId: order._id.toString(), type: 'order_update' },
+    'Order'
   );
 
   res.status(200).json({
@@ -266,7 +268,8 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
     order.vendorId,
     'Order Cancelled',
     `Order (#${order._id.toString().substring(18)}) was cancelled by the customer.`,
-    { orderId: order._id.toString(), type: 'order_cancelled' }
+    { orderId: order._id.toString(), type: 'order_cancelled' },
+    'Order'
   );
 
   res.status(200).json({
