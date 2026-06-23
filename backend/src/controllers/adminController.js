@@ -117,7 +117,7 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const { search, role, page = 1, limit = 10 } = req.query;
-  const filter = {};
+  const filter = { role: 'customer' };
 
   const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
@@ -130,9 +130,9 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     ];
   }
 
-  if (role && role !== 'All') {
-    filter.role = role;
-  }
+  const totalCustomers = await User.countDocuments({ role: 'customer' });
+  const activeCustomers = await User.countDocuments({ role: 'customer', isActive: true });
+  const inactiveCustomers = await User.countDocuments({ role: 'customer', isActive: false });
 
   const skip = (page - 1) * limit;
   const users = await User.find(filter)
@@ -150,7 +150,14 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: users.length,
-    data: { users }
+    data: {
+      users,
+      stats: {
+        totalUsers: totalCustomers,
+        activeUsers: activeCustomers,
+        inactiveUsers: inactiveCustomers,
+      }
+    }
   });
 });
 

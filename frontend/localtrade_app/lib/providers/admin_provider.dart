@@ -9,6 +9,7 @@ class AdminProvider with ChangeNotifier {
   List<dynamic> _vendors = [];
   List<dynamic> _products = [];
   List<dynamic> _orders = [];
+  Map<String, dynamic>? _userStats;
   
   bool _isLoading = false;
   String? _error;
@@ -29,6 +30,7 @@ class AdminProvider with ChangeNotifier {
   List<dynamic> get vendors => _vendors;
   List<dynamic> get products => _products;
   List<dynamic> get orders => _orders;
+  Map<String, dynamic>? get userStats => _userStats;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -64,6 +66,7 @@ class AdminProvider with ChangeNotifier {
     try {
       final result = await _adminService.getAllUsers(search: search, role: role, page: _usersPage);
       final List<dynamic> newUsers = result['data']['users'];
+      _userStats = result['data']['stats'];
       
       if (refresh) {
         _users = newUsers;

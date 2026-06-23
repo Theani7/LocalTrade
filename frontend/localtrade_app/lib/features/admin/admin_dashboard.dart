@@ -617,7 +617,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.users.isEmpty) return const ListSkeleton(itemCount: 5);
-        if (provider.users.isEmpty) return const EmptyState(icon: Icons.people_outline_rounded, title: 'No users', message: 'No users registered yet.');
+
+        final stats = provider.userStats;
+        final total = stats?['totalUsers'] ?? provider.users.length;
+        final active = stats?['activeUsers'] ?? 0;
+        final inactive = stats?['inactiveUsers'] ?? 0;
 
         return Column(
           children: [
@@ -633,12 +637,26 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                         Text('Users', style: AppTextStyles.screenTitle),
                         const SizedBox(height: 2),
                         Text(
-                          '${provider.users.length} registered user${provider.users.length == 1 ? '' : 's'}',
+                          '$total registered customer${total == 1 ? '' : 's'}',
                           style: AppTextStyles.caption,
                         ),
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
+
+            // Stat tiles
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(child: _buildStatTile(Icons.people_rounded, '$total', 'Total users', AppColors.blueLight, AppColors.blueDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildStatTile(Icons.check_circle_outline_rounded, '$active', 'Active', AppColors.successLight, AppColors.successDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildStatTile(Icons.block_rounded, '$inactive', 'Inactive', AppColors.mutedLight, AppColors.muted)),
                 ],
               ),
             ),
@@ -651,7 +669,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 onChanged: (q) => _onSearchChanged(q, provider),
                 style: const TextStyle(fontSize: 13, color: AppColors.ink),
                 decoration: InputDecoration(
-                  hintText: 'Search users...',
+                  hintText: 'Search customers...',
                   hintStyle: TextStyle(fontSize: 13, color: AppColors.muted.withValues(alpha: 0.6)),
                   prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.muted),
                   suffixIcon: _searchController.text.isNotEmpty
@@ -683,102 +701,105 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
             ),
 
             // List
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: provider.fetchUsers,
-                color: AppColors.coral,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: provider.users.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 62, endIndent: 14),
-                  itemBuilder: (context, index) {
-                    final user = provider.users[index];
-                    final isAdmin = user['role'] == 'admin';
-                    final isVendor = user['role'] == 'vendor';
-                    final isActive = user['isActive'] != false;
-                    final joinDate = user['createdAt'] != null ? _formatJoinDate(user['createdAt']) : '';
-                    final isToggling = _togglingUserId == user['_id'];
+            if (provider.users.isEmpty)
+              const Expanded(child: EmptyState(icon: Icons.people_outline_rounded, title: 'No customers', message: 'No customers registered yet.'))
+            else
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: provider.fetchUsers,
+                  color: AppColors.coral,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: provider.users.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 56, endIndent: 14),
+                    itemBuilder: (context, index) {
+                      final user = provider.users[index];
+                      final isActive = user['isActive'] != false;
+                      final joinDate = user['createdAt'] != null ? _formatJoinDate(user['createdAt']) : '';
+                      final isToggling = _togglingUserId == user['_id'];
 
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      child: Row(
-                        children: [
-                          // Avatar
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isVendor ? AppColors.coralLight : AppColors.blueLight,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                _getInitials(user['fullName'] ?? ''),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: isVendor ? AppColors.coralDark : AppColors.blueDark,
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        child: Row(
+                          children: [
+                            // Avatar
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.blueLight,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _getInitials(user['fullName'] ?? ''),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.blueDark,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Name + email + join date
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user['fullName'] ?? '',
-                                  style: AppTextStyles.cardTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  user['email'] ?? '',
-                                  style: AppTextStyles.caption,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (joinDate.isNotEmpty) ...[
+                            const SizedBox(width: 12),
+                            // Name + email + join date
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user['fullName'] ?? '',
+                                    style: AppTextStyles.cardTitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'Joined $joinDate',
-                                    style: AppTextStyles.caption.copyWith(fontSize: 11),
+                                    user['email'] ?? '',
+                                    style: AppTextStyles.caption,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  if (joinDate.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Joined $joinDate',
+                                      style: AppTextStyles.caption.copyWith(fontSize: 11),
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
-                          ),
-                          // Role badge + actions
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: isAdmin
-                                      ? AppColors.blueLight
-                                      : isVendor
-                                          ? AppColors.coralLight
-                                          : AppColors.mutedLight,
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Text(
-                                  user['role'] ?? '',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: isAdmin
-                                        ? AppColors.blueDark
-                                        : isVendor
-                                            ? AppColors.coralDark
-                                            : AppColors.muted,
+                            // Status + actions
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isActive ? AppColors.successLight : AppColors.mutedLight,
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                                        size: 10,
+                                        color: isActive ? AppColors.successDark : AppColors.muted,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        isActive ? 'Active' : 'Inactive',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                          color: isActive ? AppColors.successDark : AppColors.muted,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              if (!isAdmin) ...[
                                 const SizedBox(height: 6),
                                 GestureDetector(
                                   onTap: isToggling ? null : () => _toggleUserStatus(context, user, provider),
@@ -802,18 +823,50 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                                   ),
                                 ),
                               ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildStatTile(IconData icon, String value, String label, Color tintColor, Color iconColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: tintColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: iconColor),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
+              Text(label, style: TextStyle(fontSize: 11, color: AppColors.muted.withValues(alpha: 0.8))),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
