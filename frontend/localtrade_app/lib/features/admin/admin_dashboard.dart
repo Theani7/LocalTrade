@@ -218,6 +218,7 @@ class AdminAnalyticsTab extends StatelessWidget {
         final stats = admin.analytics!['stats'];
         final revenueByCategory = admin.analytics!['revenueByCategory'] as List? ?? [];
         final recent = admin.analytics!['recentOrders'] as List? ?? [];
+        final dailyStats = admin.analytics!['dailyStats'] as List? ?? [];
 
         double totalRevenue = 0.0;
         if (stats['totalRevenue'] != null) {
@@ -332,7 +333,7 @@ class AdminAnalyticsTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       // Mini bar chart
-                      _MiniBarChart(),
+                      _MiniBarChart(dailyStats: dailyStats),
                       const SizedBox(height: 8),
                       Text(
                         'Revenue across all vendor categories',
@@ -442,11 +443,59 @@ class AdminAnalyticsTab extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(height: 32),
+
+                // Export section
+                Text('Export data', style: AppTextStyles.sectionHeading),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _buildExportChip(context, 'Overview', 'overview'),
+                    const SizedBox(width: 8),
+                    _buildExportChip(context, 'Orders', 'orders'),
+                    const SizedBox(width: 8),
+                    _buildExportChip(context, 'Products', 'products'),
+                    const SizedBox(width: 8),
+                    _buildExportChip(context, 'Vendors', 'vendors'),
+                  ],
+                ),
+                const SizedBox(height: 32),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  static Widget _buildExportChip(BuildContext context, String label, String type) {
+    return GestureDetector(
+      onTap: () async {
+        final provider = Provider.of<AdminProvider>(context, listen: false);
+        final csv = await provider.exportAnalytics(type: type);
+        if (csv != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$label data exported (${csv.split('\n').length} rows)'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.divider),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.download_rounded, size: 14, color: AppColors.muted),
+            const SizedBox(width: 4),
+            Text(label, style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -485,11 +534,31 @@ class AdminAnalyticsTab extends StatelessWidget {
 // Mini Bar Chart (for revenue card)
 // ═════════════════════════════════════════════════════════════════════════════
 class _MiniBarChart extends StatelessWidget {
+  final List<dynamic> dailyStats;
+
+  const _MiniBarChart({this.dailyStats = const []});
+
   @override
   Widget build(BuildContext context) {
-    const barCount = 7;
     const maxBarHeight = 40.0;
-    final barHeights = [0.6, 0.4, 0.8, 0.3, 0.7, 0.5, 1.0];
+
+    // Build 7 bars from dailyStats (last 7 days)
+    final List<double> barHeights = [];
+    if (dailyStats.isNotEmpty) {
+      final maxCount = dailyStats.fold<int>(0, (max, d) {
+        final count = (d['count'] ?? 0) as int;
+        return count > max ? count : max;
+      });
+      for (final day in dailyStats) {
+        final count = (day['count'] ?? 0) as int;
+        barHeights.add(maxCount > 0 ? count / maxCount : 0.3);
+      }
+    }
+    // Pad to 7 bars if fewer
+    while (barHeights.length < 7) {
+      barHeights.add(0.3);
+    }
+    final barCount = barHeights.length > 7 ? 7 : barHeights.length;
 
     return SizedBox(
       height: maxBarHeight + 4,
@@ -517,8 +586,15 @@ class _MiniBarChart extends StatelessWidget {
 // ═════════════════════════════════════════════════════════════════════════════
 // Users Tab
 // ═════════════════════════════════════════════════════════════════════════════
-class AdminUsersTab extends StatelessWidget {
+class AdminUsersTab extends StatefulWidget {
   const AdminUsersTab({super.key});
+
+  @override
+  State<AdminUsersTab> createState() => _AdminUsersTabState();
+}
+
+class _AdminUsersTabState extends State<AdminUsersTab> {
+  String? _togglingUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -564,7 +640,9 @@ class AdminUsersTab extends StatelessWidget {
                     final user = provider.users[index];
                     final isAdmin = user['role'] == 'admin';
                     final isVendor = user['role'] == 'vendor';
+                    final isActive = user['isActive'] != false;
                     final joinDate = user['createdAt'] != null ? _formatJoinDate(user['createdAt']) : '';
+                    final isToggling = _togglingUserId == user['_id'];
 
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -618,29 +696,58 @@ class AdminUsersTab extends StatelessWidget {
                               ],
                             ),
                           ),
-                          // Role badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: isAdmin
-                                  ? AppColors.blueLight
-                                  : isVendor
-                                      ? AppColors.coralLight
-                                      : AppColors.mutedLight,
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: Text(
-                              user['role'] ?? '',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: isAdmin
-                                    ? AppColors.blueDark
-                                    : isVendor
-                                        ? AppColors.coralDark
-                                        : AppColors.muted,
+                          // Role badge + actions
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isAdmin
+                                      ? AppColors.blueLight
+                                      : isVendor
+                                          ? AppColors.coralLight
+                                          : AppColors.mutedLight,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Text(
+                                  user['role'] ?? '',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: isAdmin
+                                        ? AppColors.blueDark
+                                        : isVendor
+                                            ? AppColors.coralDark
+                                            : AppColors.muted,
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (!isAdmin) ...[
+                                const SizedBox(height: 6),
+                                GestureDetector(
+                                  onTap: isToggling ? null : () => _toggleUserStatus(context, user, provider),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: isActive ? null : AppColors.successLight,
+                                      border: isActive ? Border.all(color: AppColors.divider) : null,
+                                      borderRadius: BorderRadius.circular(100),
+                                    ),
+                                    child: isToggling
+                                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                        : Text(
+                                            isActive ? 'Deactivate' : 'Activate',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                              color: isActive ? AppColors.muted : AppColors.successDark,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
@@ -652,6 +759,39 @@ class AdminUsersTab extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _toggleUserStatus(BuildContext context, dynamic user, AdminProvider provider) {
+    final isActive = user['isActive'] != false;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isActive ? 'Deactivate user' : 'Activate user'),
+        content: Text(
+          isActive
+              ? 'Deactivate "${user['fullName']}"? They will not be able to log in.'
+              : 'Activate "${user['fullName']}"? They will be able to log in again.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _togglingUserId = user['_id']);
+              await provider.toggleUserStatus(user['_id']);
+              if (mounted) setState(() => _togglingUserId = null);
+            },
+            child: Text(
+              isActive ? 'Deactivate' : 'Activate',
+              style: TextStyle(color: isActive ? AppColors.muted : AppColors.successDark),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -825,7 +965,7 @@ class AdminVendorsTab extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => provider.updateVendorStatus(vendor['_id'], 'rejected'),
+                  onTap: () => provider.updateVendorStatus(vendor['_id'], 'suspended'),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
@@ -904,6 +1044,19 @@ class AdminVendorsTab extends StatelessWidget {
                       child: const Text('Reinstate', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.successDark)),
                     ),
                   ),
+                ] else if (status == 'approved') ...[
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: () => _showSuspendDialog(context, vendor, provider),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.divider),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text('Suspend', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -966,13 +1119,43 @@ class AdminVendorsTab extends StatelessWidget {
       return '';
     }
   }
+
+  void _showSuspendDialog(BuildContext context, dynamic vendor, AdminProvider provider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Suspend vendor'),
+        content: Text('Suspend "${vendor['shopName'] ?? vendor['fullName']}"? They will not be able to list or sell products.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await provider.updateVendorStatus(vendor['_id'], 'suspended');
+            },
+            child: const Text('Suspend', style: TextStyle(color: AppColors.muted)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Products Tab
 // ═════════════════════════════════════════════════════════════════════════════
-class AdminProductsTab extends StatelessWidget {
+class AdminProductsTab extends StatefulWidget {
   const AdminProductsTab({super.key});
+
+  @override
+  State<AdminProductsTab> createState() => _AdminProductsTabState();
+}
+
+class _AdminProductsTabState extends State<AdminProductsTab> {
+  String? _deletingProductId;
 
   @override
   Widget build(BuildContext context) {
@@ -1017,6 +1200,7 @@ class AdminProductsTab extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final product = provider.products[index];
                     final isAvailable = (product['stockQuantity'] ?? 0) > 0 && product['productStatus'] != 'unavailable';
+                    final isDeleting = _deletingProductId == product['_id'];
 
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1057,13 +1241,20 @@ class AdminProductsTab extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Price + status
+                          // Price + status + delete
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text('Rs. ${product['price']}', style: AppTextStyles.label),
                               const SizedBox(height: 4),
                               _buildProductStatusChip(isAvailable),
+                              const SizedBox(height: 6),
+                              GestureDetector(
+                                onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
+                                child: isDeleting
+                                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                    : const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.muted),
+                              ),
                             ],
                           ),
                         ],
@@ -1102,6 +1293,31 @@ class AdminProductsTab extends StatelessWidget {
               fontWeight: FontWeight.w500,
               color: isAvailable ? AppColors.successDark : AppColors.muted,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, dynamic product, AdminProvider provider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete product'),
+        content: Text('Delete "${product['title']}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _deletingProductId = product['_id']);
+              await provider.deleteProduct(product['_id']);
+              if (mounted) setState(() => _deletingProductId = null);
+            },
+            child: const Text('Delete', style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),

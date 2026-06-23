@@ -188,7 +188,6 @@ class AdminProvider with ChangeNotifier {
     notifyListeners();
     try {
       await _adminService.updateVendorStatus(vendorId, status);
-      // Update local lists - easier to refresh all for data consistency
       await Future.wait([
         fetchVendors(refresh: true),
         fetchAnalytics(),
@@ -200,6 +199,54 @@ class AdminProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<bool> toggleUserStatus(String userId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _adminService.toggleUserStatus(userId);
+      await Future.wait([
+        fetchUsers(refresh: true),
+        fetchAnalytics(),
+      ]);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteProduct(String productId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _adminService.deleteProduct(productId);
+      await Future.wait([
+        fetchProducts(refresh: true),
+        fetchAnalytics(),
+      ]);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> exportAnalytics({String type = 'overview'}) async {
+    try {
+      return await _adminService.exportAnalytics(type: type);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
     }
   }
 

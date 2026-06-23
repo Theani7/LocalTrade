@@ -354,3 +354,75 @@ exports.toggleUserStatus = catchAsync(async (req, res, next) => {
     data: { user },
   });
 });
+
+// @desc    Export analytics as CSV
+// @route   GET /api/v1/admin/analytics/export
+// @access  Private/Admin
+exports.exportAnalytics = catchAsync(async (req, res, next) => {
+  const { format = 'csv', type = 'overview' } = req.query;
+
+  let csvContent = '';
+  let filename = '';
+
+  if (type === 'orders') {
+    const orders = await Order.find()
+      .populate('customerId', 'fullName email')
+      .populate('vendorId', 'fullName shopName')
+      .sort('-createdAt');
+
+    csvContent = 'Order ID,Customer,Vendor,Amount,Status,Date\n';
+    for (const order of orders) {
+      const id = order._id.toString().slice(-8).toUpperCase();
+      const customer = order.customerId?.fullName || 'N/A';
+      const vendor = order.vendorId?.shopName || order.vendorId?.fullName || 'N/A';
+      const amount = order.totalAmount || 0;
+      const status = order.orderStatus || 'Unknown';
+      const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '';
+      csvContent += `"#${id}","${customer}","${vendor}",${amount},"${status}","${date}"\n`;
+    }
+    filename = 'localtrade-orders';
+  } else if (type === 'products') {
+    const products = await Product.find()
+      .populate('vendorId', 'fullName shopName')
+      .sort('-createdAt');
+
+    csvContent = 'Product,Vendor,Category,Price,Stock,Status\n';
+    for (const product of products) {
+      const vendor = product.vendorId?.shopName || product.vendorId?.fullName || 'N/A';
+      const status = (product.stockQuantity > 0 && product.productStatus !== 'unavailable') ? 'Available' : 'Unavailable';
+      csvContent += `"${product.title}","${vendor}","${product.category || 'N/A'}",${product.price},${product.stockQuantity},"${status}"\n`;
+    }
+    filename = 'localtrade-products';
+  } else if (type === 'vendors') {
+    const vendors = await User.find({ role: 'vendor' }).select('-password').sort('-createdAt');
+
+    csvContent = 'Name,Shop,Email,Status,Joined\n';
+    for (const vendor of vendors) {
+      const joined = vendor.createdAt ? new Date(vendor.createdAt).toLocaleDateString() : '';
+      csvContent += `"${vendor.fullName}","${vendor.shopName || 'N/A'}","${vendor.email}","${vendor.vendorApprovalStatus}","${joined}"\n`;
+    }
+    filename = 'localtrade-vendors';
+  } else {
+    const totalUsers = await User.countDocuments();
+    const totalVendors = await User.countDocuments({ role: 'vendor' });
+    const totalProducts = await Product.countDocuments();
+    const totalOrders = await Order.countDocuments();
+    const revenueResult = await Order.aggregate([
+      { $match: { orderStatus: 'Delivered' } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    ]);
+    const totalRevenue = revenueResult[0]?.total || 0;
+
+    csvContent = 'Metric,Value\n';
+    csvContent += `Total Users,${totalUsers}\n`;
+    csvContent += `Total Vendors,${totalVendors}\n`;
+    csvContent += `Total Products,${totalProducts}\n`;
+    csvContent += `Total Orders,${totalOrders}\n`;
+    csvContent += `Total Revenue,${totalRevenue}\n`;
+    filename = 'localtrade-overview';
+  }
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}-${new Date().toISOString().split('T')[0]}.csv"`);
+  res.status(200).send(csvContent);
+});

@@ -14,6 +14,26 @@ class AuthGuard {
     return Provider.of<AuthProvider>(context, listen: false).isAuthenticated;
   }
 
+  static bool isAdmin(BuildContext context) {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    return user?['role'] == 'admin';
+  }
+
+  /// Requires admin role. If not admin, redirects to login.
+  static void requireAdmin(BuildContext context, {required VoidCallback onAuthenticated}) {
+    if (!isAuthenticated(context)) {
+      _showLoginPrompt(context, onAuthenticated);
+      return;
+    }
+    if (!isAdmin(context)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Admin access required'), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+    onAuthenticated();
+  }
+
   /// If authenticated, calls [onAuthenticated] immediately.
   /// Otherwise shows a bottom-sheet login prompt. After successful login,
   /// calls [onAuthenticated] (user stays where they are).

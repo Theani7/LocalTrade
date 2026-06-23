@@ -107,4 +107,50 @@ class AdminService {
       throw Exception(data['message'] ?? 'Failed to update vendor status');
     }
   }
+
+  Future<Map<String, dynamic>> toggleUserStatus(String userId) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.patch(
+      '/admin/users/$userId/toggle-status',
+      body: {},
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to update user status');
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteProduct(String productId) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.delete(
+      '/admin/products/$productId',
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to delete product');
+    }
+  }
+
+  Future<String> exportAnalytics({String type = 'overview'}) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.get(
+      '/admin/analytics/export?type=$type',
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      final data = json.decode(response.body);
+      throw Exception(data['message'] ?? 'Failed to export data');
+    }
+  }
 }
