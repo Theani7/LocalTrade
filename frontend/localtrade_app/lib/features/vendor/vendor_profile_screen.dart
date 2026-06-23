@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import '../../providers/vendor_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/category_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -40,18 +41,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   bool _hasChanges = false;
   Map<String, dynamic> _savedValues = {};
 
-  final List<String> _allCategories = [
-    'Vegetables',
-    'Dairy',
-    'Handicrafts',
-    'Clothing',
-    'Local Goods',
-    'Tailoring',
-    'Groceries',
-    'Bakery',
-    'Meat',
-    'Others',
-  ];
+  List<String> _allCategories = [];
 
   @override
   void initState() {
@@ -84,6 +74,17 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     }
 
     _snapshotValues();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final catProvider = Provider.of<CategoryProvider>(context, listen: false);
+      catProvider.fetchActiveCategories().then((_) {
+        if (mounted) {
+          setState(() {
+            _allCategories = catProvider.categoryNames;
+          });
+        }
+      });
+    });
   }
 
   void _snapshotValues() {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import '../../providers/product_provider.dart';
+import '../../providers/category_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -25,16 +26,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _stockController;
   bool _availableForPickup = true;
 
-  String _selectedCategory = 'Vegetables';
-  final List<String> _categories = [
-    'Vegetables',
-    'Dairy',
-    'Handicrafts',
-    'Clothing',
-    'Local Goods',
-    'Tailoring',
-    'Others',
-  ];
+  String _selectedCategory = '';
+  List<String> _categories = [];
 
   final List<dynamic> _selectedImages = [];
   final List<Uint8List?> _imageBytes = [];
@@ -66,7 +59,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _stockController = TextEditingController(text: '$initialStock');
 
     if (widget.product != null) {
-      _selectedCategory = widget.product['category'] ?? 'Vegetables';
+      _selectedCategory = widget.product['category'] ?? '';
       _availableForPickup = widget.product['availableForPickup'] ?? true;
     }
 
@@ -75,6 +68,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _priceController.addListener(_markChanged);
     _originalPriceController.addListener(_markChanged);
     _stockController.addListener(_markChanged);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final catProvider = Provider.of<CategoryProvider>(context, listen: false);
+      catProvider.fetchActiveCategories().then((_) {
+        if (mounted) {
+          setState(() {
+            _categories = catProvider.categoryNames;
+            if (_selectedCategory.isEmpty && _categories.isNotEmpty) {
+              _selectedCategory = _categories.first;
+            }
+          });
+        }
+      });
+    });
   }
 
   @override

@@ -14,6 +14,7 @@ import '../../core/utils/app_animations.dart';
 import '../../widgets/status_badge.dart';
 import '../customer/notification_screen.dart';
 import 'admin_product_detail_screen.dart';
+import 'admin_categories_screen.dart';
 
 class AdminStatTile extends StatelessWidget {
   final IconData icon;
@@ -181,6 +182,21 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
               ],
             ),
           ),
+          // Categories button
+          GestureDetector(
+            onTap: () => Navigator.push(context, SlideFadePageRoute(builder: (_) => const AdminCategoriesScreen())),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                border: Border.all(color: AppColors.divider),
+              ),
+              child: const Icon(Icons.category_outlined, size: 18, color: AppColors.ink),
+            ),
+          ),
+          const SizedBox(width: 8),
           // Notification bell
           GestureDetector(
             onTap: () => Navigator.push(context, SlideFadePageRoute(builder: (_) => const NotificationScreen())),

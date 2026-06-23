@@ -39,12 +39,15 @@ class Product {
   String get stockLabel => isOutOfStock ? 'Out of Stock' : '$stockQuantity in stock';
   String get categoryEmoji {
     switch (category) {
-      case 'Vegetables': return '🥦';
+      case 'Vegetables': return '🥬';
       case 'Dairy': return '🥛';
-      case 'Handicrafts': return '🏺';
+      case 'Handicrafts': return '🎨';
       case 'Clothing': return '👕';
       case 'Local Goods': return '🌾';
       case 'Tailoring': return '✂️';
+      case 'Groceries': return '🧺';
+      case 'Bakery': return '🍞';
+      case 'Meat': return '🥩';
       default: return '📦';
     }
   }

@@ -12,6 +12,7 @@ import 'providers/notification_provider.dart';
 import 'providers/vendor_provider.dart';
 import 'providers/feedback_provider.dart';
 import 'providers/review_provider.dart';
+import 'providers/category_provider.dart';
 import 'features/common/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -52,6 +53,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => VendorProvider()),
         ChangeNotifierProvider(create: (_) => FeedbackProvider()),
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
       ],
       child: Builder(
         builder: (context) {

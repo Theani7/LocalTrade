@@ -16,18 +16,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'A product must have a category'],
-      enum: {
-        values: [
-          'Vegetables',
-          'Dairy',
-          'Handicrafts',
-          'Clothing',
-          'Local Goods',
-          'Tailoring',
-          'Others',
-        ],
-        message: 'Category is either: Vegetables, Dairy, Handicrafts, Clothing, Local Goods, Tailoring, or Others',
-      },
+      trim: true,
     },
     price: {
       type: Number,

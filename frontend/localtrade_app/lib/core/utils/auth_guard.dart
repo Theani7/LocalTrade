@@ -109,7 +109,7 @@ class AuthGuard {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
+            return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 24,
                 24,

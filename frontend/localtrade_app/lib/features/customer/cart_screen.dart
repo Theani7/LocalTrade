@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/category_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
@@ -693,14 +694,17 @@ class _EmptyCartBody extends StatelessWidget {
 
   const _EmptyCartBody({this.onBrowseProducts, this.onCategoryTap});
 
-  static const _categories = [
-    {'label': 'Vegetables', 'emoji': '🥬'},
-    {'label': 'Dairy', 'emoji': '🥛'},
-    {'label': 'Handicrafts', 'emoji': '🎨'},
-    {'label': 'Clothing', 'emoji': '👕'},
-    {'label': 'Local goods', 'emoji': '🏠'},
-    {'label': 'Tailoring', 'emoji': '🧵'},
-  ];
+  static const _categoryIcons = {
+    'Vegetables': '🥬',
+    'Dairy': '🥛',
+    'Handicrafts': '🎨',
+    'Clothing': '👕',
+    'Local Goods': '🌾',
+    'Tailoring': '✂️',
+    'Groceries': '🧺',
+    'Bakery': '🍞',
+    'Meat': '🥩',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -854,9 +858,9 @@ class _EmptyCartBody extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               alignment: WrapAlignment.center,
-              children: _categories.map((cat) {
+              children: Provider.of<CategoryProvider>(context).categoryNames.take(6).map((name) {
                 return GestureDetector(
-                  onTap: () => onCategoryTap?.call(cat['label']!),
+                  onTap: () => onCategoryTap?.call(name),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -877,12 +881,12 @@ class _EmptyCartBody extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          cat['emoji']!,
+                          _categoryIcons[name] ?? '📦',
                           style: const TextStyle(fontSize: 14),
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          cat['label']!,
+                          name,
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,

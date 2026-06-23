@@ -4,6 +4,7 @@ import '../../providers/product_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/category_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
@@ -65,16 +66,7 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
   String? _selectedSort;
   bool _showAll = false;
 
-  final List<String> _categories = [
-    'All',
-    'Vegetables',
-    'Dairy',
-    'Handicrafts',
-    'Clothing',
-    'Local goods',
-    'Tailoring',
-    'Others',
-  ];
+  List<String> _categories = ['All'];
 
   final Map<String, String> _sortOptions = {
     'newest': 'Newest first',
@@ -96,6 +88,14 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
     super.initState();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final catProvider = Provider.of<CategoryProvider>(context, listen: false);
+      catProvider.fetchActiveCategories().then((_) {
+        if (mounted) {
+          setState(() {
+            _categories = ['All', ...catProvider.categoryNames];
+          });
+        }
+      });
       _fetchProducts();
       if (AuthGuard.isAuthenticated(context)) {
         Provider.of<NotificationProvider>(context, listen: false)

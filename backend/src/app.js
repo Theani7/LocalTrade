@@ -44,6 +44,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 const app = express();
 
@@ -127,6 +128,7 @@ app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/vendors`, vendorRoutes);
 app.use(`${API_PREFIX}/feedback`, feedbackRoutes);
 app.use(`${API_PREFIX}/reviews`, reviewRoutes);
+app.use(`${API_PREFIX}/categories`, categoryRoutes);
 
 // ---------------------------------------------------------------------
 // Multer error handling
