@@ -43,25 +43,23 @@ class _CustomerShellState extends State<CustomerShell> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          CustomerHomeBody(
-            key: _homeKey,
-            onNotificationTap: () => AuthGuard.requireAuthRoute(
-              context,
-              const NotificationScreen(),
-            ),
-            cartIconKey: _cartIconKey,
-          ),
-          CartBody(
-            onBrowseProducts: () => _switchTab(0),
-            onCategoryTap: _onCategoryTap,
-          ),
-          const CustomerOrdersBody(),
-          const CustomerProfileBody(),
-        ],
-      ),
+      body: _currentIndex == 0
+          ? CustomerHomeBody(
+              key: _homeKey,
+              onNotificationTap: () => AuthGuard.requireAuthRoute(
+                context,
+                const NotificationScreen(),
+              ),
+              cartIconKey: _cartIconKey,
+            )
+          : _currentIndex == 1
+              ? CartBody(
+                  onBrowseProducts: () => _switchTab(0),
+                  onCategoryTap: _onCategoryTap,
+                )
+              : _currentIndex == 2
+                  ? const CustomerOrdersBody()
+                  : const CustomerProfileBody(),
       bottomNavigationBar: _CustomerBottomNav(
         currentIndex: _currentIndex,
         cartItemCount: cart.itemCount,
@@ -164,6 +162,7 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
                 onTap: () => widget.onTap(index),
                 behavior: HitTestBehavior.opaque,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(

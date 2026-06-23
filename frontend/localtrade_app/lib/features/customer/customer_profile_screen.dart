@@ -209,8 +209,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
   @override
   Widget build(BuildContext context) {
     if (!AuthGuard.isAuthenticated(context)) {
-      return SizedBox.expand(
-        child: Center(
+      return Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -239,8 +238,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             ),
           ],
           ),
-        ),
-      );
+        );
     }
 
     final user = Provider.of<AuthProvider>(context).user;

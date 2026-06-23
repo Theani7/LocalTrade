@@ -31,6 +31,19 @@ void main() async {
     debugPrintStack(stackTrace: details.stack);
   };
 
+  ErrorWidget.builder = (details) {
+    return Material(
+      child: Container(
+        color: Colors.red.shade100,
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          'ERROR: ${details.exception}\n${details.stack}',
+          style: const TextStyle(color: Colors.red, fontSize: 12),
+        ),
+      ),
+    );
+  };
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

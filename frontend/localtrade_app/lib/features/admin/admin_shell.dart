@@ -142,6 +142,7 @@ class AdminShellState extends State<AdminShell> {
       },
       behavior: HitTestBehavior.opaque,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Stack(

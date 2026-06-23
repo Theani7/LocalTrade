@@ -99,6 +99,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
         onTap: () => setState(() => _currentIndex = index),
         behavior: HitTestBehavior.opaque,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
