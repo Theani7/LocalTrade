@@ -24,6 +24,10 @@ const clearData = async () => {
     const vendorResult = await User.deleteMany({ role: 'vendor' });
     console.log(`✅ Deleted ${vendorResult.deletedCount} vendors.`);
 
+    console.log('Clearing all customers...');
+    const customerResult = await User.deleteMany({ role: 'customer' });
+    console.log(`✅ Deleted ${customerResult.deletedCount} customers.`);
+
     console.log('Clearing related data (orders, reviews, feedback, notifications)...');
     const orderResult = await Order.deleteMany({});
     const reviewResult = await Review.deleteMany({});
@@ -47,7 +51,13 @@ const clearData = async () => {
       email: adminEmail,
       phone: '9800000000',
       password: adminPassword,
-      address: 'Kathmandu, Nepal',
+      address: {
+        fullName: 'System Admin',
+        phone: '9800000000',
+        city: 'Kathmandu',
+        state: 'Bagmati',
+        zipCode: '44600',
+      },
       role: 'admin',
       isActive: true,
       vendorApprovalStatus: 'approved'

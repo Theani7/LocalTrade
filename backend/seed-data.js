@@ -30,7 +30,13 @@ const seedData = async () => {
       email: adminEmail,
       phone: '9800000000',
       password: adminPassword,
-      address: 'Kathmandu, Nepal',
+      address: {
+        fullName: 'System Admin',
+        phone: '9800000000',
+        city: 'Kathmandu',
+        state: 'Bagmati',
+        zipCode: '44600',
+      },
       role: 'admin',
       isActive: true,
       vendorApprovalStatus: 'approved'
