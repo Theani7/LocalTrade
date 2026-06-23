@@ -14,11 +14,15 @@ class AdminShell extends StatefulWidget {
 
 class AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
+  int _activeNavIndex = 0;
   final _dashboardKey = GlobalKey<AdminDashboardState>();
 
   void _switchDashboardTab(int topTabIndex, int navIndex) {
     _dashboardKey.currentState?.switchTab(topTabIndex);
-    setState(() => _selectedIndex = navIndex);
+    setState(() {
+      _selectedIndex = 0;
+      _activeNavIndex = navIndex;
+    });
   }
 
   @override
@@ -31,9 +35,10 @@ class AdminShellState extends State<AdminShell> {
           AdminDashboard(
             key: _dashboardKey,
             onTabChanged: (tabIndex) {
-              if (_selectedIndex != tabIndex) {
-                setState(() => _selectedIndex = tabIndex);
-              }
+              setState(() {
+                _selectedIndex = 0;
+                _activeNavIndex = tabIndex;
+              });
             },
           ),
           const AdminProfileScreen(),
@@ -122,14 +127,17 @@ class AdminShellState extends State<AdminShell> {
     required int dashboardTab,
     bool showBadge = false,
   }) {
-    final isActive = _selectedIndex == index;
+    final isActive = _activeNavIndex == index;
 
     return GestureDetector(
       onTap: () {
         if (dashboardTab >= 0) {
           _switchDashboardTab(dashboardTab, index);
         } else {
-          setState(() => _selectedIndex = 1);
+          setState(() {
+            _selectedIndex = 1;
+            _activeNavIndex = index;
+          });
         }
       },
       behavior: HitTestBehavior.opaque,
