@@ -116,17 +116,6 @@ class AdminProfileScreen extends StatelessWidget {
                 _buildActionRow(Icons.lock_outline_rounded, 'Change password', onTap: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
                 }),
-                _buildActionRow(Icons.notifications_outlined, 'Notification preferences', onTap: () {}),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // About
-            _buildSection(
-              title: 'About',
-              children: [
-                _buildInfoRow(Icons.info_outline_rounded, 'App version', '1.0.0'),
-                _buildInfoRow(Icons.description_outlined, 'Terms of service', 'View'),
               ],
             ),
             const SizedBox(height: 24),
