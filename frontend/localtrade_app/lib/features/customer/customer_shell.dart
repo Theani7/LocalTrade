@@ -148,105 +148,106 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 80,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.divider, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(_items.length, (index) {
-          final item = _items[index];
-          final isActive = index == widget.currentIndex;
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(_items.length, (index) {
+              final item = _items[index];
+              final isActive = index == widget.currentIndex;
 
-          return GestureDetector(
-            onTap: () => widget.onTap(index),
-            behavior: HitTestBehavior.opaque,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 44,
-                  height: 32,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      if (index == 1 && widget.cartItemCount > 0)
-                        TickBuilder(
-                          listenable: _bounceCtrl,
-                          builder: (context, _) {
-                            return Transform.scale(
-                              scale: _bounceScale.value,
-                              child: Icon(
-                                isActive ? item.activeIcon : item.icon,
-                                size: 22,
-                                color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
-                              ),
-                            );
-                          },
-                        )
-                      else
-                        Icon(
-                          isActive ? item.activeIcon : item.icon,
-                          size: 22,
-                          color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
-                        ),
-                      // Cart badge
-                      if (index == 1 && widget.cartItemCount > 0)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            key: widget.cartIconKey,
-                            width: 18,
-                            height: 18,
-                            decoration: const BoxDecoration(
-                              color: AppColors.coral,
-                              shape: BoxShape.circle,
+              return GestureDetector(
+                onTap: () => widget.onTap(index),
+                behavior: HitTestBehavior.opaque,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      height: 32,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          if (index == 1 && widget.cartItemCount > 0)
+                            TickBuilder(
+                              listenable: _bounceCtrl,
+                              builder: (context, _) {
+                                return Transform.scale(
+                                  scale: _bounceScale.value,
+                                  child: Icon(
+                                    isActive ? item.activeIcon : item.icon,
+                                    size: 22,
+                                    color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+                                  ),
+                                );
+                              },
+                            )
+                          else
+                            Icon(
+                              isActive ? item.activeIcon : item.icon,
+                              size: 22,
+                              color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
                             ),
-                            child: Center(
-                              child: Text(
-                                '${widget.cartItemCount}',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.ink,
-                                  height: 1,
+                          // Cart badge
+                          if (index == 1 && widget.cartItemCount > 0)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                key: widget.cartIconKey,
+                                width: 18,
+                                height: 18,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.coral,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${widget.cartItemCount}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.ink,
+                                      height: 1,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+                        color: isActive ? AppColors.coralDark : AppColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    // Dot indicator
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isActive ? AppColors.coralDark : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  item.label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                    color: isActive ? AppColors.coralDark : AppColors.muted,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                // Dot indicator
-                Container(
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isActive ? AppColors.coralDark : Colors.transparent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }

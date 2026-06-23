@@ -68,17 +68,11 @@ class _VendorDashboardState extends State<VendorDashboard> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
+        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: SafeArea(
-        child: SizedBox(
-          height: 60,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
           child: Row(
             children: [
               _buildNavItem(index: 0, icon: Icons.dashboard_outlined, label: 'Dashboard'),
@@ -109,9 +103,18 @@ class _VendorDashboardState extends State<VendorDashboard> {
             Icon(
               icon,
               size: 22,
-              color: isActive ? AppColors.coralDark : AppColors.muted,
+              color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
             ),
             const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+                color: isActive ? AppColors.coralDark : AppColors.muted,
+              ),
+            ),
+            const SizedBox(height: 2),
             Container(
               width: 4,
               height: 4,
