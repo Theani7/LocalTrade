@@ -10,7 +10,7 @@ import 'forgot_password_screen.dart';
 import '../admin/admin_shell.dart';
 import '../vendor/vendor_dashboard.dart';
 import '../vendor/vendor_pending_screen.dart';
-import '../customer/customer_home_screen.dart';
+import '../customer/customer_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const VendorPendingScreen()));
           }
         } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerHomeScreen()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerShell()));
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

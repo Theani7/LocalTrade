@@ -4,7 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../providers/auth_provider.dart';
-import '../auth/login_screen.dart';
+import '../customer/customer_shell.dart';
 
 class LogoutDialog extends StatelessWidget {
   const LogoutDialog({super.key});
@@ -38,7 +38,7 @@ class LogoutDialog extends StatelessWidget {
             Provider.of<AuthProvider>(context, listen: false).logout();
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              MaterialPageRoute(builder: (_) => const CustomerShell()),
               (route) => false,
             );
           },
