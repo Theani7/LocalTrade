@@ -9,6 +9,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/vendor_order_status_badge.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../core/utils/app_animations.dart';
 import 'vendor_orders_screen.dart';
 import 'vendor_inventory_screen.dart';
 import 'vendor_profile_screen.dart';
@@ -51,7 +52,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
+            SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
           );
         },
         backgroundColor: AppColors.coral,
@@ -217,7 +218,7 @@ class VendorOverviewTab extends StatelessWidget {
                               return GestureDetector(
                                 onTap: () => Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                                  SlideFadePageRoute(builder: (_) => const NotificationScreen()),
                                 ),
                                 child: Stack(
                                   clipBehavior: Clip.none,
@@ -296,34 +297,34 @@ class VendorOverviewTab extends StatelessWidget {
                     crossAxisSpacing: 10,
                     childAspectRatio: 1.3,
                     children: [
-                      _VendorStatCard(
+                      FadeScaleIn(child: _VendorStatCard(
                         icon: Icons.schedule_outlined,
                         value: pending,
                         label: 'Pending',
                         bgColor: AppColors.warningLight,
                         iconColor: AppColors.warningDark,
-                      ),
-                      _VendorStatCard(
+                      )),
+                      FadeScaleIn(child: _VendorStatCard(
                         icon: Icons.check_circle_outline_rounded,
                         value: confirmed,
                         label: 'Confirmed',
                         bgColor: AppColors.blueLight,
                         iconColor: AppColors.blueDark,
-                      ),
-                      _VendorStatCard(
+                      )),
+                      FadeScaleIn(child: _VendorStatCard(
                         icon: Icons.local_shipping_outlined,
                         value: delivered,
                         label: 'Delivered',
                         bgColor: AppColors.successLight,
                         iconColor: AppColors.successDark,
-                      ),
-                      _VendorStatCard(
+                      )),
+                      FadeScaleIn(child: _VendorStatCard(
                         icon: Icons.inventory_2_outlined,
                         value: products,
                         label: 'Products',
                         bgColor: AppColors.coralLight,
                         iconColor: AppColors.coralDark,
-                      ),
+                      )),
                     ],
                   ),
                 ),

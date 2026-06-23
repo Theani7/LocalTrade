@@ -10,6 +10,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../core/utils/app_animations.dart';
 import '../../widgets/status_badge.dart';
 import '../customer/notification_screen.dart';
 import 'admin_product_detail_screen.dart';
@@ -182,7 +183,7 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
           ),
           // Notification bell
           GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+            onTap: () => Navigator.push(context, SlideFadePageRoute(builder: (_) => const NotificationScreen())),
             child: Container(
               width: 36,
               height: 36,
@@ -364,10 +365,10 @@ class AdminAnalyticsTab extends StatelessWidget {
                   crossAxisSpacing: 10,
                   childAspectRatio: 1.15,
                   children: [
-                    StatCard(icon: Icons.people_rounded, value: '${stats['totalUsers'] ?? 0}', label: 'Users', tintColor: AppColors.blueLight, iconColor: AppColors.blueDark),
-                    StatCard(icon: Icons.storefront_rounded, value: '${stats['totalVendors'] ?? 0}', label: 'Vendors', tintColor: AppColors.coralLight, iconColor: AppColors.coralDark),
-                    StatCard(icon: Icons.inventory_2_rounded, value: '${stats['totalProducts'] ?? 0}', label: 'Products', tintColor: AppColors.successLight, iconColor: AppColors.successDark),
-                    StatCard(icon: Icons.receipt_long_rounded, value: '${stats['totalOrders'] ?? 0}', label: 'Orders', tintColor: AppColors.warningLight, iconColor: AppColors.warningDark),
+                    FadeScaleIn(child: StatCard(icon: Icons.people_rounded, value: '${stats['totalUsers'] ?? 0}', label: 'Users', tintColor: AppColors.blueLight, iconColor: AppColors.blueDark)),
+                    FadeScaleIn(child: StatCard(icon: Icons.storefront_rounded, value: '${stats['totalVendors'] ?? 0}', label: 'Vendors', tintColor: AppColors.coralLight, iconColor: AppColors.coralDark)),
+                    FadeScaleIn(child: StatCard(icon: Icons.inventory_2_rounded, value: '${stats['totalProducts'] ?? 0}', label: 'Products', tintColor: AppColors.successLight, iconColor: AppColors.successDark)),
+                    FadeScaleIn(child: StatCard(icon: Icons.receipt_long_rounded, value: '${stats['totalOrders'] ?? 0}', label: 'Orders', tintColor: AppColors.warningLight, iconColor: AppColors.warningDark)),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -660,11 +661,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
-                  Expanded(child: AdminStatTile(Icons.people_rounded, '$total', 'Total users', AppColors.blueLight, AppColors.blueDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.people_rounded, '$total', 'Total users', AppColors.blueLight, AppColors.blueDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$active', 'Active', AppColors.successLight, AppColors.successDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.check_circle_outline_rounded, '$active', 'Active', AppColors.successLight, AppColors.successDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.block_rounded, '$inactive', 'Inactive', AppColors.mutedLight, AppColors.muted)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.block_rounded, '$inactive', 'Inactive', AppColors.mutedLight, AppColors.muted))),
                 ],
               ),
             ),
@@ -982,11 +983,11 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
-                  Expanded(child: AdminStatTile(Icons.storefront_rounded, '$totalV', 'Total', AppColors.coralLight, AppColors.coralDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.storefront_rounded, '$totalV', 'Total', AppColors.coralLight, AppColors.coralDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$approved', 'Approved', AppColors.successLight, AppColors.successDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.check_circle_outline_rounded, '$approved', 'Approved', AppColors.successLight, AppColors.successDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.pending_outlined, '$pending', 'Pending', AppColors.warningLight, AppColors.warningDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.pending_outlined, '$pending', 'Pending', AppColors.warningLight, AppColors.warningDark))),
                 ],
               ),
             ),
@@ -1446,11 +1447,11 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
-                  Expanded(child: AdminStatTile(Icons.inventory_2_rounded, '$totalP', 'Total', AppColors.successLight, AppColors.successDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.inventory_2_rounded, '$totalP', 'Total', AppColors.successLight, AppColors.successDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$available', 'Available', AppColors.blueLight, AppColors.blueDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.check_circle_outline_rounded, '$available', 'Available', AppColors.blueLight, AppColors.blueDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.remove_circle_outline_rounded, '$unavailable', 'Unavailable', AppColors.mutedLight, AppColors.muted)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.remove_circle_outline_rounded, '$unavailable', 'Unavailable', AppColors.mutedLight, AppColors.muted))),
                 ],
               ),
             ),
@@ -1511,7 +1512,7 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                     return GestureDetector(
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => AdminProductDetailScreen(productId: product['_id'])),
+                        SlideFadePageRoute(builder: (_) => AdminProductDetailScreen(productId: product['_id'])),
                       ),
                       child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1711,11 +1712,11 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
-                  Expanded(child: AdminStatTile(Icons.receipt_long_rounded, '$totalO', 'Total', AppColors.blueLight, AppColors.blueDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.receipt_long_rounded, '$totalO', 'Total', AppColors.blueLight, AppColors.blueDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.pending_outlined, '$pendingO', 'Pending', AppColors.warningLight, AppColors.warningDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.pending_outlined, '$pendingO', 'Pending', AppColors.warningLight, AppColors.warningDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$deliveredO', 'Delivered', AppColors.successLight, AppColors.successDark)),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.check_circle_outline_rounded, '$deliveredO', 'Delivered', AppColors.successLight, AppColors.successDark))),
                 ],
               ),
             ),

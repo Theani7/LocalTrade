@@ -3,6 +3,7 @@ import '../../core/network/admin_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../widgets/skeleton_loaders.dart';
 
 class AdminProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -50,7 +51,7 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
         centerTitle: false,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.coral))
+          ? const ProductDetailSkeleton()
           : _error != null
               ? Center(
                   child: Column(

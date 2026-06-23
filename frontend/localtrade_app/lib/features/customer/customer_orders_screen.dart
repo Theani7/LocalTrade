@@ -11,6 +11,7 @@ import '../../core/utils/cloudinary_helper.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../core/utils/app_animations.dart';
 import 'order_tracking_screen.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -267,7 +268,7 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
                 return GestureDetector(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    SlideFadePageRoute(
                       builder: (_) => OrderTrackingScreen(orderId: orderId),
                     ),
                   ),

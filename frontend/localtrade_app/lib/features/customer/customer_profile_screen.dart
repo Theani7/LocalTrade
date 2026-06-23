@@ -10,7 +10,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../core/utils/app_animations.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/skeleton_loaders.dart';
 import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
 import 'help_support_screen.dart';
@@ -454,6 +456,17 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
   Widget _buildQuickStats() {
     return Consumer2<OrderProvider, CartProvider>(
       builder: (context, orderProvider, cartProvider, _) {
+        if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
+          return Row(
+            children: List.generate(3, (i) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: i < 2 ? 10 : 0),
+                child: const ShimmerSkeleton(height: 72, radius: 14),
+              ),
+            )),
+          );
+        }
+
         final orders = orderProvider.orders;
         final totalOrders = orders.length;
         final pendingOrders = orders.where((o) {
@@ -581,7 +594,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.blueDark,
             onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
+                SlideFadePageRoute(
                     builder: (_) => const CustomerOrdersScreen())),
           ),
           const Divider(height: 1, indent: 52),
@@ -592,7 +605,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconBg: AppColors.coralLight,
             iconColor: AppColors.coralDark,
             onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const NotificationScreen())),
+                SlideFadePageRoute(builder: (_) => const NotificationScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildSettingsTile(
@@ -603,7 +616,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.blueDark,
             onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
+                SlideFadePageRoute(builder: (_) => const ChangePasswordScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildAddressTile(user, hasAddress),
@@ -764,7 +777,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.coralDark,
             onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const HelpSupportScreen())),
+                SlideFadePageRoute(builder: (_) => const HelpSupportScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildSettingsTile(
@@ -775,7 +788,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.blueDark,
             onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())),
+                SlideFadePageRoute(builder: (_) => const PrivacyPolicyScreen())),
           ),
         ],
       ),

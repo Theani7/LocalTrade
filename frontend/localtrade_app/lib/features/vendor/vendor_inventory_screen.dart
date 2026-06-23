@@ -7,6 +7,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../core/utils/app_animations.dart';
 import 'add_edit_product_screen.dart';
 
 class VendorInventoryScreen extends StatefulWidget {
@@ -89,7 +90,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                       message: 'Add products to start managing your inventory.',
                       onAction: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
+                        SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
                       ),
                       actionLabel: 'Add product',
                     );
@@ -505,7 +506,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(
+        SlideFadePageRoute(
           builder: (_) => AddEditProductScreen(product: product),
         ),
       ),

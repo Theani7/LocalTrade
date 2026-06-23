@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../core/utils/app_animations.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/empty_state.dart';
@@ -424,55 +425,58 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
 
           // ── Bottom bar ──
-          Container(
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              border: Border(top: BorderSide(color: AppColors.divider)),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPaddingH,
-                  AppSpacing.gapMd,
-                  AppSpacing.screenPaddingH,
-                  AppSpacing.gapLg,
-                ),
-                child: Consumer<OrderProvider>(
-                  builder: (context, order, _) {
-                    final canPlaceOrder =
-                        !order.isLoading && !_isEditingAddress && hasAddress;
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(bottom: AppSpacing.gapMd),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Order total',
-                                style: AppTextStyles.bodyMuted,
-                              ),
-                              Text(
-                                'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
-                                style: AppTextStyles.price,
-                              ),
-                            ],
+          FadeSlideIn(
+            duration: const Duration(milliseconds: 300),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screenPaddingH,
+                    AppSpacing.gapMd,
+                    AppSpacing.screenPaddingH,
+                    AppSpacing.gapLg,
+                  ),
+                  child: Consumer<OrderProvider>(
+                    builder: (context, order, _) {
+                      final canPlaceOrder =
+                          !order.isLoading && !_isEditingAddress && hasAddress;
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.gapMd),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Order total',
+                                  style: AppTextStyles.bodyMuted,
+                                ),
+                                Text(
+                                  'Rs. ${cart.totalAmount.toStringAsFixed(0)}',
+                                  style: AppTextStyles.price,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        AppButton(
-                          label: !hasAddress
-                              ? 'Add address first'
-                              : _isEditingAddress
-                                  ? 'Save address first'
-                                  : 'Place order',
-                          isLoading: order.isLoading,
-                          onPressed: canPlaceOrder ? _handlePlaceOrder : null,
-                        ),
-                      ],
-                    );
-                  },
+                          AppButton(
+                            label: !hasAddress
+                                ? 'Add address first'
+                                : _isEditingAddress
+                                    ? 'Save address first'
+                                    : 'Place order',
+                            isLoading: order.isLoading,
+                            onPressed: canPlaceOrder ? _handlePlaceOrder : null,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

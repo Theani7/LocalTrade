@@ -654,10 +654,8 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
-            delegate: SliverChildBuilderDelegate(
+              delegate: SliverChildBuilderDelegate(
               (context, index) {
-                final reduceMotion =
-                    MediaQuery.of(context).disableAnimations;
                 final card = ProductCard(
                   product: provider.products[index],
                   onAddToCart: () {
@@ -718,22 +716,10 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
                   },
                 );
 
-                if (reduceMotion) return card;
-
-                return TweenAnimationWidget(
-                  delay: index * 0.05,
-                  duration:
-                      const Duration(milliseconds: 300),
-                  builder: (context, anim) {
-                    return Opacity(
-                      opacity: anim,
-                      child: Transform.translate(
-                        offset:
-                            Offset(0, 15 * (1 - anim)),
-                        child: card,
-                      ),
-                    );
-                  },
+                return StaggeredListItem(
+                  index: index,
+                  totalCount: provider.products.length,
+                  child: card,
                 );
               },
               childCount: provider.products.length,

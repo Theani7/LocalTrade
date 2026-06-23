@@ -193,77 +193,80 @@ class _CartBodyState extends State<CartBody> {
     const deliveryFee = 0.0;
     final total = subtotal + deliveryFee;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.divider, width: 1),
+    return FadeSlideIn(
+      duration: const Duration(milliseconds: 300),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(
+            top: BorderSide(color: AppColors.divider, width: 1),
+          ),
         ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    'Subtotal ($totalQty item${totalQty == 1 ? '' : 's'})',
-                    style: AppTextStyles.bodyMuted,
-                    overflow: TextOverflow.ellipsis,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Subtotal ($totalQty item${totalQty == 1 ? '' : 's'})',
+                      style: AppTextStyles.bodyMuted,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                Text(
-                  'Rs. ${_priceFormat.format(subtotal.toInt())}',
-                  style: AppTextStyles.body,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Delivery', style: AppTextStyles.bodyMuted),
-                Text(
-                  deliveryFee == 0
-                      ? 'Free'
-                      : 'Rs. ${_priceFormat.format(deliveryFee.toInt())}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight:
-                        deliveryFee == 0 ? FontWeight.w500 : FontWeight.w400,
-                    color:
-                        deliveryFee == 0 ? AppColors.success : AppColors.ink,
+                  Text(
+                    'Rs. ${_priceFormat.format(subtotal.toInt())}',
+                    style: AppTextStyles.body,
                   ),
-                ),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Divider(color: AppColors.divider, height: 1),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Total', style: AppTextStyles.cardTitle),
-                Text(
-                  'Rs. ${_priceFormat.format(total.toInt())}',
-                  style: AppTextStyles.price,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            AppButton(
-              label: 'Checkout',
-              onPressed: () => Navigator.push(
-                context,
-                SlideFadePageRoute(builder: (_) => const CheckoutScreen()),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Delivery', style: AppTextStyles.bodyMuted),
+                  Text(
+                    deliveryFee == 0
+                        ? 'Free'
+                        : 'Rs. ${_priceFormat.format(deliveryFee.toInt())}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight:
+                          deliveryFee == 0 ? FontWeight.w500 : FontWeight.w400,
+                      color:
+                          deliveryFee == 0 ? AppColors.success : AppColors.ink,
+                    ),
+                  ),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Divider(color: AppColors.divider, height: 1),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Total', style: AppTextStyles.cardTitle),
+                  Text(
+                    'Rs. ${_priceFormat.format(total.toInt())}',
+                    style: AppTextStyles.price,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              AppButton(
+                label: 'Checkout',
+                onPressed: () => Navigator.push(
+                  context,
+                  SlideFadePageRoute(builder: (_) => const CheckoutScreen()),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/app_animations.dart';
 import '../common/change_password_screen.dart';
 import '../common/logout_dialog.dart';
 
@@ -1220,7 +1221,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+            SlideFadePageRoute(builder: (_) => const ChangePasswordScreen()),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

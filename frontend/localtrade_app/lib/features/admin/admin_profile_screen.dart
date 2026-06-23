@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/app_animations.dart';
 import '../../providers/auth_provider.dart';
 import '../common/change_password_screen.dart';
 import '../common/logout_dialog.dart';
@@ -114,7 +115,7 @@ class AdminProfileScreen extends StatelessWidget {
               title: 'Account',
               children: [
                 _buildActionRow(Icons.lock_outline_rounded, 'Change password', onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
+                  Navigator.push(context, SlideFadePageRoute(builder: (_) => const ChangePasswordScreen()));
                 }),
               ],
             ),

@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/review_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../widgets/skeleton_loaders.dart';
 import 'package:intl/intl.dart';
 
 final _priceFormat = NumberFormat('#,##0');
@@ -736,16 +737,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     return Consumer<ReviewProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.reviews.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.coral),
-              ),
-            ),
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: ReviewCardSkeleton(count: 3),
           );
         }
 
