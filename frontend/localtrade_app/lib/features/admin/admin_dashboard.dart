@@ -1456,21 +1456,29 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Price + status + delete
+                          // Price + status
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text('Rs. ${product['price']}', style: AppTextStyles.label),
                               const SizedBox(height: 4),
                               _buildProductStatusChip(isAvailable),
-                              const SizedBox(height: 6),
-                              GestureDetector(
-                                onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
-                                child: isDeleting
-                                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
-                                    : const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.muted),
-                              ),
                             ],
+                          ),
+                          const SizedBox(width: 8),
+                          // Delete button
+                          GestureDetector(
+                            onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: isDeleting ? AppColors.mutedLight : AppColors.dangerLight,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: isDeleting
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                  : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                            ),
                           ),
                         ],
                       ),

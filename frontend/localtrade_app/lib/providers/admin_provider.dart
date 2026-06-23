@@ -222,17 +222,15 @@ class AdminProvider with ChangeNotifier {
   }
 
   Future<bool> deleteProduct(String productId) async {
-    _isLoading = true;
+    _products.removeWhere((p) => p['_id'] == productId);
     notifyListeners();
     try {
       await _adminService.deleteProduct(productId);
-      await Future.wait([
-        fetchProducts(refresh: true),
-        fetchAnalytics(),
-      ]);
+      await fetchAnalytics();
       return true;
     } catch (e) {
       _error = e.toString();
+      await fetchProducts(refresh: true);
       return false;
     } finally {
       _isLoading = false;
