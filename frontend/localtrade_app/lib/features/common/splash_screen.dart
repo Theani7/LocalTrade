@@ -7,7 +7,7 @@ import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/network/notification_service.dart';
-import '../admin/admin_dashboard.dart';
+import '../admin/admin_shell.dart';
 import '../vendor/vendor_dashboard.dart';
 import '../vendor/vendor_pending_screen.dart';
 import '../customer/customer_shell.dart';
@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
       debugPrint('Splash routing: role=$role, status=$status, user=${auth.user != null}');
 
       if (role == 'admin') {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminDashboard()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminShell()));
       } else if (role == 'vendor') {
         if (status == 'approved') {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const VendorDashboard()));

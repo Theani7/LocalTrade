@@ -119,8 +119,8 @@ class _StatusBadgeState extends State<StatusBadge>
         );
       case BadgeStatus.rejected:
         return _BadgeConfig(
-          background: AppColors.coralLight,
-          foreground: AppColors.coralDark,
+          background: AppColors.mutedLight,
+          foreground: AppColors.muted,
           icon: Icons.close_rounded,
           label: 'Rejected',
         );

@@ -5,7 +5,7 @@ import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/register_screen.dart';
 import '../../widgets/app_button.dart';
 import '../../core/theme/app_colors.dart';
-import '../../features/admin/admin_dashboard.dart';
+import '../../features/admin/admin_shell.dart';
 import '../../features/vendor/vendor_dashboard.dart';
 import '../../features/vendor/vendor_pending_screen.dart';
 
@@ -65,7 +65,7 @@ class AuthGuard {
           final role = auth.user?['role'];
           final status = auth.user?['vendorApprovalStatus'];
           if (role == 'admin') {
-            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AdminDashboard()), (route) => false);
+            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AdminShell()), (route) => false);
           } else if (role == 'vendor') {
             if (status == 'approved') {
               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const VendorDashboard()), (route) => false);
@@ -199,7 +199,7 @@ class AuthGuard {
                         final role = auth.user?['role'];
                         final status = auth.user?['vendorApprovalStatus'];
                         if (role == 'admin') {
-                          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AdminDashboard()), (route) => false);
+                          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AdminShell()), (route) => false);
                         } else if (role == 'vendor') {
                           if (status == 'approved') {
                             Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const VendorDashboard()), (route) => false);

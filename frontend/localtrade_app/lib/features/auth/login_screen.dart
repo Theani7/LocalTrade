@@ -7,7 +7,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../widgets/app_button.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
-import '../admin/admin_dashboard.dart';
+import '../admin/admin_shell.dart';
 import '../vendor/vendor_dashboard.dart';
 import '../vendor/vendor_pending_screen.dart';
 import '../customer/customer_home_screen.dart';
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
         debugPrint('Login success: role=$role, status=$status');
 
         if (role == 'admin') {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminDashboard()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminShell()));
         } else if (role == 'vendor') {
           if (status == 'approved') {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const VendorDashboard()));

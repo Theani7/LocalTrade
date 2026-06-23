@@ -11,7 +11,6 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/skeleton_loaders.dart';
 import '../../widgets/status_badge.dart';
-import 'admin_feedback_results_screen.dart';
 import '../customer/notification_screen.dart';
 import '../auth/login_screen.dart';
 
@@ -19,10 +18,10 @@ class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
   @override
-  State<AdminDashboard> createState() => _AdminDashboardState();
+  State<AdminDashboard> createState() => AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProviderStateMixin {
+class AdminDashboardState extends State<AdminDashboard> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -30,6 +29,10 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
     Future.microtask(() => _refreshData());
+  }
+
+  void switchTab(int index) {
+    _tabController.animateTo(index);
   }
 
   Future<void> _refreshData() async {
@@ -59,7 +62,7 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
         child: Column(
           children: [
             _buildHeader(),
-            _buildTabBar(),
+            _buildTopTabBar(),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -92,62 +95,70 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
                 Consumer<NotificationProvider>(
                   builder: (_, provider, __) {
                     final unread = provider.unreadCount;
-                    return Text(
-                      unread > 0 ? '$unread unread notification${unread == 1 ? '' : 's'}' : 'System overview',
-                      style: AppTextStyles.caption,
-                    );
+                    if (unread > 0) {
+                      return Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: AppColors.warning,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '$unread unread',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: AppColors.warningDark),
+                          ),
+                        ],
+                      );
+                    }
+                    return Text('System overview', style: AppTextStyles.caption);
                   },
                 ),
               ],
             ),
           ),
-          _buildHeaderButton(
-            icon: Icons.notifications_outlined,
+          // Notification bell
+          GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                border: Border.all(color: AppColors.divider),
+              ),
+              child: const Icon(Icons.notifications_outlined, size: 18, color: AppColors.ink),
+            ),
           ),
           const SizedBox(width: 8),
-          _buildHeaderButton(
-            icon: Icons.rate_review_outlined,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminFeedbackResultsScreen())),
-          ),
-          const SizedBox(width: 8),
-          _buildHeaderButton(
-            icon: Icons.refresh_rounded,
-            onTap: _refreshData,
-          ),
-          const SizedBox(width: 8),
-          _buildHeaderButton(
-            icon: Icons.logout_rounded,
+          // Logout
+          GestureDetector(
             onTap: () => _showLogoutDialog(context),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                border: Border.all(color: AppColors.divider),
+              ),
+              child: const Icon(Icons.logout_rounded, size: 18, color: AppColors.ink),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderButton({required IconData icon, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          border: Border.all(color: AppColors.divider),
-        ),
-        child: Icon(icon, size: 18, color: AppColors.ink),
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
+  Widget _buildTopTabBar() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        border: Border.all(color: AppColors.divider),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.divider, width: 0.5)),
       ),
       child: TabBar(
         controller: _tabController,
@@ -185,8 +196,8 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.mutedLight,
+              foregroundColor: AppColors.ink,
               minimumSize: const Size(100, 40),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
             ),
@@ -202,7 +213,9 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
   }
 }
 
-// ─── Analytics Tab ──────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// Analytics Tab
+// ═════════════════════════════════════════════════════════════════════════════
 class AdminAnalyticsTab extends StatelessWidget {
   const AdminAnalyticsTab({super.key});
 
@@ -247,6 +260,67 @@ class AdminAnalyticsTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Pending approval banner
+                Consumer<AdminProvider>(
+                  builder: (_, adminProv, __) {
+                    final pendingCount = adminProv.vendors
+                        .where((v) => v['vendorApprovalStatus'] == 'pending')
+                        .length;
+                    if (pendingCount == 0) return const SizedBox.shrink();
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.warningLight,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 20, color: AppColors.warningDark),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '$pendingCount vendor${pendingCount == 1 ? '' : 's'} pending approval',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warningDark),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Review applications to onboard new vendors',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w400, color: AppColors.warningDark.withValues(alpha: 0.7)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              final dashboardState = context.findAncestorStateOfType<AdminDashboardState>();
+                              dashboardState?.switchTab(2);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: AppColors.warning,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('Review', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.ink),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
                 // Revenue card
                 Container(
                   width: double.infinity,
@@ -259,11 +333,32 @@ class AdminAnalyticsTab extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Total revenue', style: AppTextStyles.label),
-                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Total revenue', style: AppTextStyles.label),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.coralLight,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: const Text('All time', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.coralDark)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
                       Text(
                         'Rs. ${totalRevenue.toStringAsFixed(0)}',
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w500, color: AppColors.ink),
+                        style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500, color: AppColors.ink),
+                      ),
+                      const SizedBox(height: 12),
+                      // Mini bar chart
+                      _MiniBarChart(),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Revenue across all vendor categories',
+                        style: AppTextStyles.caption.copyWith(fontSize: 11),
                       ),
                     ],
                   ),
@@ -301,23 +396,7 @@ class AdminAnalyticsTab extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                       boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
                     ),
-                    child: PieChart(
-                      PieChartData(
-                        sections: revenueByCategory.map((cat) {
-                          final colors = [AppColors.coral, AppColors.blue, AppColors.success, AppColors.warning, AppColors.muted];
-                          final index = revenueByCategory.indexOf(cat);
-                          return PieChartSectionData(
-                            value: (cat['total'] ?? 0).toDouble(),
-                            title: cat['_id'] ?? '',
-                            color: colors[index % colors.length],
-                            radius: 60,
-                            titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
-                          );
-                        }).toList(),
-                        sectionsSpace: 2,
-                        centerSpaceRadius: 0,
-                      ),
-                    ),
+                    child: _buildPieChart(revenueByCategory),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -393,7 +472,27 @@ class AdminAnalyticsTab extends StatelessWidget {
     );
   }
 
-  BadgeStatus _mapStatus(String? status) {
+  static Widget _buildPieChart(List<dynamic> revenueByCategory) {
+    final colors = [AppColors.coral, AppColors.blue, AppColors.success, AppColors.warning, AppColors.muted];
+    return PieChart(
+      PieChartData(
+        sections: revenueByCategory.map((cat) {
+          final index = revenueByCategory.indexOf(cat);
+          return PieChartSectionData(
+            value: (cat['total'] ?? 0).toDouble(),
+            title: cat['_id'] ?? '',
+            color: colors[index % colors.length],
+            radius: 60,
+            titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
+          );
+        }).toList(),
+        sectionsSpace: 2,
+        centerSpaceRadius: 0,
+      ),
+    );
+  }
+
+  static BadgeStatus _mapStatus(String? status) {
     switch (status) {
       case 'Pending': return BadgeStatus.pending;
       case 'Confirmed': return BadgeStatus.confirmed;
@@ -404,7 +503,42 @@ class AdminAnalyticsTab extends StatelessWidget {
   }
 }
 
-// ─── Users Tab ──────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// Mini Bar Chart (for revenue card)
+// ═════════════════════════════════════════════════════════════════════════════
+class _MiniBarChart extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    const barCount = 7;
+    const maxBarHeight = 40.0;
+    final barHeights = [0.6, 0.4, 0.8, 0.3, 0.7, 0.5, 1.0];
+
+    return SizedBox(
+      height: maxBarHeight + 4,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: List.generate(barCount, (index) {
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Container(
+                height: maxBarHeight * barHeights[index],
+                decoration: BoxDecoration(
+                  color: index == barCount - 1 ? AppColors.blue : AppColors.blueLight,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Users Tab
+// ═════════════════════════════════════════════════════════════════════════════
 class AdminUsersTab extends StatelessWidget {
   const AdminUsersTab({super.key});
 
@@ -444,28 +578,41 @@ class AdminUsersTab extends StatelessWidget {
               child: RefreshIndicator(
                 onRefresh: provider.fetchUsers,
                 color: AppColors.coral,
-                child: ListView.builder(
+                child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: provider.users.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 62, endIndent: 14),
                   itemBuilder: (context, index) {
                     final user = provider.users[index];
+                    final isAdmin = user['role'] == 'admin';
+                    final isVendor = user['role'] == 'vendor';
+                    final joinDate = user['createdAt'] != null ? _formatJoinDate(user['createdAt']) : '';
+
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       child: Row(
                         children: [
+                          // Avatar
                           Container(
                             width: 40,
                             height: 40,
-                            decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
-                            child: const Icon(Icons.person_rounded, size: 20, color: AppColors.coralDark),
+                            decoration: BoxDecoration(
+                              color: isVendor ? AppColors.coralLight : AppColors.blueLight,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                _getInitials(user['fullName'] ?? ''),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: isVendor ? AppColors.coralDark : AppColors.blueDark,
+                                ),
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 12),
+                          // Name + email + join date
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,13 +630,25 @@ class AdminUsersTab extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                                if (joinDate.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Joined $joinDate',
+                                    style: AppTextStyles.caption.copyWith(fontSize: 11),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
+                          // Role badge
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: user['role'] == 'admin' ? AppColors.blueLight : AppColors.mutedLight,
+                              color: isAdmin
+                                  ? AppColors.blueLight
+                                  : isVendor
+                                      ? AppColors.coralLight
+                                      : AppColors.mutedLight,
                               borderRadius: BorderRadius.circular(100),
                             ),
                             child: Text(
@@ -497,7 +656,11 @@ class AdminUsersTab extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: user['role'] == 'admin' ? AppColors.blueDark : AppColors.muted,
+                                color: isAdmin
+                                    ? AppColors.blueDark
+                                    : isVendor
+                                        ? AppColors.coralDark
+                                        : AppColors.muted,
                               ),
                             ),
                           ),
@@ -513,9 +676,33 @@ class AdminUsersTab extends StatelessWidget {
       },
     );
   }
+
+  static String _getInitials(String name) {
+    final parts = name.split(' ').where((w) => w.isNotEmpty).toList();
+    if (parts.isEmpty) return '';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  static String _formatJoinDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+      if (diff.inDays < 1) return 'today';
+      if (diff.inDays == 1) return 'yesterday';
+      if (diff.inDays < 30) return '${diff.inDays} days ago';
+      if (diff.inDays < 365) return '${(diff.inDays / 30).floor()} months ago';
+      return '${(diff.inDays / 365).floor()} years ago';
+    } catch (_) {
+      return '';
+    }
+  }
 }
 
-// ─── Vendors Tab ────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// Vendors Tab
+// ═════════════════════════════════════════════════════════════════════════════
 class AdminVendorsTab extends StatelessWidget {
   const AdminVendorsTab({super.key});
 
@@ -525,6 +712,9 @@ class AdminVendorsTab extends StatelessWidget {
       builder: (context, provider, _) {
         if (provider.isLoading && provider.vendors.isEmpty) return const ListSkeleton(itemCount: 5);
         if (provider.vendors.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
+
+        final pendingVendors = provider.vendors.where((v) => v['vendorApprovalStatus'] == 'pending').toList();
+        final otherVendors = provider.vendors.where((v) => v['vendorApprovalStatus'] != 'pending').toList();
 
         return Column(
           children: [
@@ -555,51 +745,24 @@ class AdminVendorsTab extends StatelessWidget {
               child: RefreshIndicator(
                 onRefresh: provider.fetchVendors,
                 color: AppColors.coral,
-                child: ListView.builder(
+                child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: provider.vendors.length,
-                  itemBuilder: (context, index) {
-                    final vendor = provider.vendors[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
-                            child: const Icon(Icons.storefront_rounded, size: 20, color: AppColors.coralDark),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  vendor['shopName'] ?? vendor['fullName'] ?? '',
-                                  style: AppTextStyles.cardTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  vendor['vendorApprovalStatus'] ?? 'pending',
-                                  style: AppTextStyles.caption,
-                                ),
-                              ],
-                            ),
-                          ),
-                          _buildApprovalActions(context, vendor, provider),
-                        ],
-                      ),
-                    );
-                  },
+                  children: [
+                    // Pending section
+                    if (pendingVendors.isNotEmpty) ...[
+                      Text('Pending approval', style: AppTextStyles.label.copyWith(color: AppColors.warningDark)),
+                      const SizedBox(height: 8),
+                      ...pendingVendors.map((vendor) => _buildPendingVendorCard(context, vendor, provider)),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // All vendors
+                    if (otherVendors.isNotEmpty) ...[
+                      Text('All vendors', style: AppTextStyles.label),
+                      const SizedBox(height: 8),
+                      ...otherVendors.map((vendor) => _buildApprovedVendorCard(context, vendor, provider)),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -609,57 +772,227 @@ class AdminVendorsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildApprovalActions(BuildContext context, dynamic vendor, AdminProvider provider) {
-    final status = vendor['vendorApprovalStatus'];
-
-    if (status == 'pending') {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-            onTap: () => provider.updateVendorStatus(vendor['_id'], 'approved'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(100)),
-              child: const Text('Approve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => provider.updateVendorStatus(vendor['_id'], 'rejected'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border.all(color: AppColors.divider),
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: Text('Reject', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
-            ),
-          ),
-        ],
-      );
-    }
+  Widget _buildPendingVendorCard(BuildContext context, dynamic vendor, AdminProvider provider) {
+    final appliedDate = vendor['createdAt'] != null ? _formatAppliedDate(vendor['createdAt']) : '';
+    final categories = (vendor['categories'] as List?)?.join(', ') ?? '';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: status == 'approved' ? AppColors.successLight : AppColors.dangerLight,
-        borderRadius: BorderRadius.circular(100),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
       ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: status == 'approved' ? AppColors.successDark : AppColors.dangerDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(color: AppColors.warningLight, shape: BoxShape.circle),
+                child: const Icon(Icons.storefront_rounded, size: 20, color: AppColors.warningDark),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(vendor['shopName'] ?? vendor['fullName'] ?? '', style: AppTextStyles.cardTitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 2),
+                    Text(
+                      appliedDate.isNotEmpty ? 'Applied $appliedDate' : 'Awaiting review',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (categories.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: categories.split(', ').map((c) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedLight,
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Text(c, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.muted)),
+              )).toList(),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => provider.updateVendorStatus(vendor['_id'], 'approved'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.coral,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text('Approve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.ink)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => provider.updateVendorStatus(vendor['_id'], 'rejected'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.divider),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text('Reject', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApprovedVendorCard(BuildContext context, dynamic vendor, AdminProvider provider) {
+    final status = vendor['vendorApprovalStatus'];
+    final isSuspended = status == 'suspended';
+    final productCount = vendor['productCount'] ?? 0;
+
+    return Opacity(
+      opacity: isSuspended ? 0.75 : 1.0,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
+              child: const Icon(Icons.storefront_rounded, size: 20, color: AppColors.coralDark),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    vendor['shopName'] ?? vendor['fullName'] ?? '',
+                    style: AppTextStyles.cardTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$productCount product${productCount == 1 ? '' : 's'} listed',
+                    style: AppTextStyles.caption,
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildStatusChip(status),
+                if (isSuspended) ...[
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: () => provider.updateVendorStatus(vendor['_id'], 'approved'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.successLight,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: const Text('Reinstate', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.successDark)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildStatusChip(String? status) {
+    switch (status) {
+      case 'approved':
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppColors.successLight,
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_rounded, size: 12, color: AppColors.successDark),
+              SizedBox(width: 4),
+              Text('Approved', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.successDark)),
+            ],
+          ),
+        );
+      case 'suspended':
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppColors.mutedLight,
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.pause_rounded, size: 12, color: AppColors.muted),
+              SizedBox(width: 4),
+              Text('Suspended', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.muted)),
+            ],
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  static String _formatAppliedDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+      if (diff.inDays < 1) return 'today';
+      if (diff.inDays == 1) return 'yesterday';
+      if (diff.inDays < 30) return '${diff.inDays} days ago';
+      if (diff.inDays < 365) return '${(diff.inDays / 30).floor()} months ago';
+      return '${(diff.inDays / 365).floor()} years ago';
+    } catch (_) {
+      return '';
+    }
+  }
 }
 
-// ─── Products Tab ───────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// Products Tab
+// ═════════════════════════════════════════════════════════════════════════════
 class AdminProductsTab extends StatelessWidget {
   const AdminProductsTab({super.key});
 
@@ -699,33 +1032,32 @@ class AdminProductsTab extends StatelessWidget {
               child: RefreshIndicator(
                 onRefresh: provider.fetchProducts,
                 color: AppColors.coral,
-                child: ListView.builder(
+                child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: provider.products.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 68, endIndent: 14),
                   itemBuilder: (context, index) {
                     final product = provider.products[index];
+                    final isAvailable = (product['stockQuantity'] ?? 0) > 0 && product['productStatus'] != 'unavailable';
+
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       child: Row(
                         children: [
+                          // Thumbnail
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                            borderRadius: BorderRadius.circular(10),
                             child: Container(
-                              width: 56,
-                              height: 56,
+                              width: 44,
+                              height: 44,
                               color: AppColors.background,
                               child: product['images'] != null && product['images'].isNotEmpty
                                   ? Image.network(product['images'][0], fit: BoxFit.cover)
-                                  : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 20),
+                                  : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 18),
                             ),
                           ),
                           const SizedBox(width: 12),
+                          // Name + vendor
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -738,15 +1070,23 @@ class AdminProductsTab extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Rs. ${product['price']}  •  ${product['category'] ?? ''}',
+                                  product['vendorId']?['shopName'] ?? product['vendorId']?['fullName'] ?? 'Vendor',
                                   style: AppTextStyles.caption,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
                           ),
-                          Text(
-                            'Stock: ${product['stockQuantity'] ?? 0}',
-                            style: AppTextStyles.label,
+                          const SizedBox(width: 8),
+                          // Price + status
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text('Rs. ${product['price']}', style: AppTextStyles.label),
+                              const SizedBox(height: 4),
+                              _buildProductStatusChip(isAvailable),
+                            ],
                           ),
                         ],
                       ),
@@ -760,11 +1100,50 @@ class AdminProductsTab extends StatelessWidget {
       },
     );
   }
+
+  Widget _buildProductStatusChip(bool isAvailable) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isAvailable ? AppColors.successLight : AppColors.mutedLight,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isAvailable ? Icons.check_rounded : Icons.close_rounded,
+            size: 10,
+            color: isAvailable ? AppColors.successDark : AppColors.muted,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            isAvailable ? 'Available' : 'Unavailable',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: isAvailable ? AppColors.successDark : AppColors.muted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ─── Orders Tab ─────────────────────────────────────────────────────────────
-class AdminOrdersTab extends StatelessWidget {
+// ═════════════════════════════════════════════════════════════════════════════
+// Orders Tab
+// ═════════════════════════════════════════════════════════════════════════════
+class AdminOrdersTab extends StatefulWidget {
   const AdminOrdersTab({super.key});
+
+  @override
+  State<AdminOrdersTab> createState() => _AdminOrdersTabState();
+}
+
+class _AdminOrdersTabState extends State<AdminOrdersTab> {
+  String _selectedFilter = 'All';
+  static const _filters = ['All', 'Pending', 'Confirmed', 'Delivered', 'Rejected', 'Cancelled'];
 
   @override
   Widget build(BuildContext context) {
@@ -772,6 +1151,10 @@ class AdminOrdersTab extends StatelessWidget {
       builder: (context, provider, _) {
         if (provider.isLoading && provider.orders.isEmpty) return const OrderCardSkeleton();
         if (provider.orders.isEmpty) return const EmptyState(icon: Icons.receipt_long_outlined, title: 'No orders', message: 'No orders placed yet.');
+
+        final filteredOrders = _selectedFilter == 'All'
+            ? provider.orders
+            : provider.orders.where((o) => o['orderStatus'] == _selectedFilter).toList();
 
         return Column(
           children: [
@@ -797,86 +1180,120 @@ class AdminOrdersTab extends StatelessWidget {
               ),
             ),
 
+            // Filter chips
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                itemCount: _filters.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final filter = _filters[index];
+                  final isActive = _selectedFilter == filter;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedFilter = filter),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isActive ? AppColors.coral : AppColors.surface,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: isActive ? AppColors.coral : AppColors.divider),
+                      ),
+                      child: Center(
+                        child: Text(
+                          filter,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: isActive ? AppColors.ink : AppColors.muted,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
             // List
             Expanded(
               child: RefreshIndicator(
                 onRefresh: provider.fetchOrders,
                 color: AppColors.coral,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: provider.orders.length,
-                  itemBuilder: (context, index) {
-                    final order = provider.orders[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '#${(() { final id = order['_id'].toString(); return id.length > 6 ? id.substring(id.length - 6) : id; })().toUpperCase()}',
-                                style: AppTextStyles.label.copyWith(color: AppColors.muted),
-                              ),
-                              StatusBadge(status: _mapStatus(order['orderStatus'])),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.muted),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  order['customerId']?['fullName'] ?? 'Customer',
-                                  style: AppTextStyles.cardTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                child: filteredOrders.isEmpty
+                    ? Center(child: Text('No $_selectedFilter orders', style: AppTextStyles.bodyMuted))
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: filteredOrders.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1, indent: 14, endIndent: 14),
+                        itemBuilder: (context, index) {
+                          final order = filteredOrders[index];
+                          return Container(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '#${(() { final id = order['_id'].toString(); return id.length > 6 ? id.substring(id.length - 6) : id; })().toUpperCase()}',
+                                      style: AppTextStyles.label.copyWith(color: AppColors.muted),
+                                    ),
+                                    StatusBadge(status: _mapStatus(order['orderStatus'])),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.storefront_rounded, size: 16, color: AppColors.muted),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  order['vendorId']?['shopName'] ?? 'Vendor',
-                                  style: AppTextStyles.bodyMuted,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.muted),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        order['customerId']?['fullName'] ?? 'Customer',
+                                        style: AppTextStyles.cardTitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${order['products']?.length ?? 0} items',
-                                style: AppTextStyles.caption,
-                              ),
-                              Text(
-                                'Rs. ${order['totalAmount']}',
-                                style: AppTextStyles.price,
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.storefront_rounded, size: 16, color: AppColors.muted),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        order['vendorId']?['shopName'] ?? 'Vendor',
+                                        style: AppTextStyles.bodyMuted,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '${order['products']?.length ?? 0} items',
+                                      style: AppTextStyles.caption,
+                                    ),
+                                    Text(
+                                      'Rs. ${order['totalAmount']}',
+                                      style: AppTextStyles.price,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ),
           ],
@@ -896,7 +1313,9 @@ class AdminOrdersTab extends StatelessWidget {
   }
 }
 
-// ─── Skeleton ───────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// Skeleton
+// ═════════════════════════════════════════════════════════════════════════════
 class _AdminAnalyticsSkeleton extends StatelessWidget {
   const _AdminAnalyticsSkeleton();
 
