@@ -154,6 +154,7 @@ class AuthGuard {
                   ),
                   const SizedBox(height: 20),
                   TextField(
+                    key: const ValueKey('login_email'),
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: AppColors.ink, fontSize: 14),
@@ -164,6 +165,7 @@ class AuthGuard {
                   ),
                   const SizedBox(height: 12),
                   TextField(
+                    key: const ValueKey('login_password'),
                     controller: passwordController,
                     obscureText: !isPasswordVisible,
                     style: const TextStyle(color: AppColors.ink, fontSize: 14),
