@@ -5,7 +5,7 @@ const AppError = require('../utils/appError');
 const { notifyAdmins } = require('../utils/notificationUtils');
 
 exports.register = catchAsync(async (req, res, next) => {
-  const { fullName, email, phone, password, role, shopName, businessDescription, categories, openingHours, address } = req.body;
+  let { fullName, email, phone, password, role, shopName, businessDescription, categories, openingHours, address } = req.body;
 
   if (role && !['customer', 'vendor'].includes(role)) {
     return next(new AppError('Unauthorized: Invalid role selection', 400));
@@ -16,6 +16,12 @@ exports.register = catchAsync(async (req, res, next) => {
   }
   if (!password || password.length < 6) {
     return next(new AppError('Password must be at least 6 characters', 400));
+  }
+  // Phone number is required for both customers and vendors. The User schema enforces it,
+  // but the controller previously allowed it to be missing which caused a Mongoose validation
+  // error that bubbled up as a 500. We now validate explicitly to return a controlled 400.
+  if (!phone) {
+    return next(new AppError('Phone number is required', 400));
   }
   if (!fullName || typeof fullName !== 'string' || fullName.trim().length === 0 || fullName.length > 100) {
     return next(new AppError('Full name is required and must be under 100 characters', 400));

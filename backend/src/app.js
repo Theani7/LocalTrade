@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 const dotenv = require('dotenv');
+const multer = require('multer'); // Needed for Multer error handling
+const AppError = require('./utils/appError');
 
 // Custom NoSQL query injection sanitizer middleware for Express 5 compatibility
 const sanitizeObject = (obj) => {
@@ -76,11 +78,22 @@ app.use(customMongoSanitize);
 
 // Limit requests from same API
 const limiter = rateLimit({
-  max: 200, // Limit each IP to 200 requests per 15 minutes
+  max: 200, // General limit: 200 requests per 15 minutes per IP
   windowMs: 15 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in 15 minutes!',
 });
 app.use('/api', limiter);
+
+// Stricter limiter for authentication routes to mitigate credential‑stuffing attacks.
+// We disable it in the test environment to avoid interfering with automated test suites.
+if (process.env.NODE_ENV !== 'test') {
+  const authLimiter = rateLimit({
+    max: 20, // 20 requests per 15 minutes per IP for auth endpoints
+    windowMs: 15 * 60 * 1000,
+    message: 'Too many authentication attempts, please try again later.',
+  });
+  app.use('/api/v1/auth', authLimiter);
+}
 
 // Body Parser
 app.use(express.json({ limit: '10mb' }));
@@ -114,6 +127,25 @@ app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/vendors`, vendorRoutes);
 app.use(`${API_PREFIX}/feedback`, feedbackRoutes);
 app.use(`${API_PREFIX}/reviews`, reviewRoutes);
+
+// ---------------------------------------------------------------------
+// Multer error handling
+// ---------------------------------------------------------------------
+// Multer can throw its own errors (e.g., file too large, invalid file type).
+// Those errors are not caught by the generic async wrapper, so we translate
+// them into our AppError format so the global error handler can respond
+// with a consistent JSON payload.
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    // Multer's own error codes are descriptive, we expose the message directly.
+    return next(new AppError(err.message, 400));
+  }
+  // Our custom fileFilter creates a generic Error with a specific message.
+  if (err && typeof err.message === 'string' && err.message.includes('Invalid file type')) {
+    return next(new AppError(err.message, 400));
+  }
+  next(err);
+});
 
 // 404 Route
 app.use((req, res, next) => {

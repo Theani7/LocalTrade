@@ -1,6 +1,6 @@
 name: localtrade_app
 description: A modern, community-focused marketplace for Nepal.
-version: 1.0.0+1
+version: 2.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
