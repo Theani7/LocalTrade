@@ -1029,37 +1029,38 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
 
             // Status filter chips
             SizedBox(
-              height: 32,
-              child: ListView(
+              height: 38,
+              child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
-                children: ['All', 'Pending', 'Approved', 'Suspended'].map((status) {
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: ['All', 'Pending', 'Approved', 'Suspended'].length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final status = ['All', 'Pending', 'Approved', 'Suspended'][index];
                   final isSelected = _selectedStatus == status;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _selectedStatus = status);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.coral : AppColors.surface,
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: isSelected ? AppColors.coral : AppColors.divider),
-                        ),
-                        child: Text(
-                          status,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected ? AppColors.ink : AppColors.muted,
-                          ),
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedStatus = status);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.coral : AppColors.surface,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: isSelected ? AppColors.coral : AppColors.divider),
+                      ),
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? AppColors.ink : AppColors.muted,
                         ),
                       ),
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
 
