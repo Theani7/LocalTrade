@@ -945,7 +945,10 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
         final pending = vStats?['pendingVendors'] ?? 0;
 
         final pendingVendors = provider.vendors.where((v) => v['vendorApprovalStatus'] == 'pending').toList();
-        final otherVendors = provider.vendors.where((v) => v['vendorApprovalStatus'] != 'pending').toList();
+
+        final filteredList = _selectedStatus == 'All'
+            ? provider.vendors.where((v) => v['vendorApprovalStatus'] != 'pending').toList()
+            : provider.vendors.where((v) => v['vendorApprovalStatus'] == _selectedStatus.toLowerCase()).toList();
 
         return Column(
           children: [
@@ -1037,10 +1040,6 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() => _selectedStatus = status);
-                        provider.fetchVendors(
-                          search: _searchController.text.isEmpty ? null : _searchController.text,
-                          status: status == 'All' ? null : status,
-                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1069,25 +1068,31 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
               child: RefreshIndicator(
                 onRefresh: provider.fetchVendors,
                 color: AppColors.coral,
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    // Pending section
-                    if (pendingVendors.isNotEmpty) ...[
-                      Text('Pending approval', style: AppTextStyles.label.copyWith(color: AppColors.warningDark)),
-                      const SizedBox(height: 8),
-                      ...pendingVendors.map((vendor) => _buildPendingVendorCard(context, vendor, provider)),
-                      const SizedBox(height: 16),
-                    ],
+                child: filteredList.isEmpty
+                    ? EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No $_selectedStatus vendors found.')
+                    : ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          // Pending section (only when filter is All or Pending)
+                          if (_selectedStatus == 'All' || _selectedStatus == 'Pending') ...[
+                            if (pendingVendors.isNotEmpty) ...[
+                              Text('Pending approval', style: AppTextStyles.label.copyWith(color: AppColors.warningDark)),
+                              const SizedBox(height: 8),
+                              ...pendingVendors.map((vendor) => _buildPendingVendorCard(context, vendor, provider)),
+                              const SizedBox(height: 16),
+                            ],
+                          ],
 
-                    // All vendors
-                    if (otherVendors.isNotEmpty) ...[
-                      Text('All vendors', style: AppTextStyles.label),
-                      const SizedBox(height: 8),
-                      ...otherVendors.map((vendor) => _buildApprovedVendorCard(context, vendor, provider)),
-                    ],
-                  ],
-                ),
+                          // Other vendors (only when filter is All or not Pending)
+                          if (_selectedStatus != 'Pending') ...[
+                            if (filteredList.isNotEmpty) ...[
+                              if (_selectedStatus == 'All') Text('All vendors', style: AppTextStyles.label),
+                              const SizedBox(height: 8),
+                              ...filteredList.map((vendor) => _buildApprovedVendorCard(context, vendor, provider)),
+                            ],
+                          ],
+                        ],
+                      ),
               ),
             ),
           ],
@@ -1287,6 +1292,22 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
               Icon(Icons.check_rounded, size: 12, color: AppColors.successDark),
               SizedBox(width: 4),
               Text('Approved', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.successDark)),
+            ],
+          ),
+        );
+      case 'pending':
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppColors.warningLight,
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.schedule_rounded, size: 12, color: AppColors.warningDark),
+              SizedBox(width: 4),
+              Text('Pending', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.warningDark)),
             ],
           ),
         );
