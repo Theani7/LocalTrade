@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_animations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/network/notification_service.dart';
@@ -21,14 +22,84 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   final NotificationService _notificationService = NotificationService();
   StreamSubscription<RemoteMessage>? _messageSubscription;
+  late final AnimationController _logoCtrl;
+  late final Animation<double> _logoOpacity;
+  late final Animation<double> _logoScale;
+  late final AnimationController _textCtrl;
+  late final Animation<double> _textOpacity;
+  late final Animation<Offset> _textSlide;
+  late final AnimationController _subtitleCtrl;
+  late final Animation<double> _subtitleOpacity;
+  late final Animation<Offset> _subtitleSlide;
+  late final AnimationController _spinnerCtrl;
+  late final Animation<double> _spinnerOpacity;
 
   @override
   void initState() {
     super.initState();
+
+    _logoCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoCtrl, curve: AppCurves.standard),
+    );
+    _logoScale = Tween(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut),
+    );
+
+    _textCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _textOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _textCtrl, curve: AppCurves.standard),
+    );
+    _textSlide = Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _textCtrl, curve: AppCurves.standard),
+    );
+
+    _subtitleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _subtitleOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _subtitleCtrl, curve: AppCurves.standard),
+    );
+    _subtitleSlide = Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _subtitleCtrl, curve: AppCurves.standard),
+    );
+
+    _spinnerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _spinnerOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _spinnerCtrl, curve: AppCurves.standard),
+    );
+
+    _startAnimations();
     _initializeApp();
+  }
+
+  Future<void> _startAnimations() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    _logoCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    _textCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    _subtitleCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    _spinnerCtrl.forward();
   }
 
   Future<void> _initializeApp() async {
@@ -90,6 +161,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void dispose() {
     _messageSubscription?.cancel();
+    _logoCtrl.dispose();
+    _textCtrl.dispose();
+    _subtitleCtrl.dispose();
+    _spinnerCtrl.dispose();
     super.dispose();
   }
 
@@ -101,39 +176,62 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Use the app logo image to satisfy the test expectation for an Image widget.
-            // The logo asset is defined in pubspec.yaml under assets/images/.
-            Image.asset(
-              'assets/images/logo.png',
-              width: 100,
-              height: 100,
+            // Logo with fade + elastic scale
+            FadeTransition(
+              opacity: _logoOpacity,
+              child: ScaleTransition(
+                scale: _logoScale,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 140,
+                  height: 140,
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              AppConstants.appName,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w500,
-                color: AppColors.ink,
-                letterSpacing: -0.5,
+            const SizedBox(height: 28),
+            // App name with fade + slide up
+            FadeTransition(
+              opacity: _textOpacity,
+              child: SlideTransition(
+                position: _textSlide,
+                child: Text(
+                  AppConstants.appName,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.ink,
+                    letterSpacing: -0.5,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Community marketplace',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: AppColors.muted,
+            // Subtitle with fade + slide up
+            FadeTransition(
+              opacity: _subtitleOpacity,
+              child: SlideTransition(
+                position: _subtitleSlide,
+                child: const Text(
+                  'Community marketplace',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.muted,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 48),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.coral,
+            // Spinner with fade in
+            FadeTransition(
+              opacity: _spinnerOpacity,
+              child: const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.coral,
+                ),
               ),
             ),
           ],
