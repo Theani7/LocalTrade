@@ -209,10 +209,11 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
   @override
   Widget build(BuildContext context) {
     if (!AuthGuard.isAuthenticated(context)) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      return SizedBox.expand(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Container(
               width: 72,
               height: 72,
@@ -237,6 +238,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
               },
             ),
           ],
+          ),
         ),
       );
     }

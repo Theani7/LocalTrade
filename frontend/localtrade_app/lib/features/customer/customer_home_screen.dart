@@ -143,6 +143,7 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
 
   @override
   Widget build(BuildContext context) {
+    final productProvider = Provider.of<ProductProvider>(context);
     return RefreshIndicator(
       onRefresh: () async => _fetchProducts(),
       color: AppColors.coral,
@@ -433,10 +434,10 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
           const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
           // ── Products grid ──
-          _buildProductGrid(),
+          _buildProductGrid(productProvider),
 
           // ── Load more ──
-          _buildLoadMoreIndicator(),
+          _buildLoadMoreIndicator(productProvider),
         ],
       ),
     );
@@ -596,9 +597,7 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
     );
   }
 
-  Widget _buildProductGrid() {
-    return Consumer<ProductProvider>(
-      builder: (context, provider, _) {
+  Widget _buildProductGrid(ProductProvider provider) {
         if (provider.isLoading && provider.products.isEmpty) {
           return SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -726,13 +725,9 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
             ),
           ),
         );
-      },
-    );
   }
 
-  Widget _buildLoadMoreIndicator() {
-    return Consumer<ProductProvider>(
-      builder: (context, provider, _) {
+  Widget _buildLoadMoreIndicator(ProductProvider provider) {
         if (provider.isFetchingMore) {
           return const SliverToBoxAdapter(
             child: Padding(
@@ -764,7 +759,5 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
         }
         return const SliverToBoxAdapter(
             child: SizedBox(height: 32));
-      },
-    );
   }
 }

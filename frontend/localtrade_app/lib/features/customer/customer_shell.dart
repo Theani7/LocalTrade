@@ -152,10 +152,9 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
-          child: Row(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(6, 10, 6, MediaQuery.of(context).padding.bottom + 4),
+        child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(_items.length, (index) {
               final item = _items[index];
@@ -248,7 +247,6 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
             }),
           ),
         ),
-      ),
     );
   }
 }
