@@ -15,6 +15,60 @@ import '../../widgets/status_badge.dart';
 import '../customer/notification_screen.dart';
 import '../auth/login_screen.dart';
 
+class AdminStatTile extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color tintColor;
+  final Color iconColor;
+
+  const AdminStatTile(
+    this.icon,
+    this.value,
+    this.label,
+    this.tintColor,
+    this.iconColor, {
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: tintColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 14, color: iconColor),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink), maxLines: 1),
+                Text(label, style: TextStyle(fontSize: 10, color: AppColors.muted.withValues(alpha: 0.8)), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class AdminDashboard extends StatefulWidget {
   final void Function(int tabIndex)? onTabChanged;
 
@@ -652,11 +706,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
-                  Expanded(child: _buildStatTile(Icons.people_rounded, '$total', 'Total users', AppColors.blueLight, AppColors.blueDark)),
+                  Expanded(child: AdminStatTile(Icons.people_rounded, '$total', 'Total users', AppColors.blueLight, AppColors.blueDark)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildStatTile(Icons.check_circle_outline_rounded, '$active', 'Active', AppColors.successLight, AppColors.successDark)),
+                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$active', 'Active', AppColors.successLight, AppColors.successDark)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildStatTile(Icons.block_rounded, '$inactive', 'Inactive', AppColors.mutedLight, AppColors.muted)),
+                  Expanded(child: AdminStatTile(Icons.block_rounded, '$inactive', 'Inactive', AppColors.mutedLight, AppColors.muted)),
                 ],
               ),
             ),
@@ -837,42 +891,6 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     );
   }
 
-  Widget _buildStatTile(IconData icon, String value, String label, Color tintColor, Color iconColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: tintColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 14, color: iconColor),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink), maxLines: 1),
-                Text(label, style: TextStyle(fontSize: 10, color: AppColors.muted.withValues(alpha: 0.8)), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _toggleUserStatus(BuildContext context, dynamic user, AdminProvider provider) {
     final isActive = user['isActive'] != false;
     showDialog(
@@ -968,6 +986,11 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
         if (provider.isLoading && provider.vendors.isEmpty) return const ListSkeleton(itemCount: 5);
         if (provider.vendors.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
 
+        final vStats = provider.vendorStats;
+        final totalV = vStats?['totalVendors'] ?? provider.vendors.length;
+        final approved = vStats?['approvedVendors'] ?? 0;
+        final pending = vStats?['pendingVendors'] ?? 0;
+
         final pendingVendors = provider.vendors.where((v) => v['vendorApprovalStatus'] == 'pending').toList();
         final otherVendors = provider.vendors.where((v) => v['vendorApprovalStatus'] != 'pending').toList();
 
@@ -985,12 +1008,26 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
                         Text('Vendors', style: AppTextStyles.screenTitle),
                         const SizedBox(height: 2),
                         Text(
-                          '${provider.vendors.length} registered vendor${provider.vendors.length == 1 ? '' : 's'}',
+                          '$totalV registered vendor${totalV == 1 ? '' : 's'}',
                           style: AppTextStyles.caption,
                         ),
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
+
+            // Stat tiles
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(child: AdminStatTile(Icons.storefront_rounded, '$totalV', 'Total', AppColors.coralLight, AppColors.coralDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$approved', 'Approved', AppColors.successLight, AppColors.successDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: AdminStatTile(Icons.pending_outlined, '$pending', 'Pending', AppColors.warningLight, AppColors.warningDark)),
                 ],
               ),
             ),
@@ -1396,6 +1433,11 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
         if (provider.isLoading && provider.products.isEmpty) return const ListSkeleton(itemCount: 5);
         if (provider.products.isEmpty) return const EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.');
 
+        final pStats = provider.productStats;
+        final totalP = pStats?['totalProducts'] ?? provider.products.length;
+        final available = pStats?['availableProducts'] ?? 0;
+        final unavailable = pStats?['unavailableProducts'] ?? 0;
+
         return Column(
           children: [
             // Header
@@ -1410,12 +1452,26 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                         Text('Products', style: AppTextStyles.screenTitle),
                         const SizedBox(height: 2),
                         Text(
-                          '${provider.products.length} product${provider.products.length == 1 ? '' : 's'} listed',
+                          '$totalP product${totalP == 1 ? '' : 's'} listed',
                           style: AppTextStyles.caption,
                         ),
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
+
+            // Stat tiles
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(child: AdminStatTile(Icons.inventory_2_rounded, '$totalP', 'Total', AppColors.successLight, AppColors.successDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$available', 'Available', AppColors.blueLight, AppColors.blueDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: AdminStatTile(Icons.remove_circle_outline_rounded, '$unavailable', 'Unavailable', AppColors.mutedLight, AppColors.muted)),
                 ],
               ),
             ),
@@ -1625,6 +1681,11 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
         if (provider.isLoading && provider.orders.isEmpty) return const OrderCardSkeleton();
         if (provider.orders.isEmpty) return const EmptyState(icon: Icons.receipt_long_outlined, title: 'No orders', message: 'No orders placed yet.');
 
+        final oStats = provider.orderStats;
+        final totalO = oStats?['totalOrders'] ?? provider.orders.length;
+        final pendingO = oStats?['pendingOrders'] ?? 0;
+        final deliveredO = oStats?['deliveredOrders'] ?? 0;
+
         final filteredOrders = _selectedFilter == 'All'
             ? provider.orders
             : provider.orders.where((o) => o['orderStatus'] == _selectedFilter).toList();
@@ -1633,7 +1694,7 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
               child: Row(
                 children: [
                   Expanded(
@@ -1643,12 +1704,26 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
                         Text('Orders', style: AppTextStyles.screenTitle),
                         const SizedBox(height: 2),
                         Text(
-                          '${provider.orders.length} order${provider.orders.length == 1 ? '' : 's'} placed',
+                          '$totalO order${totalO == 1 ? '' : 's'} placed',
                           style: AppTextStyles.caption,
                         ),
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
+
+            // Stat tiles
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(child: AdminStatTile(Icons.receipt_long_rounded, '$totalO', 'Total', AppColors.blueLight, AppColors.blueDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: AdminStatTile(Icons.pending_outlined, '$pendingO', 'Pending', AppColors.warningLight, AppColors.warningDark)),
+                  const SizedBox(width: 8),
+                  Expanded(child: AdminStatTile(Icons.check_circle_outline_rounded, '$deliveredO', 'Delivered', AppColors.successLight, AppColors.successDark)),
                 ],
               ),
             ),

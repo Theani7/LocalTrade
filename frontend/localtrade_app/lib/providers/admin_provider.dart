@@ -10,6 +10,9 @@ class AdminProvider with ChangeNotifier {
   List<dynamic> _products = [];
   List<dynamic> _orders = [];
   Map<String, dynamic>? _userStats;
+  Map<String, dynamic>? _vendorStats;
+  Map<String, dynamic>? _productStats;
+  Map<String, dynamic>? _orderStats;
   
   bool _isLoading = false;
   String? _error;
@@ -31,6 +34,9 @@ class AdminProvider with ChangeNotifier {
   List<dynamic> get products => _products;
   List<dynamic> get orders => _orders;
   Map<String, dynamic>? get userStats => _userStats;
+  Map<String, dynamic>? get vendorStats => _vendorStats;
+  Map<String, dynamic>? get productStats => _productStats;
+  Map<String, dynamic>? get orderStats => _orderStats;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -101,6 +107,7 @@ class AdminProvider with ChangeNotifier {
     try {
       final result = await _adminService.getAllVendors(search: search, status: status, page: _vendorsPage);
       final List<dynamic> newVendors = result['data']['vendors'];
+      _vendorStats = result['data']['stats'];
 
       if (refresh) {
         _vendors = newVendors;
@@ -135,6 +142,7 @@ class AdminProvider with ChangeNotifier {
     try {
       final result = await _adminService.getAllProducts(search: search, category: category, page: _productsPage);
       final List<dynamic> newProducts = result['data']['products'];
+      _productStats = result['data']['stats'];
 
       if (refresh) {
         _products = newProducts;
@@ -169,6 +177,7 @@ class AdminProvider with ChangeNotifier {
     try {
       final result = await _adminService.getAllOrders(search: search, status: status, page: _ordersPage);
       final List<dynamic> newOrders = result['data']['orders'];
+      _orderStats = result['data']['stats'];
 
       if (refresh) {
         _orders = newOrders;

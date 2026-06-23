@@ -183,6 +183,11 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
     filter.vendorApprovalStatus = status;
   }
 
+  const totalVendors = await User.countDocuments({ role: 'vendor' });
+  const approvedVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'approved' });
+  const pendingVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'pending' });
+  const suspendedVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'suspended' });
+
   const skip = (page - 1) * limit;
   const vendors = await User.find(filter)
     .select('-password')
@@ -199,7 +204,15 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
     page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: vendors.length,
-    data: { vendors }
+    data: {
+      vendors,
+      stats: {
+        totalVendors,
+        approvedVendors,
+        pendingVendors,
+        suspendedVendors,
+      }
+    }
   });
 });
 
@@ -224,6 +237,10 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     filter.category = category;
   }
 
+  const totalProducts = await Product.countDocuments();
+  const availableProducts = await Product.countDocuments({ productStatus: 'available' });
+  const unavailableProducts = await Product.countDocuments({ productStatus: 'unavailable' });
+
   const skip = (page - 1) * limit;
   const products = await Product.find(filter)
     .populate('vendorId', 'fullName shopName')
@@ -240,7 +257,14 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: products.length,
-    data: { products }
+    data: {
+      products,
+      stats: {
+        totalProducts,
+        availableProducts,
+        unavailableProducts,
+      }
+    }
   });
 });
 
@@ -264,6 +288,11 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
     ];
   }
 
+  const totalOrders = await Order.countDocuments();
+  const pendingOrders = await Order.countDocuments({ orderStatus: 'Pending' });
+  const deliveredOrders = await Order.countDocuments({ orderStatus: 'Delivered' });
+  const cancelledOrders = await Order.countDocuments({ orderStatus: 'Cancelled' });
+
   const skip = (page - 1) * limit;
   const orders = await Order.find(filter)
     .populate('customerId', 'fullName')
@@ -281,7 +310,15 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
     page: parseInt(page, 10),
     totalPages: Math.ceil(totalCount / limit),
     results: orders.length,
-    data: { orders }
+    data: {
+      orders,
+      stats: {
+        totalOrders,
+        pendingOrders,
+        deliveredOrders,
+        cancelledOrders,
+      }
+    }
   });
 });
 
