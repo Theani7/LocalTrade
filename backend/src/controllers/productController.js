@@ -116,7 +116,7 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 // @route   POST /api/v1/products
 // @access  Private/Vendor
 exports.createProduct = catchAsync(async (req, res, next) => {
-  const { title, description, category, price, originalPrice, stock, stockQuantity } = req.body;
+  const { title, description, category, price, originalPrice, stock, stockQuantity, priceUnit, minOrder } = req.body;
   
   const priceNum = Number(price);
   if (isNaN(priceNum) || priceNum <= 0) {
@@ -139,6 +139,8 @@ exports.createProduct = catchAsync(async (req, res, next) => {
     description,
     category,
     price: Number(price),
+    priceUnit: priceUnit || 'piece',
+    minOrder: minOrder ? Number(minOrder) : 1,
     originalPrice: originalPrice ? Number(originalPrice) : null,
     stockQuantity: resolvedStock,
     vendorId: req.user.id,
@@ -198,13 +200,15 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     return next(new AppError('You are not authorized to update this product', 403));
   }
 
-  const { title, description, category, price, originalPrice, stock, stockQuantity, productStatus } = req.body;
+  const { title, description, category, price, originalPrice, stock, stockQuantity, productStatus, priceUnit, minOrder } = req.body;
   const updateData = {};
   
   if (title !== undefined) updateData.title = title;
   if (description !== undefined) updateData.description = description;
   if (category !== undefined) updateData.category = category;
   if (price !== undefined) updateData.price = Number(price);
+  if (priceUnit !== undefined) updateData.priceUnit = priceUnit;
+  if (minOrder !== undefined) updateData.minOrder = Number(minOrder);
   if (originalPrice !== undefined) updateData.originalPrice = originalPrice ? Number(originalPrice) : null;
   if (productStatus !== undefined) updateData.productStatus = productStatus;
   

@@ -34,7 +34,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   final PageController _pageController = PageController();
   bool _hasPurchased = false;
   String? _selectedSize;
-  int _quantity = 1;
+  double _quantity = 1;
 
   @override
   void initState() {
@@ -93,6 +93,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
     final double price =
         (widget.product['price'] ?? 0).toDouble();
+    final String priceUnit = widget.product['priceUnit'] ?? 'piece';
+    final String unitLabel = _unitLabel(priceUnit);
     final double? originalPrice =
         widget.product['originalPrice'] != null &&
                 widget.product['originalPrice'] > price
@@ -271,7 +273,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                 ),
                               ),
                             Text(
-                              'Rs. ${_priceFormat.format(price.toInt())}',
+                              'Rs. ${_priceFormat.format(price.toInt())}${unitLabel.isNotEmpty ? '/$unitLabel' : ''}',
                               style: AppTextStyles.price.copyWith(fontSize: 26, height: 1.1),
                             ),
                           ],
@@ -414,8 +416,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             children: [
                               GestureDetector(
                                 onTap: () {
-                                  if (_quantity > 1) {
-                                    setState(() => _quantity--);
+                                  final step = _isWeightUnit(priceUnit) ? 0.5 : 1;
+                                  final newQty = _quantity - step;
+                                  if (newQty >= step) {
+                                    setState(() => _quantity = newQty);
                                   }
                                 },
                                 behavior: HitTestBehavior.opaque,
@@ -431,16 +435,17 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               ),
                               SizedBox(
                                 width: 36,
-                                child:                                 Text(
-                                  '$_quantity',
+                                child: Text(
+                                  _quantity % 1 == 0 ? '${_quantity.toInt()}' : _quantity.toStringAsFixed(1),
                                   textAlign: TextAlign.center,
                                   style: AppTextStyles.cardTitle,
                                 ),
                               ),
                               GestureDetector(
                                 onTap: () {
+                                  final step = _isWeightUnit(priceUnit) ? 0.5 : 1;
                                   if (_quantity < stock) {
-                                    setState(() => _quantity++);
+                                    setState(() => _quantity += step);
                                   }
                                 },
                                 behavior: HitTestBehavior.opaque,
@@ -488,6 +493,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                           ? (widget.product['vendorId']['_id'] ??
                                               widget.product['vendorId'])
                                           : (widget.product['vendorId'] ?? ''),
+                                      priceUnit: widget.product['priceUnit'] ?? 'piece',
                                     );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -1011,4 +1017,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       },
     );
   }
+
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
+  }
+
+  bool _isWeightUnit(String unit) => unit == 'kg' || unit == '100g' || unit == 'liter';
 }

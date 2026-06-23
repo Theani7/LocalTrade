@@ -26,6 +26,16 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    priceUnit: {
+      type: String,
+      enum: ['piece', 'kg', '100g', 'liter', 'dozen', 'packet', 'bundle'],
+      default: 'piece',
+    },
+    minOrder: {
+      type: Number,
+      default: 1,
+      min: [0.1, 'Minimum order must be at least 0.1'],
+    },
     images: {
       type: [String],
       required: [true, 'A product must have at least one image'],

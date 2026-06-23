@@ -360,7 +360,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          '${item.quantity} x Rs. ${item.price.toStringAsFixed(0)}',
+                                          '${item.quantity.toInt()}${item.priceUnitLabel.isNotEmpty ? ' ${item.priceUnitLabel}' : ''} x Rs. ${item.price.toStringAsFixed(0)}',
                                           style: AppTextStyles.caption,
                                         ),
                                       ],

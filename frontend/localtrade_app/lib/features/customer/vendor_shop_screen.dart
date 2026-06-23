@@ -297,6 +297,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
                               double.parse(p['price'].toString()),
                               image,
                               vendorId,
+                              priceUnit: p['priceUnit'] ?? 'piece',
                             );
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

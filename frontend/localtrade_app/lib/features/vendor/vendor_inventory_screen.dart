@@ -369,7 +369,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        'Rs. ${product['price']}',
+                        'Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}',
                         style: AppTextStyles.price.copyWith(fontSize: 15),
                       ),
                       const SizedBox(height: 2),
@@ -642,4 +642,15 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
     }
   }
 
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
+  }
 }

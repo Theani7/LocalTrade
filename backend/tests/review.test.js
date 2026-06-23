@@ -13,7 +13,7 @@ describe('Reviews API', () => {
     email: 'review.customer@example.com',
     phone: '9844444444',
     password: 'password123',
-    address: 'Kathmandu',
+    address: { street: 'Street 1', city: 'Kathmandu', state: 'Bagmati', zipCode: '44600' },
     role: 'customer'
   };
 
@@ -22,7 +22,7 @@ describe('Reviews API', () => {
     email: 'review.vendor@example.com',
     phone: '9855555555',
     password: 'password123',
-    address: 'Lalitpur',
+    address: { street: 'Street 1', city: 'Lalitpur', state: 'Bagmati', zipCode: '44600' },
     role: 'vendor'
   };
 
@@ -83,7 +83,7 @@ describe('Reviews API', () => {
         vendorId: vendorUser._id,
         products: [{ product: productId, quantity: 1, price: 500 }],
         totalAmount: 500,
-        shippingAddress: 'Kathmandu',
+        shippingAddress: { fullName: 'Review Customer', phone: '9844444444', street: 'Street 1', city: 'Kathmandu', state: 'Bagmati', zipCode: '44600' },
         orderStatus: 'Delivered'
       });
       console.log('Created test order:', order._id, order.orderStatus, order.products[0].product);

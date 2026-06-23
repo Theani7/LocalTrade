@@ -13,7 +13,7 @@ describe('Orders API', () => {
     email: 'order.customer@example.com',
     phone: '9822222222',
     password: 'password123',
-    address: 'Kathmandu',
+    address: { street: 'Street 1', city: 'Kathmandu', state: 'Bagmati', zipCode: '44600' },
     role: 'customer'
   };
 
@@ -22,7 +22,7 @@ describe('Orders API', () => {
     email: 'order.vendor@example.com',
     phone: '9833333333',
     password: 'password123',
-    address: 'Lalitpur',
+    address: { street: 'Street 1', city: 'Lalitpur', state: 'Bagmati', zipCode: '44600' },
     role: 'vendor'
   };
 
@@ -66,7 +66,7 @@ describe('Orders API', () => {
       .set('Authorization', `Bearer ${customerToken}`)
       .send({
         items: [{ productId: productId, quantity: 1, vendorId: vendorId }],
-        shippingAddress: 'Kathmandu',
+        shippingAddress: { fullName: 'Order Customer', phone: '9822222222', street: 'Street 1', city: 'Kathmandu', state: 'Bagmati', zipCode: '44600' },
         phone: '9822222222'
       });
 
@@ -83,7 +83,7 @@ describe('Orders API', () => {
       .set('Authorization', `Bearer ${customerToken}`)
       .send({
         items: [{ productId: productId, quantity: 1, vendorId: vendorId }],
-        shippingAddress: 'New Road',
+        shippingAddress: { fullName: 'Order Customer', phone: '9822222222', street: 'Street 2', city: 'New Road', state: 'Bagmati', zipCode: '44600' },
         phone: '9822222222'
       });
 

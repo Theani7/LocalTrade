@@ -24,10 +24,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _originalPriceController;
 
   late TextEditingController _stockController;
+  late TextEditingController _minOrderController;
   bool _availableForPickup = true;
 
   String _selectedCategory = '';
   List<String> _categories = [];
+  String _selectedPriceUnit = 'piece';
 
   final List<dynamic> _selectedImages = [];
   final List<Uint8List?> _imageBytes = [];
@@ -57,6 +59,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     final initialStock = widget.product?['stock'] ?? 0;
     _stockController = TextEditingController(text: '$initialStock');
+    _minOrderController = TextEditingController(
+      text: widget.product?['minOrder']?.toString() ?? '1',
+    );
+    _selectedPriceUnit = widget.product?['priceUnit'] ?? 'piece';
 
     if (widget.product != null) {
       _selectedCategory = widget.product['category'] ?? '';
@@ -96,6 +102,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _priceController.dispose();
     _originalPriceController.dispose();
     _stockController.dispose();
+    _minOrderController.dispose();
     super.dispose();
   }
 
@@ -171,6 +178,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         'title': _titleController.text.trim(),
         'description': _descController.text.trim(),
         'price': _priceController.text,
+        'priceUnit': _selectedPriceUnit,
+        'minOrder': _minOrderController.text.isEmpty ? '1' : _minOrderController.text,
         'originalPrice': _originalPriceController.text.isEmpty
             ? null
             : _originalPriceController.text,
@@ -647,6 +656,45 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               style: AppTextStyles.body,
               decoration: _noBorderDecoration(hint: '0'),
               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            ),
+          ),
+          const _HairlineDivider(),
+          _buildFieldRow(
+            label: 'Price unit',
+            required: false,
+            child: DropdownButtonFormField<String>(
+              initialValue: _selectedPriceUnit,
+              isDense: true,
+              isExpanded: true,
+              style: AppTextStyles.body,
+              decoration: _noBorderDecoration(hint: 'Unit'),
+              items: const [
+                DropdownMenuItem(value: 'piece', child: Text('Per piece')),
+                DropdownMenuItem(value: 'kg', child: Text('Per kg')),
+                DropdownMenuItem(value: '100g', child: Text('Per 100g')),
+                DropdownMenuItem(value: 'liter', child: Text('Per liter')),
+                DropdownMenuItem(value: 'dozen', child: Text('Per dozen')),
+                DropdownMenuItem(value: 'packet', child: Text('Per packet')),
+                DropdownMenuItem(value: 'bundle', child: Text('Per bundle')),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _selectedPriceUnit = val);
+                  _markChanged();
+                }
+              },
+            ),
+          ),
+          const _HairlineDivider(),
+          _buildFieldRow(
+            label: 'Minimum order',
+            required: false,
+            prefix: _selectedPriceUnit == 'piece' ? '' : '',
+            child: TextFormField(
+              controller: _minOrderController,
+              keyboardType: TextInputType.number,
+              style: AppTextStyles.body,
+              decoration: _noBorderDecoration(hint: '1'),
             ),
           ),
           const _HairlineDivider(),

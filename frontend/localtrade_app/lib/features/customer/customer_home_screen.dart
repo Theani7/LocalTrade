@@ -529,6 +529,7 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
                         double.parse(p['price'].toString()),
                         image,
                         vendorId,
+                        priceUnit: p['priceUnit'] ?? 'piece',
                       );
                       if (widget.cartIconKey != null) {
                         CartFlyAnimation.show(

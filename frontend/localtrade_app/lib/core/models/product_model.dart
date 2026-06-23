@@ -4,6 +4,8 @@ class Product {
   final String description;
   final String category;
   final double price;
+  final String priceUnit;
+  final double minOrder;
   final List<String> images;
   final String vendorId;
   final String? vendorName;
@@ -20,6 +22,8 @@ class Product {
     required this.description,
     required this.category,
     required this.price,
+    this.priceUnit = 'piece',
+    this.minOrder = 1,
     required this.images,
     required this.vendorId,
     this.vendorName,
@@ -36,6 +40,25 @@ class Product {
   bool get isInactive => productStatus == 'Inactive';
 
   String get displayPrice => 'Rs. ${price.toStringAsFixed(price % 1 == 0 ? 0 : 2)}';
+
+  String get priceWithUnit {
+    final unitLabel = priceUnitLabel;
+    if (unitLabel.isEmpty) return displayPrice;
+    return '$displayPrice/$unitLabel';
+  }
+
+  String get priceUnitLabel {
+    switch (priceUnit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'packet';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
+  }
+
   String get stockLabel => isOutOfStock ? 'Out of Stock' : '$stockQuantity in stock';
   String get categoryEmoji {
     switch (category) {
@@ -73,6 +96,8 @@ class Product {
       description: json['description'] ?? '',
       category: json['category'] ?? 'Others',
       price: (json['price'] ?? 0).toDouble(),
+      priceUnit: json['priceUnit'] ?? 'piece',
+      minOrder: (json['minOrder'] ?? 1).toDouble(),
       images: List<String>.from(json['images'] ?? []),
       vendorId: vendorId,
       vendorName: vendorName,
@@ -92,6 +117,8 @@ class Product {
       'description': description,
       'category': category,
       'price': price,
+      'priceUnit': priceUnit,
+      'minOrder': minOrder,
       'images': images,
       'vendorId': vendorId,
       'vendorName': vendorName,

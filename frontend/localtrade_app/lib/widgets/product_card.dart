@@ -41,6 +41,8 @@ class ProductCard extends StatelessWidget {
     final String title = product['title'] ?? '';
     final String description = product['description'] ?? '';
     final double price = (product['price'] ?? 0).toDouble();
+    final String priceUnit = product['priceUnit'] ?? 'piece';
+    final String unitLabel = _unitLabel(priceUnit);
     final double? originalPrice = product['originalPrice'] != null &&
             product['originalPrice'] > price
         ? (product['originalPrice'] ?? 0).toDouble()
@@ -267,7 +269,7 @@ class ProductCard extends StatelessWidget {
                                 ),
                               ),
                             Text(
-                              'Rs. ${_priceFormat.format(price.toInt())}',
+                              'Rs. ${_priceFormat.format(price.toInt())}${unitLabel.isNotEmpty ? '/$unitLabel' : ''}',
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w500,
@@ -292,9 +294,19 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
-}
 
-/// Cart button with scale tap animation.
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
+  }
+}
 class _CartButton extends StatefulWidget {
   final VoidCallback onTap;
   const _CartButton({required this.onTap});

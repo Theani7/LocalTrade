@@ -1573,7 +1573,7 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('Rs. ${product['price']}', style: AppTextStyles.label),
+                              Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label),
                               const SizedBox(height: 4),
                               _buildProductStatusChip(isAvailable),
                             ],
@@ -1666,6 +1666,18 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
         ],
       ),
     );
+  }
+
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
   }
 }
 

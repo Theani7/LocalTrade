@@ -529,6 +529,11 @@ class _CartItemTileState extends State<_CartItemTile>
                       'Rs. ${_priceFormat.format((widget.item.price * widget.item.quantity).toInt())}',
                       style: AppTextStyles.cardTitle,
                     ),
+                    if (widget.item.priceUnitLabel.isNotEmpty)
+                      Text(
+                        ' (${widget.item.quantity.toInt()} ${widget.item.priceUnitLabel})',
+                        style: AppTextStyles.caption.copyWith(color: AppColors.muted),
+                      ),
                   ],
                 ),
               ],

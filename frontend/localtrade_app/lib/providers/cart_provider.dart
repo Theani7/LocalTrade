@@ -6,6 +6,7 @@ class CartItem {
   final String id;
   final String title;
   final double price;
+  final String priceUnit;
   final String imageUrl;
   final String vendorId;
   final String vendorName;
@@ -15,16 +16,30 @@ class CartItem {
     required this.id,
     required this.title,
     required this.price,
+    this.priceUnit = 'piece',
     required this.imageUrl,
     required this.vendorId,
     this.vendorName = '',
     this.quantity = 1,
   });
 
+  String get priceUnitLabel {
+    switch (priceUnit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
     'price': price,
+    'priceUnit': priceUnit,
     'imageUrl': imageUrl,
     'vendorId': vendorId,
     'vendorName': vendorName,
@@ -35,6 +50,7 @@ class CartItem {
     id: json['id'],
     title: json['title'],
     price: json['price'].toDouble(),
+    priceUnit: json['priceUnit'] ?? 'piece',
     imageUrl: json['imageUrl'],
     vendorId: json['vendorId'],
     vendorName: json['vendorName'] ?? '',
@@ -106,7 +122,7 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = ''}) {
+  void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = '', String priceUnit = 'piece'}) {
     if (_items.containsKey(productId)) {
       _items.update(
         productId,
@@ -114,6 +130,7 @@ class CartProvider with ChangeNotifier {
           id: existingItem.id,
           title: existingItem.title,
           price: existingItem.price,
+          priceUnit: existingItem.priceUnit,
           imageUrl: existingItem.imageUrl,
           vendorId: existingItem.vendorId,
           vendorName: existingItem.vendorName,
@@ -127,6 +144,7 @@ class CartProvider with ChangeNotifier {
           id: productId,
           title: title,
           price: price,
+          priceUnit: priceUnit,
           imageUrl: imageUrl,
           vendorId: vendorId,
           vendorName: vendorName,
