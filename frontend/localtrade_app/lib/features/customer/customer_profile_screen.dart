@@ -605,6 +605,17 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
                 MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
           ),
           const Divider(height: 1, indent: 52),
+          _buildSettingsTile(
+            icon: Icons.lock_outline_rounded,
+            title: 'Change password',
+            subtitle: 'Update your password',
+            iconBg: AppColors.blueLight,
+            iconColor: AppColors.blueDark,
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
+          ),
+          const Divider(height: 1, indent: 52),
           _buildAddressTile(user, hasAddress),
         ],
       ),

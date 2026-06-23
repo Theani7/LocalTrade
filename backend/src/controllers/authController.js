@@ -7,12 +7,10 @@ const { notifyAdmins } = require('../utils/notificationUtils');
 exports.register = catchAsync(async (req, res, next) => {
   const { fullName, email, phone, password, role, shopName, businessDescription, categories, openingHours, address } = req.body;
 
-  // Security: Allow registering only as customer or vendor
   if (role && !['customer', 'vendor'].includes(role)) {
     return next(new AppError('Unauthorized: Invalid role selection', 400));
   }
 
-  // Input validation
   if (!email || !email.includes('@') || !email.includes('.')) {
     return next(new AppError('Please provide a valid email address', 400));
   }
@@ -26,7 +24,6 @@ exports.register = catchAsync(async (req, res, next) => {
     return next(new AppError('Phone number must be digits only, 7 to 15 characters', 400));
   }
 
-  // Check if user already exists
   const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
   if (existingUser) {
     return next(new AppError('User with this email or phone already exists', 400));
@@ -40,7 +37,6 @@ exports.register = catchAsync(async (req, res, next) => {
     role,
   };
 
-  // Store vendor-specific fields during registration
   if (role === 'vendor') {
     if (shopName) userData.shopName = shopName;
     if (businessDescription) userData.businessDescription = businessDescription;
@@ -52,7 +48,6 @@ exports.register = catchAsync(async (req, res, next) => {
         userData.categories = [];
       }
     }
-    // Parse and store address
     if (address && typeof address === 'object') {
       userData.address = {
         fullName: address.fullName || fullName || '',
@@ -69,7 +64,6 @@ exports.register = catchAsync(async (req, res, next) => {
 
   const newUser = await User.create(userData);
 
-  // Notify Admins if a new vendor registers
   if (role === 'vendor') {
     await notifyAdmins(
       'New vendor registration',
@@ -84,30 +78,26 @@ exports.register = catchAsync(async (req, res, next) => {
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // 1) Check if email and password exist
   if (!email || !password) {
     return next(new AppError('Please provide email and password', 400));
   }
 
-  // 2) Check if user exists && password is correct
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !(await user.comparePassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  // 3) Check if user is active
   if (!user.isActive) {
     return next(new AppError('Your account has been deactivated', 401));
   }
 
-  // 4) If everything ok, send token to client
   sendToken(user, 200, res);
 });
 
 exports.getMe = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id);
-  
+
   if (!user) {
     return next(new AppError('No user found with that ID', 404));
   }
@@ -123,7 +113,7 @@ exports.getMe = catchAsync(async (req, res, next) => {
 
 exports.updateFcmToken = catchAsync(async (req, res, next) => {
   const { fcmToken } = req.body;
-  
+
   const user = await User.findByIdAndUpdate(req.user.id, { fcmToken }, {
     new: true,
     runValidators: true
@@ -133,20 +123,16 @@ exports.updateFcmToken = catchAsync(async (req, res, next) => {
     return next(new AppError('No user found with that ID', 404));
   }
 
-  res.status(200).json({ 
+  res.status(200).json({
     success: true,
-    status: 'success', 
-    message: 'FCM token updated' 
+    status: 'success',
+    message: 'FCM token updated'
   });
 });
 
-// @desc    Update user profile
-// @route   PATCH /api/v1/auth/profile
-// @access  Private
 exports.updateProfile = catchAsync(async (req, res, next) => {
   const { fullName, phone, address, shopName, businessDescription, openingHours, categories } = req.body;
-  
-  // Input validation
+
   if (fullName !== undefined && (typeof fullName !== 'string' || fullName.trim().length === 0 || fullName.length > 100)) {
     return next(new AppError('Full name must be a non-empty string under 100 characters', 400));
   }
@@ -160,8 +146,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   const updateData = {};
   if (fullName !== undefined) updateData.fullName = fullName;
   if (phone !== undefined) updateData.phone = phone;
-  
-  // Parse address if it comes as a JSON string (multipart form)
+
   if (address !== undefined && address !== null && address !== '') {
     try {
       const parsed = typeof address === 'string' ? JSON.parse(address) : address;
@@ -182,7 +167,6 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     }
   }
 
-  // Vendor-specific fields
   if (shopName !== undefined) updateData.shopName = shopName;
   if (businessDescription !== undefined) updateData.businessDescription = businessDescription;
   if (openingHours !== undefined) updateData.openingHours = openingHours;
@@ -193,7 +177,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
       updateData.categories = [];
     }
   }
-  
+
   if (req.file) {
     const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
     updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'localtrade/profiles');
@@ -216,20 +200,15 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc    Change user password
-// @route   PATCH /api/v1/auth/change-password
-// @access  Private
 exports.changePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
   if (!currentPassword || !newPassword || !confirmPassword) {
-    return next(new AppError('Please provide current password, new password, and confirm password', 400));
+    return next(new AppError('Current password, new password and confirm password are required', 400));
   }
-
   if (newPassword.length < 6) {
     return next(new AppError('New password must be at least 6 characters', 400));
   }
-
   if (newPassword !== confirmPassword) {
     return next(new AppError('New password and confirm password do not match', 400));
   }
@@ -240,9 +219,9 @@ exports.changePassword = catchAsync(async (req, res, next) => {
     return next(new AppError('No user found with that ID', 404));
   }
 
-  const isMatch = await user.comparePassword(currentPassword, user.password);
+  const isCorrect = await user.comparePassword(currentPassword, user.password);
 
-  if (!isMatch) {
+  if (!isCorrect) {
     return next(new AppError('Current password is incorrect', 401));
   }
 
