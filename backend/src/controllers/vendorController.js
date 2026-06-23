@@ -112,7 +112,6 @@ exports.updateVendorProfile = catchAsync(async (req, res, next) => {
         updateData.address = {
           fullName: parsed.fullName || '',
           phone: parsed.phone || '',
-          flatHouse: parsed.flatHouse || '',
           street: parsed.street || '',
           landmark: parsed.landmark || '',
           city: parsed.city || '',

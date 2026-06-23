@@ -1,7 +1,6 @@
 class Address {
   final String fullName;
   final String phone;
-  final String flatHouse;
   final String street;
   final String landmark;
   final String city;
@@ -11,7 +10,6 @@ class Address {
   const Address({
     required this.fullName,
     required this.phone,
-    this.flatHouse = '',
     this.street = '',
     this.landmark = '',
     required this.city,
@@ -22,7 +20,6 @@ class Address {
   /// Full address as a single display string (for order tracking / vendor view).
   String get fullAddress {
     final parts = <String>[
-      if (flatHouse.isNotEmpty) flatHouse,
       if (street.isNotEmpty) street,
       if (landmark.isNotEmpty) 'Landmark: $landmark',
       city,
@@ -35,7 +32,6 @@ class Address {
   /// Short one-line summary for compact displays (max 2 lines).
   String get shortAddress {
     final parts = <String>[
-      if (flatHouse.isNotEmpty) flatHouse,
       if (street.isNotEmpty) street,
       city,
       state,
@@ -45,7 +41,6 @@ class Address {
 
   factory Address.fromJson(dynamic json) {
     if (json is String) {
-      // Legacy orders stored as plain string
       return Address(
         fullName: '',
         phone: '',
@@ -58,7 +53,6 @@ class Address {
       return Address(
         fullName: json['fullName'] ?? '',
         phone: json['phone'] ?? '',
-        flatHouse: json['flatHouse'] ?? '',
         street: json['street'] ?? '',
         landmark: json['landmark'] ?? '',
         city: json['city'] ?? '',
@@ -72,7 +66,6 @@ class Address {
   Map<String, dynamic> toJson() => {
     'fullName': fullName,
     'phone': phone,
-    'flatHouse': flatHouse,
     'street': street,
     'landmark': landmark,
     'city': city,

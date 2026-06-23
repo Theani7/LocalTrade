@@ -665,7 +665,6 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
   String _formatAddress(dynamic raw) {
     if (raw is Map) {
       final parts = <String>[
-        if ((raw['flatHouse'] ?? '').isNotEmpty) raw['flatHouse'],
         if ((raw['street'] ?? '').isNotEmpty) raw['street'],
         if ((raw['city'] ?? '').isNotEmpty) raw['city'],
         if ((raw['state'] ?? '').isNotEmpty) raw['state'],

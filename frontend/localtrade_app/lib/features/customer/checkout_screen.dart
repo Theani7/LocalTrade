@@ -27,7 +27,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _flatController = TextEditingController();
   final _streetController = TextEditingController();
   final _landmarkController = TextEditingController();
   final _cityController = TextEditingController();
@@ -45,7 +44,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     final addr = user['address'];
     if (addr is Map && (addr['city'] ?? '').toString().isNotEmpty) {
-      _flatController.text = addr['flatHouse'] ?? '';
       _streetController.text = addr['street'] ?? '';
       _landmarkController.text = addr['landmark'] ?? '';
       _cityController.text = addr['city'] ?? '';
@@ -60,8 +58,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (user == null) return false;
     final addr = user['address'];
     if (addr is Map) {
-      return (addr['flatHouse'] ?? '').toString().isNotEmpty ||
-          (addr['street'] ?? '').toString().isNotEmpty ||
+      return (addr['street'] ?? '').toString().isNotEmpty ||
           (addr['landmark'] ?? '').toString().isNotEmpty ||
           (addr['city'] ?? '').toString().isNotEmpty ||
           (addr['state'] ?? '').toString().isNotEmpty ||
@@ -75,7 +72,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _notesController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
-    _flatController.dispose();
     _streetController.dispose();
     _landmarkController.dispose();
     _cityController.dispose();
@@ -121,7 +117,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final shippingAddress = {
       'fullName': _nameController.text.trim(),
       'phone': _phoneController.text.trim(),
-      'flatHouse': _flatController.text.trim(),
       'street': _streetController.text.trim(),
       'landmark': _landmarkController.text.trim(),
       'city': _cityController.text.trim(),
@@ -605,7 +600,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   String _formatAddress() {
     final parts = <String>[
-      if (_flatController.text.isNotEmpty) _flatController.text,
       if (_streetController.text.isNotEmpty) _streetController.text,
       if (_landmarkController.text.isNotEmpty)
         'Landmark: ${_landmarkController.text}',
@@ -644,11 +638,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.gapLg),
-          _field(
-              controller: _flatController,
-              label: 'Flat / house number',
-              icon: Icons.home_outlined),
-          const SizedBox(height: AppSpacing.gapMd),
           _field(
               controller: _streetController,
               label: 'Street / area',

@@ -58,7 +58,6 @@ exports.register = catchAsync(async (req, res, next) => {
       userData.address = {
         fullName: address.fullName || fullName || '',
         phone: address.phone || phone || '',
-        flatHouse: address.flatHouse || '',
         street: address.street || '',
         landmark: address.landmark || '',
         city: address.city || '',
@@ -160,7 +159,6 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
         updateData.address = {
           fullName: parsed.fullName || '',
           phone: parsed.phone || '',
-          flatHouse: parsed.flatHouse || '',
           street: parsed.street || '',
           landmark: parsed.landmark || '',
           city: parsed.city || '',

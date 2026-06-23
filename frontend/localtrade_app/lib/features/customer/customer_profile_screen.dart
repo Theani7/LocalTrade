@@ -72,7 +72,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
   late TextEditingController _fullNameController;
   late TextEditingController _phoneController;
 
-  late TextEditingController _flatController;
   late TextEditingController _streetController;
   late TextEditingController _landmarkController;
   late TextEditingController _cityController;
@@ -95,8 +94,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
     _phoneController = TextEditingController(text: user?['phone'] ?? '');
 
     final addr = user?['address'];
-    _flatController = TextEditingController(
-        text: addr is Map ? (addr['flatHouse'] ?? '') : '');
     _streetController =
         TextEditingController(text: addr is Map ? (addr['street'] ?? '') : '');
     _landmarkController = TextEditingController(
@@ -121,7 +118,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
   void dispose() {
     _fullNameController.dispose();
     _phoneController.dispose();
-    _flatController.dispose();
     _streetController.dispose();
     _landmarkController.dispose();
     _cityController.dispose();
@@ -175,7 +171,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
     final address = {
       'fullName': _fullNameController.text.trim(),
       'phone': _phoneController.text.trim(),
-      'flatHouse': _flatController.text.trim(),
       'street': _streetController.text.trim(),
       'landmark': _landmarkController.text.trim(),
       'city': _cityController.text.trim(),
@@ -254,8 +249,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             .toUpperCase()
         : 'U';
     final hasAddress = user?['address'] is Map &&
-        ((user!['address']['flatHouse'] ?? '').toString().isNotEmpty ||
-            (user['address']['street'] ?? '').toString().isNotEmpty ||
+        ((user!['address']['street'] ?? '').toString().isNotEmpty ||
             (user['address']['landmark'] ?? '').toString().isNotEmpty ||
             (user['address']['city'] ?? '').toString().isNotEmpty ||
             (user['address']['state'] ?? '').toString().isNotEmpty ||
@@ -695,7 +689,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
     final addr = user?['address'];
     if (addr is Map) {
       final parts = <String>[
-        if ((addr['flatHouse'] ?? '').isNotEmpty) addr['flatHouse'],
         if ((addr['street'] ?? '').isNotEmpty) addr['street'],
         if ((addr['landmark'] ?? '').isNotEmpty) addr['landmark'],
         if ((addr['city'] ?? '').isNotEmpty) addr['city'],
@@ -925,11 +918,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _field(
-                          controller: _flatController,
-                          label: 'Flat / House number',
-                          icon: Icons.home_outlined),
-                      const SizedBox(height: 12),
                       _field(
                           controller: _streetController,
                           label: 'Street / Area',

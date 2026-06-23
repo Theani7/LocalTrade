@@ -79,7 +79,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         userData['address'] = {
           'fullName': _nameController.text.trim(),
           'phone': _phoneController.text.trim(),
-          'flatHouse': '',
           'street': _streetController.text.trim(),
           'city': _cityController.text.trim(),
           'state': _stateController.text.trim(),

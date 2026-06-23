@@ -599,7 +599,6 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     if (rawAddress is Map) {
       displayName = rawAddress['fullName'] ?? '';
       final parts = <String>[
-        if ((rawAddress['flatHouse'] ?? '').isNotEmpty) rawAddress['flatHouse'],
         if ((rawAddress['street'] ?? '').isNotEmpty) rawAddress['street'],
         if ((rawAddress['landmark'] ?? '').isNotEmpty) 'Landmark: ${rawAddress['landmark']}',
         if ((rawAddress['city'] ?? '').isNotEmpty) rawAddress['city'],

@@ -38,7 +38,6 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
     String location = '';
     if (rawAddress is Map) {
       final parts = <String>[
-        if ((rawAddress['flatHouse'] ?? '').isNotEmpty) rawAddress['flatHouse'],
         if ((rawAddress['street'] ?? '').isNotEmpty) rawAddress['street'],
         if ((rawAddress['city'] ?? '').isNotEmpty) rawAddress['city'],
         if ((rawAddress['state'] ?? '').isNotEmpty) rawAddress['state'],
