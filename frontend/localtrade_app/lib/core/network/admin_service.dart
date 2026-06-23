@@ -124,17 +124,15 @@ class AdminService {
     }
   }
 
-  Future<Map<String, dynamic>> deleteProduct(String productId) async {
+  Future<void> deleteProduct(String productId) async {
     final token = await _authService.getToken();
     final response = await _apiService.delete(
       '/admin/products/$productId',
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
-    if (response.statusCode == 200) {
-      return data;
-    } else {
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      final data = json.decode(response.body);
       throw Exception(data['message'] ?? 'Failed to delete product');
     }
   }
