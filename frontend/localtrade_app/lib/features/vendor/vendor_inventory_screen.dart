@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/vendor_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -567,6 +568,9 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
               final provider = Provider.of<ProductProvider>(context, listen: false);
               Navigator.pop(context);
               final success = await provider.deleteProduct(product['_id']);
+              if (success && mounted) {
+                Provider.of<VendorProvider>(context, listen: false).fetchAnalytics();
+              }
               if (mounted) {
                 messenger.showSnackBar(
                   SnackBar(

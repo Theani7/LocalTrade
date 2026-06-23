@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/vendor_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -618,6 +619,11 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     setState(() => _updatingOrderId = null);
 
     if (success) {
+      // Refresh dashboard stats after any order status change
+      if (mounted) {
+        Provider.of<VendorProvider>(context, listen: false).fetchAnalytics();
+      }
+
       String label;
       switch (status) {
         case 'Confirmed':

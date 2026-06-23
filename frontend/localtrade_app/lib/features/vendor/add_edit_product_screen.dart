@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import '../../providers/product_provider.dart';
+import '../../providers/vendor_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -203,6 +204,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
       if (success && mounted) {
         setState(() => _hasChanges = false);
+        // Refresh dashboard stats (product count, etc.)
+        Provider.of<VendorProvider>(context, listen: false).fetchAnalytics();
         final messenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
         messenger.showSnackBar(
