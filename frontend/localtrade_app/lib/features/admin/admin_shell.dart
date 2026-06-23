@@ -16,11 +16,9 @@ class AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
   final _dashboardKey = GlobalKey<AdminDashboardState>();
 
-  void _switchDashboardTab(int topTabIndex) {
+  void _switchDashboardTab(int topTabIndex, int navIndex) {
     _dashboardKey.currentState?.switchTab(topTabIndex);
-    if (_selectedIndex != 0) {
-      setState(() => _selectedIndex = 0);
-    }
+    setState(() => _selectedIndex = navIndex);
   }
 
   @override
@@ -30,7 +28,14 @@ class AdminShellState extends State<AdminShell> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          AdminDashboard(key: _dashboardKey),
+          AdminDashboard(
+            key: _dashboardKey,
+            onTabChanged: (tabIndex) {
+              if (_selectedIndex != tabIndex) {
+                setState(() => _selectedIndex = tabIndex);
+              }
+            },
+          ),
           const AdminProfileScreen(),
         ],
       ),
@@ -42,7 +47,7 @@ class AdminShellState extends State<AdminShell> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider, width: 0.5)),
+        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: SafeArea(
         child: Column(
@@ -51,32 +56,44 @@ class AdminShellState extends State<AdminShell> {
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildNavItem(
                     index: 0,
-                    outlineIcon: Icons.dashboard_outlined,
-                    filledIcon: Icons.dashboard_rounded,
-                    label: 'Dashboard',
+                    icon: Icons.analytics_outlined,
+                    label: 'Analytics',
+                    dashboardTab: 0,
                   ),
                   _buildNavItem(
                     index: 1,
-                    outlineIcon: Icons.storefront_outlined,
-                    filledIcon: Icons.storefront_rounded,
-                    label: 'Vendors',
-                    showBadge: true,
+                    icon: Icons.people_outlined,
+                    label: 'Users',
+                    dashboardTab: 1,
                   ),
                   _buildNavItem(
                     index: 2,
-                    outlineIcon: Icons.receipt_outlined,
-                    filledIcon: Icons.receipt_rounded,
-                    label: 'Orders',
+                    icon: Icons.storefront_outlined,
+                    label: 'Vendors',
+                    dashboardTab: 2,
+                    showBadge: true,
                   ),
                   _buildNavItem(
                     index: 3,
-                    outlineIcon: Icons.person_outline_rounded,
-                    filledIcon: Icons.person_rounded,
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Products',
+                    dashboardTab: 3,
+                  ),
+                  _buildNavItem(
+                    index: 4,
+                    icon: Icons.receipt_outlined,
+                    label: 'Orders',
+                    dashboardTab: 4,
+                  ),
+                  _buildNavItem(
+                    index: 5,
+                    icon: Icons.person_outline_rounded,
                     label: 'Profile',
+                    dashboardTab: -1,
                   ),
                 ],
               ),
@@ -100,89 +117,82 @@ class AdminShellState extends State<AdminShell> {
 
   Widget _buildNavItem({
     required int index,
-    required IconData outlineIcon,
-    required IconData filledIcon,
+    required IconData icon,
     required String label,
+    required int dashboardTab,
     bool showBadge = false,
   }) {
     final isActive = _selectedIndex == index;
 
     return GestureDetector(
       onTap: () {
-        if (index == 0) {
-          _switchDashboardTab(0);
-        } else if (index == 1) {
-          _switchDashboardTab(2);
-        } else if (index == 2) {
-          _switchDashboardTab(4);
+        if (dashboardTab >= 0) {
+          _switchDashboardTab(dashboardTab, index);
         } else {
-          setState(() => _selectedIndex = index);
+          setState(() => _selectedIndex = 1);
         }
       },
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 64,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  isActive ? filledIcon : outlineIcon,
-                  size: 22,
-                  color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
-                ),
-                if (showBadge)
-                  Consumer<AdminProvider>(
-                    builder: (_, admin, __) {
-                      final pendingCount = admin.vendors
-                          .where((v) => v['vendorApprovalStatus'] == 'pending')
-                          .length;
-                      if (pendingCount == 0) return const SizedBox.shrink();
-                      return Positioned(
-                        right: -6,
-                        top: -4,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppColors.coral,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            '$pendingCount',
-                            style: const TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.ink,
-                            ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+              ),
+              if (showBadge)
+                Consumer<AdminProvider>(
+                  builder: (_, admin, __) {
+                    final pendingCount = admin.vendors
+                        .where((v) => v['vendorApprovalStatus'] == 'pending')
+                        .length;
+                    if (pendingCount == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      right: -6,
+                      top: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppColors.coral,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$pendingCount',
+                          style: const TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink,
                           ),
                         ),
-                      );
-                    },
-                  ),
-              ],
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              color: isActive ? AppColors.coralDark : AppColors.muted,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                color: isActive ? AppColors.coralDark : AppColors.muted,
-              ),
+          ),
+          const SizedBox(height: 2),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.coralDark : Colors.transparent,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 4),
-            Container(
-              width: 4,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isActive ? AppColors.coralDark : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

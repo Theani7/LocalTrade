@@ -15,7 +15,9 @@ import '../customer/notification_screen.dart';
 import '../auth/login_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
-  const AdminDashboard({super.key});
+  final void Function(int tabIndex)? onTabChanged;
+
+  const AdminDashboard({super.key, this.onTabChanged});
 
   @override
   State<AdminDashboard> createState() => AdminDashboardState();
@@ -28,6 +30,11 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        widget.onTabChanged?.call(_tabController.index);
+      }
+    });
     Future.microtask(() => _refreshData());
   }
 
@@ -62,7 +69,6 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
         child: Column(
           children: [
             _buildHeader(),
-            _buildTopTabBar(),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -149,34 +155,6 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
               child: const Icon(Icons.logout_rounded, size: 18, color: AppColors.ink),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopTabBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider, width: 0.5)),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        labelColor: AppColors.coralDark,
-        unselectedLabelColor: AppColors.muted,
-        indicatorColor: AppColors.coralDark,
-        indicatorWeight: 2,
-        indicatorSize: TabBarIndicatorSize.label,
-        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-        dividerHeight: 0,
-        tabs: const [
-          Tab(text: 'Analytics'),
-          Tab(text: 'Users'),
-          Tab(text: 'Vendors'),
-          Tab(text: 'Products'),
-          Tab(text: 'Orders'),
         ],
       ),
     );
@@ -374,7 +352,7 @@ class AdminAnalyticsTab extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  childAspectRatio: 1.4,
+                  childAspectRatio: 1.15,
                   children: [
                     StatCard(icon: Icons.people_rounded, value: '${stats['totalUsers'] ?? 0}', label: 'Users', tintColor: AppColors.blueLight, iconColor: AppColors.blueDark),
                     StatCard(icon: Icons.storefront_rounded, value: '${stats['totalVendors'] ?? 0}', label: 'Vendors', tintColor: AppColors.coralLight, iconColor: AppColors.coralDark),
@@ -1331,7 +1309,7 @@ class _AdminAnalyticsSkeleton extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 1.4,
+          childAspectRatio: 1.15,
           children: List.generate(4, (_) => const StatCardSkeleton()),
         ),
       ],
