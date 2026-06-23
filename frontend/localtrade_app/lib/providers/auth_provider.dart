@@ -96,6 +96,20 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _authService.changePassword(currentPassword, newPassword, confirmPassword);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     _user = null;
     await _authService.logout();

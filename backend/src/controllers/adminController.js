@@ -238,8 +238,8 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   }
 
   const totalProducts = await Product.countDocuments();
-  const availableProducts = await Product.countDocuments({ productStatus: 'available' });
-  const unavailableProducts = await Product.countDocuments({ productStatus: 'unavailable' });
+  const availableProducts = await Product.countDocuments({ productStatus: 'Available' });
+  const unavailableProducts = await Product.countDocuments({ productStatus: { $in: ['OutOfStock', 'Inactive'] } });
 
   const skip = (page - 1) * limit;
   const products = await Product.find(filter)
@@ -265,6 +265,24 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
         unavailableProducts,
       }
     }
+  });
+});
+
+// @desc    Get single product details
+// @route   GET /api/v1/admin/products/:id
+// @access  Private/Admin
+exports.getProduct = catchAsync(async (req, res, next) => {
+  const product = await Product.findById(req.params.id)
+    .populate('vendorId', 'fullName email phone shopName businessDescription categories address');
+
+  if (!product) {
+    return next(new AppError('No product found with that ID', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    data: { product }
   });
 });
 
@@ -342,14 +360,14 @@ exports.updateVendorStatus = catchAsync(async (req, res, next) => {
   await user.save();
 
   // Notify Vendor of the status change
-  let title = 'Account Status Updated';
+  let title = 'Account status updated';
   let message = `Your vendor account status has been updated to ${status}.`;
   
   if (status === 'approved') {
-    title = 'Vendor Account Approved!';
-    message = 'Congratulations! Your vendor account has been approved. You can now start listing products.';
+    title = 'Vendor account approved';
+    message = 'Your vendor account has been approved. You can now start listing products.';
   } else if (status === 'suspended') {
-    title = 'Account Suspended';
+    title = 'Vendor account suspended';
     message = 'Your vendor account has been suspended. Please contact support for more details.';
   }
 
@@ -386,7 +404,9 @@ exports.toggleUserStatus = catchAsync(async (req, res, next) => {
   await sendNotification(
     user._id,
     `Your account has been ${user.isActive ? 'activated' : 'deactivated'}`,
-    `If you have questions, please contact support.`,
+    user.isActive
+      ? 'Your account is now active. You can sign in and use LocalTrade.'
+      : 'Your account has been deactivated. Please contact support if you have questions.',
     null,
     'Account'
   );

@@ -15,6 +15,7 @@ import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
 import 'help_support_screen.dart';
 import 'privacy_policy_screen.dart';
+import '../common/change_password_screen.dart';
 
 String _toTitleCase(String text) {
   if (text.isEmpty) return text;
@@ -591,6 +592,17 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.coralDark,
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const NotificationScreen())),
+          ),
+          const Divider(height: 1, indent: 52),
+          _buildSettingsTile(
+            icon: Icons.lock_outline_rounded,
+            title: 'Change password',
+            subtitle: 'Update your password',
+            iconBg: AppColors.blueLight,
+            iconColor: AppColors.blueDark,
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildAddressTile(user, hasAddress),

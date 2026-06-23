@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../auth/login_screen.dart';
+import '../common/change_password_screen.dart';
 
 class VendorProfileScreen extends StatefulWidget {
   const VendorProfileScreen({super.key});
@@ -374,6 +375,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                   ]),
                   const SizedBox(height: 16),
                   _buildInfoBanner(),
+                  const SizedBox(height: 16),
+                  _buildChangePasswordSection(),
                   const SizedBox(height: 16),
                   _buildLogoutSection(),
                   const SizedBox(height: 80),
@@ -1189,6 +1192,69 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                 )),
             const SizedBox(height: 8),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Change password section
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildChangePasswordSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.blueLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.lock_outline_rounded, size: 20, color: AppColors.blueDark),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Change password', style: AppTextStyles.cardTitle),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Update your password',
+                        style: AppTextStyles.caption,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.muted),
+              ],
+            ),
+          ),
         ),
       ),
     );

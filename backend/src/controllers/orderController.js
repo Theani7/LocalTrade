@@ -112,8 +112,8 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     // 4) Send notification to vendor
     await sendNotification(
       order.vendorId,
-      'New Order Received!',
-      `You have a new order (#${order._id.toString().substring(18)}) for Rs. ${totalAmount}`,
+      'New order received',
+      `Order #${order._id.toString().substring(18)} for Rs. ${totalAmount}. Please review and confirm.`,
       { orderId: order._id.toString(), type: 'new_order' },
       'Order'
     );
@@ -299,8 +299,8 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   // Send notification to customer
   await sendNotification(
     order.customerId,
-    'Order Status Updated',
-    `Your order (#${order._id.toString().substring(18)}) is now ${status}.`,
+    'Order ${status.toLowerCase()}',
+    `Your order #${order._id.toString().substring(18)} is now ${status.toLowerCase()}.`,
     { orderId: order._id.toString(), type: 'order_update' },
     'Order'
   );
@@ -360,8 +360,8 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   // Send notification to vendor
   await sendNotification(
     order.vendorId,
-    'Order Cancelled',
-    `Order (#${order._id.toString().substring(18)}) was cancelled by the customer.`,
+    'Order cancelled by customer',
+    `Order #${order._id.toString().substring(18)} was cancelled. Stock has been restored.`,
     { orderId: order._id.toString(), type: 'order_cancelled' },
     'Order'
   );

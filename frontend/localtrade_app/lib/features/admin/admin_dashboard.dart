@@ -12,6 +12,7 @@ import '../../widgets/stat_card.dart';
 import '../../widgets/skeleton_loaders.dart';
 import '../../widgets/status_badge.dart';
 import '../customer/notification_screen.dart';
+import 'admin_product_detail_screen.dart';
 
 class AdminStatTile extends StatelessWidget {
   final IconData icon;
@@ -831,10 +832,10 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
+                        ],
+                      ),
+                    );
+                  },
                   ),
                 ),
               ),
@@ -1504,7 +1505,12 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                     final isAvailable = (product['stockQuantity'] ?? 0) > 0 && product['productStatus'] != 'unavailable';
                     final isDeleting = _deletingProductId == product['_id'];
 
-                    return Container(
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => AdminProductDetailScreen(productId: product['_id'])),
+                      ),
+                      child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       child: Row(
                         children: [
@@ -1564,10 +1570,11 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                               ),
                               child: isDeleting
                                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
-                                  : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                                   : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
                             ),
                           ),
                         ],
+                      ),
                       ),
                     );
                   },

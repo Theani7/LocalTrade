@@ -72,7 +72,7 @@ exports.register = catchAsync(async (req, res, next) => {
   // Notify Admins if a new vendor registers
   if (role === 'vendor') {
     await notifyAdmins(
-      'New Vendor Registration',
+      'New vendor registration',
       `${fullName} (${shopName || 'No shop name'}) has registered as a vendor and is awaiting approval.`,
       { userId: newUser._id.toString(), type: 'vendor_approval' }
     );
@@ -213,5 +213,45 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     data: { user },
+  });
+});
+
+// @desc    Change user password
+// @route   PATCH /api/v1/auth/change-password
+// @access  Private
+exports.changePassword = catchAsync(async (req, res, next) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return next(new AppError('Please provide current password, new password, and confirm password', 400));
+  }
+
+  if (newPassword.length < 6) {
+    return next(new AppError('New password must be at least 6 characters', 400));
+  }
+
+  if (newPassword !== confirmPassword) {
+    return next(new AppError('New password and confirm password do not match', 400));
+  }
+
+  const user = await User.findById(req.user.id).select('+password');
+
+  if (!user) {
+    return next(new AppError('No user found with that ID', 404));
+  }
+
+  const isMatch = await user.comparePassword(currentPassword, user.password);
+
+  if (!isMatch) {
+    return next(new AppError('Current password is incorrect', 401));
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    message: 'Password changed successfully',
   });
 });

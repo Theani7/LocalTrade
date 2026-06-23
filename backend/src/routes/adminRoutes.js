@@ -13,6 +13,7 @@ router.get('/analytics/export', adminController.exportAnalytics);
 router.get('/users', adminController.getAllUsers);
 router.get('/vendors', adminController.getAllVendors);
 router.get('/products', adminController.getAllProducts);
+router.get('/products/:id', adminController.getProduct);
 router.get('/orders', adminController.getAllOrders);
 router.patch('/vendors/:id/status', adminController.updateVendorStatus);
 router.patch('/users/:id/toggle-status', adminController.toggleUserStatus);

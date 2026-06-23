@@ -164,8 +164,8 @@ exports.createProduct = catchAsync(async (req, res, next) => {
       const notificationPromises = customers.map(customer =>
         sendNotification(
           customer._id,
-          'New item listed!',
-          `${shopName} just listed "${title}" in ${category || 'Local Goods'} — grab this offer before it runs out!`,
+          'New product listed',
+          `${shopName} added "${title}" in ${category || 'Local Goods'}.`,
           { productId: product._id.toString(), type: 'new_product' },
           'Promotional'
         )

@@ -98,6 +98,26 @@ class AuthService {
     return await _storage.read(key: AppConstants.tokenKey);
   }
 
+  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
+    final response = await _apiService.patch('/auth/change-password', body: {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+      'confirmPassword': confirmPassword,
+    });
+
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to change password');
+    }
+  }
+
   Future<void> logout() async {
     await _storage.delete(key: AppConstants.tokenKey);
     final prefs = await SharedPreferences.getInstance();
