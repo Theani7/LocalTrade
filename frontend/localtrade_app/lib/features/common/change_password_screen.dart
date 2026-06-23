@@ -6,26 +6,31 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 
 class ChangePasswordScreen extends StatelessWidget {
-  const ChangePasswordScreen({super.key});
+  final bool forceMode;
+  const ChangePasswordScreen({super.key, this.forceMode = false});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Change password', style: AppTextStyles.screenTitle),
+    return PopScope(
+      canPop: !forceMode,
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-        centerTitle: true,
+        appBar: forceMode ? null : AppBar(
+          title: Text('Change password', style: AppTextStyles.screenTitle),
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.ink,
+          elevation: 0,
+          centerTitle: true,
+        ),
+        body: ChangePasswordBody(forceMode: forceMode),
       ),
-      body: const ChangePasswordBody(),
     );
   }
 }
 
 class ChangePasswordBody extends StatefulWidget {
-  const ChangePasswordBody({super.key});
+  final bool forceMode;
+  const ChangePasswordBody({super.key, this.forceMode = false});
 
   @override
   State<ChangePasswordBody> createState() => _ChangePasswordBodyState();
@@ -51,11 +56,19 @@ class _ChangePasswordBodyState extends State<ChangePasswordBody> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final provider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await provider.changePassword(
-      _currentPasswordController.text.trim(),
-      _newPasswordController.text.trim(),
-      _confirmPasswordController.text.trim(),
-    );
+    bool success;
+    if (widget.forceMode) {
+      success = await provider.forceChangePassword(
+        _newPasswordController.text.trim(),
+        _confirmPasswordController.text.trim(),
+      );
+    } else {
+      success = await provider.changePassword(
+        _currentPasswordController.text.trim(),
+        _newPasswordController.text.trim(),
+        _confirmPasswordController.text.trim(),
+      );
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -85,10 +98,17 @@ class _ChangePasswordBodyState extends State<ChangePasswordBody> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            Text('Change your password', style: AppTextStyles.sectionHeading),
+            Text(
+              widget.forceMode ? 'Set a new password' : 'Change your password',
+              style: AppTextStyles.sectionHeading,
+            ),
             const SizedBox(height: 4),
-            Text('This action updates your login credentials',
-                style: AppTextStyles.bodyMuted),
+            Text(
+              widget.forceMode
+                  ? 'For security, you must set a new password before continuing'
+                  : 'This action updates your login credentials',
+              style: AppTextStyles.bodyMuted,
+            ),
             const SizedBox(height: 22),
             Container(
               width: double.infinity,
@@ -101,15 +121,20 @@ class _ChangePasswordBodyState extends State<ChangePasswordBody> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Set a new password', style: AppTextStyles.cardTitle),
+                  Text(
+                    widget.forceMode ? 'Create a new password' : 'Set a new password',
+                    style: AppTextStyles.cardTitle,
+                  ),
                   const SizedBox(height: 4),
                   Text('Choose a strong password for your account',
                       style: AppTextStyles.caption),
                   const SizedBox(height: 20),
-                  _buildPasswordField('Current password', _currentPasswordController, _obscureCurrent, () {
-                    setState(() => _obscureCurrent = !_obscureCurrent);
-                  }, null),
-                  const SizedBox(height: 12),
+                  if (!widget.forceMode) ...[
+                    _buildPasswordField('Current password', _currentPasswordController, _obscureCurrent, () {
+                      setState(() => _obscureCurrent = !_obscureCurrent);
+                    }, null),
+                    const SizedBox(height: 12),
+                  ],
                   _buildPasswordField('New password', _newPasswordController, _obscureNew, () {
                     setState(() => _obscureNew = !_obscureNew);
                   }, (value) {

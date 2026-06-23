@@ -123,4 +123,23 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.userKey);
   }
+
+  Future<Map<String, dynamic>> forceChangePassword(String newPassword, String confirmPassword) async {
+    final response = await _apiService.patch('/auth/force-change-password', body: {
+      'newPassword': newPassword,
+      'confirmPassword': confirmPassword,
+    });
+
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to change password');
+    }
+  }
 }

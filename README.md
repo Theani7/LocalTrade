@@ -269,9 +269,9 @@ The app follows a consistent design language defined in `DESIGN_LANGUAGE.md`:
 
 ## Default Credentials
 
-**Admin:**
-- Email: `admin@gmail.com`
-- Password: `admin123`
+Admin credentials are configured via environment variables (`ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`). See `.env.example` for the required format.
+
+On first login, the admin **must change their password** — the account is locked until a new password is set.
 
 ## License
 

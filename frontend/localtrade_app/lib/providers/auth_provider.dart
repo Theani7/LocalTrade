@@ -15,6 +15,7 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _user != null;
+  bool get mustChangePassword => _user?['mustChangePassword'] == true;
 
   /// Completes when initial prefs load is done.
   late final Future<void> ready = _init();
@@ -101,6 +102,25 @@ class AuthProvider with ChangeNotifier {
     _error = null;
     try {
       await _authService.changePassword(currentPassword, newPassword, confirmPassword);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> forceChangePassword(String newPassword, String confirmPassword) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _authService.forceChangePassword(newPassword, confirmPassword);
+      // Update local user state to clear the flag
+      if (_user != null) {
+        _user!['mustChangePassword'] = false;
+        await _saveUserToPrefs(_user!);
+      }
       _setLoading(false);
       return true;
     } catch (e) {

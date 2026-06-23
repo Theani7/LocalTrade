@@ -87,7 +87,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Please provide email and password', 400));
   }
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password +mustChangePassword');
 
   if (!user || !(await user.comparePassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
@@ -97,7 +97,22 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Your account has been deactivated', 401));
   }
 
-  sendToken(user, 200, res);
+  // Include mustChangePassword in the response so frontend can force password reset
+  const userObj = user.toObject();
+  delete userObj.password;
+  if (user.mustChangePassword) {
+    userObj.mustChangePassword = true;
+  }
+
+  const { signToken } = require('../utils/authUtils');
+  const token = signToken(user._id);
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    token,
+    data: { user: userObj },
+  });
 });
 
 exports.getMe = catchAsync(async (req, res, next) => {
@@ -236,5 +251,40 @@ exports.changePassword = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     message: 'Password changed successfully',
+  });
+});
+
+// Force change password for users with mustChangePassword flag (no current password required)
+exports.forceChangePassword = catchAsync(async (req, res, next) => {
+  const { newPassword, confirmPassword } = req.body;
+
+  if (!newPassword || !confirmPassword) {
+    return next(new AppError('New password and confirm password are required', 400));
+  }
+  if (newPassword.length < 6) {
+    return next(new AppError('New password must be at least 6 characters', 400));
+  }
+  if (newPassword !== confirmPassword) {
+    return next(new AppError('New password and confirm password do not match', 400));
+  }
+
+  const user = await User.findById(req.user.id).select('+password +mustChangePassword');
+
+  if (!user) {
+    return next(new AppError('No user found with that ID', 404));
+  }
+
+  if (!user.mustChangePassword) {
+    return next(new AppError('Password change is not required for this account', 400));
+  }
+
+  user.password = newPassword;
+  user.mustChangePassword = false;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    message: 'Password updated successfully. You can now use your new password.',
   });
 });

@@ -11,6 +11,7 @@ import '../admin/admin_shell.dart';
 import '../vendor/vendor_dashboard.dart';
 import '../vendor/vendor_pending_screen.dart';
 import '../customer/customer_shell.dart';
+import '../common/change_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,6 +42,17 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
+        // Force password change if flagged
+        if (authProvider.mustChangePassword) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ChangePasswordScreen(forceMode: true),
+            ),
+          );
+          return;
+        }
+
         final role = authProvider.user?['role'];
         final status = authProvider.user?['vendorApprovalStatus'];
         debugPrint('Login success: role=$role, status=$status');
