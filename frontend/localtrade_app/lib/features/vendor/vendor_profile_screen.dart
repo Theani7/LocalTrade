@@ -8,8 +8,8 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../auth/login_screen.dart';
 import '../common/change_password_screen.dart';
+import '../common/logout_dialog.dart';
 
 class VendorProfileScreen extends StatefulWidget {
   const VendorProfileScreen({super.key});
@@ -1321,40 +1321,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Logout', style: AppTextStyles.sectionHeading),
-        content: Text(
-          'Are you sure you want to log out?',
-          style: AppTextStyles.bodyMuted,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTextStyles.bodyMuted),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.coral,
-              minimumSize: const Size(100, 40),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-            child: Text('Logout', style: AppTextStyles.buttonPrimary),
-          ),
-        ],
-      ),
-    );
+    LogoutDialog.show(context);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

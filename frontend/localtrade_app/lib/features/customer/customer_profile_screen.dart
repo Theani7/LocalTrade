@@ -10,12 +10,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../widgets/app_button.dart';
-import 'customer_home_screen.dart';
 import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
 import 'help_support_screen.dart';
 import 'privacy_policy_screen.dart';
 import '../common/change_password_screen.dart';
+import '../common/logout_dialog.dart';
 
 String _toTitleCase(String text) {
   if (text.isEmpty) return text;
@@ -813,7 +813,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
         subtitle: 'Sign out of your account',
         iconBg: AppColors.mutedLight,
         iconColor: AppColors.muted,
-        onTap: () => _showLogoutDialog(context),
+        onTap: () => LogoutDialog.show(context),
       ),
     );
   }
@@ -1050,43 +1050,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
       validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Logout',
-            style: AppTextStyles.sectionHeading),
-        content: Text('Are you sure you want to log out?',
-            style: AppTextStyles.bodyMuted),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                Text('Cancel', style: AppTextStyles.bodyMuted),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.coral,
-              minimumSize: const Size(100, 40),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CustomerHomeScreen()),
-                  (route) => false);
-            },
-            child: Text('Logout',
-                style: AppTextStyles.buttonPrimary),
-          ),
-        ],
-      ),
     );
   }
 }

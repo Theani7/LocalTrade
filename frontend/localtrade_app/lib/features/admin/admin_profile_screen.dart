@@ -5,7 +5,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../providers/auth_provider.dart';
 import '../common/change_password_screen.dart';
-import '../auth/login_screen.dart';
+import '../common/logout_dialog.dart';
 
 class AdminProfileScreen extends StatelessWidget {
   const AdminProfileScreen({super.key});
@@ -124,7 +124,7 @@ class AdminProfileScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GestureDetector(
-                onTap: () => _showLogoutDialog(context),
+                onTap: () => LogoutDialog.show(context),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
@@ -211,36 +211,6 @@ class AdminProfileScreen extends StatelessWidget {
             const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.muted),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: Text('Logout', style: AppTextStyles.sectionHeading),
-        content: Text('Are you sure you want to log out?', style: AppTextStyles.bodyMuted),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTextStyles.bodyMuted),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.mutedLight,
-              foregroundColor: AppColors.ink,
-              minimumSize: const Size(100, 40),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
-            ),
-            onPressed: () {
-              Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
-            },
-            child: const Text('Logout'),
-          ),
-        ],
       ),
     );
   }

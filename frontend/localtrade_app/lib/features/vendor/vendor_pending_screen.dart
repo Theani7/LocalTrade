@@ -4,7 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../auth/login_screen.dart';
+import '../common/logout_dialog.dart';
 
 class VendorPendingScreen extends StatelessWidget {
   const VendorPendingScreen({super.key});
@@ -23,7 +23,7 @@ class VendorPendingScreen extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => _handleLogout(context),
+            onPressed: () => LogoutDialog.show(context),
             icon: const Icon(Icons.logout_rounded, size: 22),
           ),
         ],
@@ -73,7 +73,7 @@ class VendorPendingScreen extends StatelessWidget {
                 width: 200,
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: () => _handleLogout(context),
+                  onPressed: () => LogoutDialog.show(context),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.muted,
                     side: const BorderSide(color: AppColors.divider),
@@ -86,15 +86,6 @@ class VendorPendingScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _handleLogout(BuildContext context) {
-    Provider.of<AuthProvider>(context, listen: false).logout();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
     );
   }
 }
