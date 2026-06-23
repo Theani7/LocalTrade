@@ -49,7 +49,7 @@ class AdminProfileScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+          boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
               ),
               child: Row(
                 children: [
@@ -90,7 +90,7 @@ class AdminProfileScreen extends StatelessWidget {
                     ),
                     child: const Text(
                       'Super admin',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.blueDark),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.blueDark),
                     ),
                   ),
                 ],

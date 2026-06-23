@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../widgets/app_button.dart';
@@ -330,7 +331,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: AppColors.ink.withValues(alpha: 0.05),
               blurRadius: 12,
               offset: const Offset(0, 2)),
         ],
@@ -420,10 +421,10 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
                     color: AppColors.blueLight,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(
-                    role[0].toUpperCase() + role.substring(1),
-                    style: AppTextStyles.label.copyWith(color: AppColors.blueDark, fontSize: 11),
-                  ),
+                   child: Text(
+                     role[0].toUpperCase() + role.substring(1),
+                     style: AppTextStyles.label.copyWith(color: AppColors.blueDark),
+                   ),
                 ),
               ],
             ),
@@ -504,16 +505,16 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2)),
-          ],
-        ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: [
+          BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2)),
+        ],
+      ),
         child: Column(
           children: [
             Container(
@@ -528,7 +529,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
                 style: AppTextStyles.price.copyWith(fontSize: 18)),
             const SizedBox(height: 2),
             Text(label,
-                style: AppTextStyles.caption.copyWith(fontSize: 11),
+                style: AppTextStyles.caption,
                 textAlign: TextAlign.center),
           ],
         ),
@@ -553,11 +554,11 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
+              color: AppColors.ink.withValues(alpha: 0.05),
+              blurRadius: 10,
               offset: const Offset(0, 2)),
         ],
       ),
@@ -592,17 +593,6 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.coralDark,
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const NotificationScreen())),
-          ),
-          const Divider(height: 1, indent: 52),
-          _buildSettingsTile(
-            icon: Icons.lock_outline_rounded,
-            title: 'Change password',
-            subtitle: 'Update your password',
-            iconBg: AppColors.blueLight,
-            iconColor: AppColors.blueDark,
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildSettingsTile(
@@ -756,11 +746,11 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
+              color: AppColors.ink.withValues(alpha: 0.05),
+              blurRadius: 10,
               offset: const Offset(0, 2)),
         ],
       ),
@@ -799,11 +789,11 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
+              color: AppColors.ink.withValues(alpha: 0.05),
+              blurRadius: 10,
               offset: const Offset(0, 2)),
         ],
       ),
@@ -869,18 +859,18 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
                                 backgroundColor: AppColors.coral,
                                 disabledBackgroundColor:
                                     AppColors.coral.withValues(alpha: 0.5),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
-                                elevation: 0,
-                              ),
-                              child: provider.isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                          color: AppColors.ink, strokeWidth: 2))
-                                   : Text('Save',
-                                       style: AppTextStyles.buttonPrimary),
+                                 shape: RoundedRectangleBorder(
+                                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+                                 elevation: 0,
+                               ),
+                               child: provider.isLoading
+                                   ? const SizedBox(
+                                       height: 20,
+                                       width: 20,
+                                       child: CircularProgressIndicator(
+                                           color: AppColors.ink, strokeWidth: 2))
+                                    : Text('Save',
+                                        style: AppTextStyles.buttonPrimary),
                             ),
                           );
                         },
@@ -972,18 +962,18 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
                                 backgroundColor: AppColors.coral,
                                 disabledBackgroundColor:
                                     AppColors.coral.withValues(alpha: 0.5),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
-                                elevation: 0,
-                              ),
-                              child: provider.isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                          color: AppColors.ink, strokeWidth: 2))
-                                   : Text('Save Address',
-                                       style: AppTextStyles.buttonPrimary),
+                                 shape: RoundedRectangleBorder(
+                                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+                                 elevation: 0,
+                               ),
+                               child: provider.isLoading
+                                   ? const SizedBox(
+                                       height: 20,
+                                       width: 20,
+                                       child: CircularProgressIndicator(
+                                           color: AppColors.ink, strokeWidth: 2))
+                                    : Text('Save Address',
+                                        style: AppTextStyles.buttonPrimary),
                             ),
                           );
                         },
@@ -1003,11 +993,11 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
+              color: AppColors.ink.withValues(alpha: 0.05),
+              blurRadius: 10,
               offset: const Offset(0, 2)),
         ],
       ),

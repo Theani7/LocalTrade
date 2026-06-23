@@ -443,7 +443,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
             color: AppColors.ink.withValues(alpha: 0.05),
@@ -1207,7 +1207,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.04),
+            color: AppColors.ink.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -1270,7 +1270,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.04),
+            color: AppColors.ink.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -1384,10 +1384,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                       width: 20,
                       child: CircularProgressIndicator(
                           color: AppColors.ink, strokeWidth: 2))
-                  : Text(
-                      'Save changes',
-                      style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
-                    ),
+                   : Text(
+                       'Save changes',
+                       style: AppTextStyles.buttonPrimary,
+                     ),
             ),
           ),
         );

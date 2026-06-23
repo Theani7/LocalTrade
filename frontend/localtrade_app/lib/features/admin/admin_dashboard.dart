@@ -850,11 +850,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isActive ? 'Deactivate user' : 'Activate user'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: Text(isActive ? 'Deactivate user' : 'Activate user', style: AppTextStyles.sectionHeading),
         content: Text(
           isActive
               ? 'Deactivate "${user['fullName']}"? They will not be able to log in.'
               : 'Activate "${user['fullName']}"? They will be able to log in again.',
+          style: AppTextStyles.bodyMuted,
         ),
         actions: [
           TextButton(
@@ -870,7 +872,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
             },
             child: Text(
               isActive ? 'Deactivate' : 'Activate',
-              style: TextStyle(color: isActive ? AppColors.muted : AppColors.successDark),
+              style: AppTextStyles.label.copyWith(color: isActive ? AppColors.muted : AppColors.successDark),
             ),
           ),
         ],
@@ -1353,8 +1355,9 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Suspend vendor'),
-        content: Text('Suspend "${vendor['shopName'] ?? vendor['fullName']}"? They will not be able to list or sell products.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: Text('Suspend vendor', style: AppTextStyles.sectionHeading),
+        content: Text('Suspend "${vendor['shopName'] ?? vendor['fullName']}"? They will not be able to list or sell products.', style: AppTextStyles.bodyMuted),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -1365,7 +1368,7 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
               Navigator.pop(ctx);
               await provider.updateVendorStatus(vendor['_id'], 'suspended');
             },
-            child: const Text('Suspend', style: TextStyle(color: AppColors.muted)),
+            child: Text('Suspend', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
           ),
         ],
       ),
@@ -1620,21 +1623,28 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete product'),
-        content: Text('Delete "${product['title']}"? This action cannot be undone.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: Text('Delete product', style: AppTextStyles.sectionHeading),
+        content: Text('Delete "${product['title']}"? This action cannot be undone.', style: AppTextStyles.bodyMuted),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Cancel', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
               setState(() => _deletingProductId = product['_id']);
               await provider.deleteProduct(product['_id']);
               if (mounted) setState(() => _deletingProductId = null);
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.danger)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(100, 40),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+            ),
+            child: const Text('Delete'),
           ),
         ],
       ),
