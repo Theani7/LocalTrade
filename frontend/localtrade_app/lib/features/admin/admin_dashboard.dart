@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../providers/admin_provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -13,7 +12,6 @@ import '../../widgets/stat_card.dart';
 import '../../widgets/skeleton_loaders.dart';
 import '../../widgets/status_badge.dart';
 import '../customer/notification_screen.dart';
-import '../auth/login_screen.dart';
 
 class AdminStatTile extends StatelessWidget {
   final IconData icon;
@@ -194,51 +192,6 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
               ),
               child: const Icon(Icons.notifications_outlined, size: 18, color: AppColors.ink),
             ),
-          ),
-          const SizedBox(width: 8),
-          // Logout
-          GestureDetector(
-            onTap: () => _showLogoutDialog(context),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                border: Border.all(color: AppColors.divider),
-              ),
-              child: const Icon(Icons.logout_rounded, size: 18, color: AppColors.ink),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: Text('Logout', style: AppTextStyles.sectionHeading),
-        content: Text('Are you sure you want to log out?', style: AppTextStyles.bodyMuted),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTextStyles.bodyMuted),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.mutedLight,
-              foregroundColor: AppColors.ink,
-              minimumSize: const Size(100, 40),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
-            ),
-            onPressed: () {
-              Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
-            },
-            child: const Text('Logout'),
           ),
         ],
       ),

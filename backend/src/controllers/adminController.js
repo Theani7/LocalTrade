@@ -185,7 +185,7 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
 
   const totalVendors = await User.countDocuments({ role: 'vendor' });
   const approvedVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'approved' });
-  const pendingVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'pending' });
+  const pendingVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: { $in: ['pending', null, undefined] } });
   const suspendedVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'suspended' });
 
   const skip = (page - 1) * limit;
