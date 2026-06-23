@@ -1167,33 +1167,48 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Add category', style: AppTextStyles.sectionHeading),
-            const SizedBox(height: 12),
-            ...available.map((cat) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(cat, style: AppTextStyles.body),
-                  trailing: const Icon(Icons.add_rounded,
-                      color: AppColors.coral, size: 20),
-                  onTap: () {
-                    setState(() {
-                      _selectedCategories.add(cat);
-                    });
-                    _checkChanges();
-                    Navigator.pop(context);
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.8,
+        expand: false,
+        builder: (context, scrollController) => Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Add category', style: AppTextStyles.sectionHeading),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: available.length,
+                  itemBuilder: (context, index) {
+                    final cat = available[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(cat, style: AppTextStyles.body),
+                      trailing: const Icon(Icons.add_rounded,
+                          color: AppColors.coral, size: 20),
+                      onTap: () {
+                        setState(() {
+                          _selectedCategories.add(cat);
+                        });
+                        _checkChanges();
+                        Navigator.pop(context);
+                      },
+                    );
                   },
-                )),
-            const SizedBox(height: 8),
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
