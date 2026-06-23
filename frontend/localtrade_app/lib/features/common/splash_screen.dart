@@ -26,61 +26,75 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   final NotificationService _notificationService = NotificationService();
   StreamSubscription<RemoteMessage>? _messageSubscription;
-  late final AnimationController _logoCtrl;
-  late final Animation<double> _logoOpacity;
-  late final Animation<double> _logoScale;
-  late final AnimationController _textCtrl;
-  late final Animation<double> _textOpacity;
-  late final Animation<Offset> _textSlide;
-  late final AnimationController _subtitleCtrl;
-  late final Animation<double> _subtitleOpacity;
-  late final Animation<Offset> _subtitleSlide;
-  late final AnimationController _spinnerCtrl;
-  late final Animation<double> _spinnerOpacity;
+
+  late final AnimationController _lineCtrl;
+  late final Animation<double> _lineWidth;
+
+  late final AnimationController _nameCtrl;
+  late final Animation<double> _nameOpacity;
+  late final Animation<Offset> _nameSlide;
+
+  late final AnimationController _taglineCtrl;
+  late final Animation<double> _taglineOpacity;
+  late final Animation<Offset> _taglineSlide;
+
+  late final AnimationController _dotCtrl;
+  late final Animation<double> _dotOpacity;
+  late final Animation<double> _dotScale;
 
   @override
   void initState() {
     super.initState();
 
-    _logoCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoCtrl, curve: AppCurves.standard),
-    );
-    _logoScale = Tween(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _logoCtrl, curve: Curves.elasticOut),
-    );
-
-    _textCtrl = AnimationController(
+    // Accent line expands from center
+    _lineCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _textOpacity = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _textCtrl, curve: AppCurves.standard),
-    );
-    _textSlide = Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(parent: _textCtrl, curve: AppCurves.standard),
+    _lineWidth = Tween(begin: 0.0, end: 48.0).animate(
+      CurvedAnimation(parent: _lineCtrl, curve: AppCurves.standard),
     );
 
-    _subtitleCtrl = AnimationController(
+    // App name fades + slides up
+    _nameCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _subtitleOpacity = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _subtitleCtrl, curve: AppCurves.standard),
+    _nameOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _nameCtrl, curve: AppCurves.standard),
     );
-    _subtitleSlide = Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(parent: _subtitleCtrl, curve: AppCurves.standard),
+    _nameSlide = Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(
+      CurvedAnimation(parent: _nameCtrl, curve: AppCurves.standard),
     );
 
-    _spinnerCtrl = AnimationController(
+    // Tagline fades + slides up
+    _taglineCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 500),
     );
-    _spinnerOpacity = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _spinnerCtrl, curve: AppCurves.standard),
+    _taglineOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _taglineCtrl, curve: AppCurves.standard),
+    );
+    _taglineSlide = Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _taglineCtrl, curve: AppCurves.standard),
+    );
+
+    // Loading dots pulse
+    _dotCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _dotOpacity = Tween(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _dotCtrl,
+        curve: const Interval(0.0, 0.5, curve: AppCurves.standard),
+      ),
+    );
+    _dotScale = Tween(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _dotCtrl,
+        curve: const Interval(0.0, 0.5, curve: Curves.elasticOut),
+      ),
     );
 
     _startAnimations();
@@ -88,18 +102,18 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _startAnimations() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
-    _logoCtrl.forward();
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
-    _textCtrl.forward();
+    _lineCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+    _nameCtrl.forward();
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
-    _subtitleCtrl.forward();
-    await Future.delayed(const Duration(milliseconds: 200));
+    _taglineCtrl.forward();
+    await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
-    _spinnerCtrl.forward();
+    _dotCtrl.repeat(reverse: true);
   }
 
   Future<void> _initializeApp() async {
@@ -161,10 +175,10 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _messageSubscription?.cancel();
-    _logoCtrl.dispose();
-    _textCtrl.dispose();
-    _subtitleCtrl.dispose();
-    _spinnerCtrl.dispose();
+    _lineCtrl.dispose();
+    _nameCtrl.dispose();
+    _taglineCtrl.dispose();
+    _dotCtrl.dispose();
     super.dispose();
   }
 
@@ -176,28 +190,30 @@ class _SplashScreenState extends State<SplashScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo with fade + elastic scale
-            FadeTransition(
-              opacity: _logoOpacity,
-              child: ScaleTransition(
-                scale: _logoScale,
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 140,
-                  height: 140,
-                ),
-              ),
+            // Accent line expands from center
+            AnimatedBuilder(
+              animation: _lineCtrl,
+              builder: (context, _) {
+                return Container(
+                  width: _lineWidth.value,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: AppColors.coral,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 28),
-            // App name with fade + slide up
+            // App name
             FadeTransition(
-              opacity: _textOpacity,
+              opacity: _nameOpacity,
               child: SlideTransition(
-                position: _textSlide,
+                position: _nameSlide,
                 child: Text(
                   AppConstants.appName,
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: FontWeight.w500,
                     color: AppColors.ink,
                     letterSpacing: -0.5,
@@ -205,32 +221,40 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            // Subtitle with fade + slide up
+            const SizedBox(height: 10),
+            // Tagline
             FadeTransition(
-              opacity: _subtitleOpacity,
+              opacity: _taglineOpacity,
               child: SlideTransition(
-                position: _subtitleSlide,
-                child: const Text(
-                  'Community marketplace',
+                position: _taglineSlide,
+                child: Text(
+                  'Your local community marketplace',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.muted,
+                    color: AppColors.muted.withValues(alpha: 0.8),
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 48),
-            // Spinner with fade in
+            const SizedBox(height: 56),
+            // Pulsing loading dots
             FadeTransition(
-              opacity: _spinnerOpacity,
-              child: const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.coral,
+              opacity: _dotOpacity,
+              child: ScaleTransition(
+                scale: _dotScale,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (i) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: AppColors.coral,
+                      shape: BoxShape.circle,
+                    ),
+                  )),
                 ),
               ),
             ),
