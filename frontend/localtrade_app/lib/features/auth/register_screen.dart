@@ -297,6 +297,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           icon: Icons.description_outlined,
                           maxLines: 3,
                           textCapitalization: TextCapitalization.sentences,
+                          required: false,
                         ),
 
                         // ── Address section ─────────────────
@@ -449,6 +450,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     TextInputType keyboardType = TextInputType.text,
     TextCapitalization textCapitalization = TextCapitalization.none,
     int maxLines = 1,
+    bool required = true,
   }) {
     return TextFormField(
       controller: controller,
@@ -476,7 +478,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
-      validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+      validator: (v) => required && (v == null || v.trim().isEmpty) ? 'Required' : null,
     );
   }
 }
