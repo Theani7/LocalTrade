@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -595,6 +596,22 @@ class AdminUsersTab extends StatefulWidget {
 
 class _AdminUsersTabState extends State<AdminUsersTab> {
   String? _togglingUserId;
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query, AdminProvider provider) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      provider.fetchUsers(search: query.isEmpty ? null : query);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -607,7 +624,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
               child: Row(
                 children: [
                   Expanded(
@@ -624,6 +641,45 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (q) => _onSearchChanged(q, provider),
+                style: const TextStyle(fontSize: 13, color: AppColors.ink),
+                decoration: InputDecoration(
+                  hintText: 'Search users...',
+                  hintStyle: TextStyle(fontSize: 13, color: AppColors.muted.withValues(alpha: 0.6)),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.muted),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
+                          onPressed: () {
+                            _searchController.clear();
+                            provider.fetchUsers();
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+                  ),
+                ),
               ),
             ),
 
@@ -821,8 +877,34 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 // ═════════════════════════════════════════════════════════════════════════════
 // Vendors Tab
 // ═════════════════════════════════════════════════════════════════════════════
-class AdminVendorsTab extends StatelessWidget {
+class AdminVendorsTab extends StatefulWidget {
   const AdminVendorsTab({super.key});
+
+  @override
+  State<AdminVendorsTab> createState() => _AdminVendorsTabState();
+}
+
+class _AdminVendorsTabState extends State<AdminVendorsTab> {
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+  String _selectedStatus = 'All';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query, AdminProvider provider) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      provider.fetchVendors(
+        search: query.isEmpty ? null : query,
+        status: _selectedStatus == 'All' ? null : _selectedStatus,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -838,7 +920,7 @@ class AdminVendorsTab extends StatelessWidget {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
               child: Row(
                 children: [
                   Expanded(
@@ -855,6 +937,85 @@ class AdminVendorsTab extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (q) => _onSearchChanged(q, provider),
+                style: const TextStyle(fontSize: 13, color: AppColors.ink),
+                decoration: InputDecoration(
+                  hintText: 'Search vendors...',
+                  hintStyle: TextStyle(fontSize: 13, color: AppColors.muted.withValues(alpha: 0.6)),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.muted),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
+                          onPressed: () {
+                            _searchController.clear();
+                            provider.fetchVendors(status: _selectedStatus == 'All' ? null : _selectedStatus);
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+
+            // Status filter chips
+            SizedBox(
+              height: 32,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 10),
+                children: ['All', 'Pending', 'Approved', 'Suspended'].map((status) {
+                  final isSelected = _selectedStatus == status;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _selectedStatus = status);
+                        provider.fetchVendors(
+                          search: _searchController.text.isEmpty ? null : _searchController.text,
+                          status: status == 'All' ? null : status,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.coral : AppColors.surface,
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: isSelected ? AppColors.coral : AppColors.divider),
+                        ),
+                        child: Text(
+                          status,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected ? AppColors.ink : AppColors.muted,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
 
@@ -1156,6 +1317,22 @@ class AdminProductsTab extends StatefulWidget {
 
 class _AdminProductsTabState extends State<AdminProductsTab> {
   String? _deletingProductId;
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query, AdminProvider provider) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      provider.fetchProducts(search: query.isEmpty ? null : query);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1168,7 +1345,7 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
               child: Row(
                 children: [
                   Expanded(
@@ -1185,6 +1362,45 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (q) => _onSearchChanged(q, provider),
+                style: const TextStyle(fontSize: 13, color: AppColors.ink),
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  hintStyle: TextStyle(fontSize: 13, color: AppColors.muted.withValues(alpha: 0.6)),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.muted),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
+                          onPressed: () {
+                            _searchController.clear();
+                            provider.fetchProducts();
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+                  ),
+                ),
               ),
             ),
 
