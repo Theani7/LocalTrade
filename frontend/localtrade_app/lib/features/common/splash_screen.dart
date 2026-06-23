@@ -23,7 +23,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final NotificationService _notificationService = NotificationService();
   StreamSubscription<RemoteMessage>? _messageSubscription;
   late final AnimationController _logoCtrl;
