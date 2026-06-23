@@ -448,14 +448,13 @@ class AdminAnalyticsTab extends StatelessWidget {
                 // Export section
                 Text('Export data', style: AppTextStyles.sectionHeading),
                 const SizedBox(height: 10),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     _buildExportChip(context, 'Overview', 'overview'),
-                    const SizedBox(width: 8),
                     _buildExportChip(context, 'Orders', 'orders'),
-                    const SizedBox(width: 8),
                     _buildExportChip(context, 'Products', 'products'),
-                    const SizedBox(width: 8),
                     _buildExportChip(context, 'Vendors', 'vendors'),
                   ],
                 ),
