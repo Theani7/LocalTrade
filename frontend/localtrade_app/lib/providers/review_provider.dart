@@ -5,10 +5,12 @@ class ReviewProvider with ChangeNotifier {
   final ReviewService _reviewService = ReviewService();
   
   List<dynamic> _reviews = [];
+  List<dynamic> _myReviews = [];
   bool _isLoading = false;
   String? _error;
 
   List<dynamic> get reviews => _reviews;
+  List<dynamic> get myReviews => _myReviews;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -33,7 +35,72 @@ class ReviewProvider with ChangeNotifier {
     notifyListeners();
     try {
       await _reviewService.addReview(productId, rating, reviewText);
-      await fetchProductReviews(productId); // Refresh reviews
+      await fetchProductReviews(productId);
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateReview(String reviewId, String productId, {int? rating, String? reviewText}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _reviewService.updateReview(reviewId, rating: rating, reviewText: reviewText);
+      await fetchProductReviews(productId);
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deleteReview(String reviewId, String productId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _reviewService.deleteReview(reviewId);
+      await fetchProductReviews(productId);
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchMyReviews() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final result = await _reviewService.getMyReviews();
+      _myReviews = result['data']['reviews'];
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> addVendorReply(String reviewId, String text) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _reviewService.addVendorReply(reviewId, text);
       return true;
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');

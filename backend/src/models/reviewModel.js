@@ -29,6 +29,16 @@ const reviewSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Review must belong to a user'],
     },
+    vendorReply: {
+      text: {
+        type: String,
+        trim: true,
+        maxlength: [500, 'Reply cannot exceed 500 characters'],
+      },
+      repliedAt: {
+        type: Date,
+      },
+    },
   },
   {
     toJSON: { virtuals: true },

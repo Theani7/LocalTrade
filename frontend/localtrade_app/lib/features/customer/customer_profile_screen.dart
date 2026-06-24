@@ -17,6 +17,7 @@ import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
 import 'help_support_screen.dart';
 import 'privacy_policy_screen.dart';
+import 'my_reviews_screen.dart';
 import '../common/change_password_screen.dart';
 import '../common/logout_dialog.dart';
 
@@ -600,6 +601,16 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.coralDark,
             onTap: () => Navigator.push(context,
                 SlideFadePageRoute(builder: (_) => const NotificationScreen())),
+          ),
+          const Divider(height: 1, indent: 52),
+          _buildSettingsTile(
+            icon: Icons.rate_review_outlined,
+            title: 'My Reviews',
+            subtitle: 'View and manage reviews',
+            iconBg: AppColors.blueLight,
+            iconColor: AppColors.blueDark,
+            onTap: () => Navigator.push(context,
+                SlideFadePageRoute(builder: (_) => const MyReviewsScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildSettingsTile(

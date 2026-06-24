@@ -103,6 +103,66 @@ exports.updateReview = catchAsync(async (req, res, next) => {
   });
 });
 
+// @desc    Get reviews by the logged-in user
+// @route   GET /api/v1/reviews/my-reviews
+// @access  Private/Customer
+exports.getMyReviews = catchAsync(async (req, res, next) => {
+  const reviews = await Review.find({ userId: req.user.id })
+    .populate('productId', 'title images')
+    .sort('-createdAt');
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    results: reviews.length,
+    data: { reviews }
+  });
+});
+
+// @desc    Vendor reply to a review
+// @route   PATCH /api/v1/reviews/:id/reply
+// @access  Private/Vendor (must own the product)
+exports.addVendorReply = catchAsync(async (req, res, next) => {
+  const { text } = req.body;
+
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return next(new AppError('Reply text is required', 400));
+  }
+  if (text.length > 500) {
+    return next(new AppError('Reply must be under 500 characters', 400));
+  }
+
+  const review = await Review.findById(req.params.id).populate('productId', 'vendorId');
+
+  if (!review) {
+    return next(new AppError('Review not found', 404));
+  }
+
+  // Verify the vendor owns the product
+  const productVendorId = review.productId.vendorId?.toString?.() ||
+    (review.productId.vendorId?._id ? review.productId.vendorId._id.toString() : review.productId.vendorId?.toString());
+
+  if (productVendorId !== req.user.id && req.user.role !== 'admin') {
+    return next(new AppError('You can only reply to reviews on your own products', 403));
+  }
+
+  if (review.vendorReply && review.vendorReply.text) {
+    return next(new AppError('You have already replied to this review', 400));
+  }
+
+  review.vendorReply = {
+    text: text.trim(),
+    repliedAt: new Date(),
+  };
+  await review.save();
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    data: { review }
+  });
+});
+
 // @desc    Delete a review
 // @route   DELETE /api/v1/reviews/:id
 // @access  Private/Customer/Admin

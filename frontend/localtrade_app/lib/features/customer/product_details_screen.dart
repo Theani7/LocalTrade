@@ -740,6 +740,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildReviewsList() {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final currentUserId = user?['_id'];
+    final isVendor = user?['role'] == 'vendor';
+
+    // Check if current user is the vendor of this product
+    final vendorData = widget.product['vendorId'];
+    final productVendorId = vendorData is Map
+        ? (vendorData['_id'] ?? vendorData)
+        : vendorData;
+    final isProductVendor = isVendor &&
+        currentUserId != null &&
+        productVendorId != null &&
+        currentUserId.toString() == productVendorId.toString();
+
     return Consumer<ReviewProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.reviews.isEmpty) {
@@ -810,6 +824,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           itemBuilder: (context, index) {
             final review = provider.reviews[index];
             final date = DateTime.parse(review['createdAt']);
+            final reviewUserId = review['userId']?['_id'] ?? review['userId'];
+            final isOwner = currentUserId != null && reviewUserId == currentUserId;
+            final vendorReply = review['vendorReply'];
+            final hasVendorReply = vendorReply != null &&
+                vendorReply['text'] != null &&
+                (vendorReply['text'] as String).isNotEmpty;
 
             return Container(
               padding: const EdgeInsets.all(14),
@@ -872,6 +892,81 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   const SizedBox(height: 10),
                   Text(review['reviewText'] ?? '',
                       style: AppTextStyles.body.copyWith(height: 1.5)),
+
+                  // Vendor reply
+                  if (hasVendorReply) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.divider),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.storefront_outlined,
+                                  size: 14, color: AppColors.coralDark),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Vendor reply',
+                                style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.coralDark,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                              const Spacer(),
+                              Text(
+                                DateFormat('MMM d, yyyy').format(
+                                    DateTime.parse(vendorReply['repliedAt'])),
+                                style: AppTextStyles.caption,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            vendorReply['text'],
+                            style: AppTextStyles.bodyMuted.copyWith(height: 1.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Owner actions
+                  if (isOwner) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildReviewAction(
+                          icon: Icons.edit_outlined,
+                          label: 'Edit',
+                          onTap: () => _showReviewModal(context,
+                              editReview: review),
+                        ),
+                        const SizedBox(width: 12),
+                        _buildReviewAction(
+                          icon: Icons.delete_outline_rounded,
+                          label: 'Delete',
+                          color: AppColors.danger,
+                          onTap: () => _confirmDeleteReview(review),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  // Vendor reply button (for product vendor, only if no reply yet)
+                  if (isProductVendor && !hasVendorReply) ...[
+                    const SizedBox(height: 8),
+                    _buildReviewAction(
+                      icon: Icons.reply_rounded,
+                      label: 'Reply as vendor',
+                      color: AppColors.coralDark,
+                      onTap: () => _showVendorReplyModal(review),
+                    ),
+                  ],
                 ],
               ),
             );
@@ -881,9 +976,118 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  void _showReviewModal(BuildContext context) {
-    int rating = 5;
-    final TextEditingController reviewController = TextEditingController();
+  Widget _buildReviewAction({
+    required IconData icon,
+    required String label,
+    Color? color,
+    required VoidCallback onTap,
+  }) {
+    final c = color ?? AppColors.muted;
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: c),
+          const SizedBox(width: 3),
+          Text(label,
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c)),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteReview(dynamic review) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Delete review?', style: AppTextStyles.sectionHeading),
+            const SizedBox(height: 8),
+            Text(
+              'This action cannot be undone. Your rating will be removed from the product average.',
+              style: AppTextStyles.bodyMuted,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.ink,
+                      side: const BorderSide(color: AppColors.divider),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text('Cancel', style: AppTextStyles.cardTitle.copyWith(fontSize: 14)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      final provider = Provider.of<ReviewProvider>(context, listen: false);
+                      final success = await provider.deleteReview(
+                        review['_id'],
+                        widget.product['_id'],
+                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success ? 'Review deleted' : (provider.error ?? 'Failed')),
+                            backgroundColor: success ? AppColors.success : AppColors.danger,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.danger,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                    ),
+                    child: const Text('Delete', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showReviewModal(BuildContext context, {dynamic editReview}) {
+    int rating = editReview?['rating'] ?? 5;
+    final TextEditingController reviewController = TextEditingController(
+      text: editReview?['reviewText'] ?? '',
+    );
+    final isEditing = editReview != null;
 
     showModalBottomSheet(
       context: context,
@@ -902,114 +1106,400 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 right: 24,
                 top: 24,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Write a review',
-                          style: AppTextStyles.sectionHeading),
-                      IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close,
-                              color: AppColors.muted)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Rate this product',
-                      style: AppTextStyles.label),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: List.generate(5, (index) {
-                      return GestureDetector(
-                        onTap: () =>
-                            setModalState(() => rating = index + 1),
-                        child: Icon(
-                          index < rating
-                              ? Icons.star_rounded
-                              : Icons.star_border_rounded,
-                          color: AppColors.warning,
-                          size: 32,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.divider,
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: reviewController,
-                    maxLines: 4,
-                    style: AppTextStyles.body.copyWith(color: AppColors.ink),
-                    decoration: const InputDecoration(
-                      hintText: 'Share your experience...',
-                      hintStyle: TextStyle(color: AppColors.muted),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Consumer<ReviewProvider>(
-                    builder: (context, provider, _) {
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: provider.isLoading
-                              ? null
-                              : () async {
-                                  if (reviewController.text
-                                      .trim()
-                                      .isEmpty) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'Please write a review.')),
-                                    );
-                                    return;
-                                  }
-                                  AuthGuard.requireAuth(context, onAuthenticated: () async {
-                                    final success =
-                                        await provider.submitReview(
-                                      widget.product['_id'],
-                                      rating,
-                                      reviewController.text.trim(),
+                    const SizedBox(height: 20),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isEditing ? 'Edit review' : 'Write a review',
+                          style: AppTextStyles.sectionHeading,
+                        ),
+                        IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close,
+                                color: AppColors.muted)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Product name context
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.shopping_bag_outlined,
+                              size: 18, color: AppColors.coralDark),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _sentenceCase(widget.product['title'] ?? ''),
+                              style: AppTextStyles.label.copyWith(color: AppColors.ink),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Star rating
+                    Text('Your rating', style: AppTextStyles.label),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: List.generate(5, (index) {
+                        return GestureDetector(
+                          onTap: () =>
+                              setModalState(() => rating = index + 1),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              index < rating
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: AppColors.warning,
+                              size: 36,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _ratingLabel(rating),
+                      style: AppTextStyles.caption.copyWith(color: AppColors.coralDark),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Review text
+                    Text('Your review', style: AppTextStyles.label),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: reviewController,
+                      maxLines: 4,
+                      maxLength: 1000,
+                      style: AppTextStyles.body.copyWith(color: AppColors.ink),
+                      decoration: InputDecoration(
+                        hintText: 'What did you like or dislike?',
+                        hintStyle: AppTextStyles.bodyMuted,
+                        filled: true,
+                        fillColor: AppColors.background,
+                        counterText: '',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit button
+                    Consumer<ReviewProvider>(
+                      builder: (context, provider, _) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: provider.isLoading
+                                ? null
+                                : () async {
+                                    if (reviewController.text.trim().isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text('Please write a review')),
+                                      );
+                                      return;
+                                    }
+                                    AuthGuard.requireAuth(context, onAuthenticated: () async {
+                                      bool success;
+                                      if (isEditing) {
+                                        success = await provider.updateReview(
+                                          editReview['_id'],
+                                          widget.product['_id'],
+                                          rating: rating,
+                                          reviewText: reviewController.text.trim(),
+                                        );
+                                      } else {
+                                        success = await provider.submitReview(
+                                          widget.product['_id'],
+                                          rating,
+                                          reviewController.text.trim(),
+                                        );
+                                      }
+                                      if (success && context.mounted) {
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                              content: Text(isEditing
+                                                  ? 'Review updated'
+                                                  : 'Review submitted'),
+                                              backgroundColor: AppColors.success),
+                                        );
+                                      } else if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                              content: Text(provider.error ?? 'Failed'),
+                                              backgroundColor: AppColors.danger),
+                                        );
+                                      }
+                                    });
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.coral,
+                              foregroundColor: AppColors.ink,
+                              disabledBackgroundColor: AppColors.divider,
+                              disabledForegroundColor: AppColors.muted,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                              elevation: 0,
+                            ),
+                            child: provider.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.ink))
+                                : Text(
+                                    isEditing ? 'Update review' : 'Submit review',
+                                    style: AppTextStyles.cardTitle,
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _ratingLabel(int rating) {
+    switch (rating) {
+      case 1: return 'Poor';
+      case 2: return 'Fair';
+      case 3: return 'Good';
+      case 4: return 'Very good';
+      case 5: return 'Excellent';
+      default: return '';
+    }
+  }
+
+  void _showVendorReplyModal(dynamic review) {
+    final TextEditingController replyController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 24,
+                right: 24,
+                top: 24,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.divider,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Reply to review',
+                            style: AppTextStyles.sectionHeading),
+                        IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close,
+                                color: AppColors.muted)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Original review preview
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ...List.generate(5, (i) {
+                                return Icon(
+                                  i < review['rating']
+                                      ? Icons.star_rounded
+                                      : Icons.star_border_rounded,
+                                  color: AppColors.warning,
+                                  size: 12,
+                                );
+                              }),
+                              const SizedBox(width: 6),
+                              Text(
+                                review['userId']?['fullName'] ?? 'Customer',
+                                style: AppTextStyles.caption
+                                    .copyWith(fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            review['reviewText'] ?? '',
+                            style: AppTextStyles.bodyMuted.copyWith(height: 1.5),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text('Your reply', style: AppTextStyles.label),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: replyController,
+                      maxLines: 3,
+                      maxLength: 500,
+                      style: AppTextStyles.body.copyWith(color: AppColors.ink),
+                      decoration: InputDecoration(
+                        hintText: 'Thank the customer or address their feedback...',
+                        hintStyle: AppTextStyles.bodyMuted,
+                        filled: true,
+                        fillColor: AppColors.background,
+                        counterText: '',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    Consumer<ReviewProvider>(
+                      builder: (context, provider, _) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: provider.isLoading
+                                ? null
+                                : () async {
+                                    if (replyController.text.trim().isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text('Please write a reply')),
+                                      );
+                                      return;
+                                    }
+                                    final success = await provider.addVendorReply(
+                                      review['_id'],
+                                      replyController.text.trim(),
                                     );
                                     if (success && context.mounted) {
                                       Navigator.pop(context);
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      // Refresh reviews
+                                      provider.fetchProductReviews(widget.product['_id']);
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
-                                            content:
-                                                Text('Review submitted'),
-                                            backgroundColor:
-                                                AppColors.success),
+                                            content: Text('Reply submitted'),
+                                            backgroundColor: AppColors.success),
                                       );
                                     } else if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                            content: Text(
-                                                provider.error ??
-                                                    'Failed to submit'),
-                                            backgroundColor:
-                                                AppColors.danger),
+                                            content: Text(provider.error ?? 'Failed'),
+                                            backgroundColor: AppColors.danger),
                                       );
                                     }
-                                  });
-                                },
-                          child: provider.isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.ink))
-                              : const Text('Submit review'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.coral,
+                              foregroundColor: AppColors.ink,
+                              disabledBackgroundColor: AppColors.divider,
+                              disabledForegroundColor: AppColors.muted,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                              elevation: 0,
+                            ),
+                            child: provider.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.ink))
+                                : Text('Submit reply',
+                                    style: AppTextStyles.cardTitle),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             );
           },

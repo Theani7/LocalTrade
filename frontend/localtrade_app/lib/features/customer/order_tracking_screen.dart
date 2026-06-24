@@ -9,6 +9,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../providers/order_provider.dart';
 import '../../widgets/skeleton_loaders.dart';
+import 'product_details_screen.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String orderId;
@@ -730,10 +731,15 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   Widget _buildActionButtons() {
     final status = _order['orderStatus'];
     final canCancel = status == 'Pending';
+    final isDelivered = status == 'Delivered';
 
     return Column(
       children: [
-        if (status == 'Delivered')
+        if (isDelivered) ...[
+          // Review CTA card
+          _buildReviewCtaCard(),
+          const SizedBox(height: 12),
+          // Reorder button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -758,8 +764,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ),
             ),
           ),
+        ],
         if (canCancel) ...[
-          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -781,6 +787,97 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildReviewCtaCard() {
+    final products = _order['products'] as List? ?? [];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.coralLight.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.coral.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: AppColors.coral,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.rate_review_outlined,
+                    size: 18, color: AppColors.ink),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rate your purchase',
+                      style: AppTextStyles.cardTitle.copyWith(fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Help other customers by sharing your experience',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...products.map((p) {
+            final product = p['product'];
+            if (product is! Map) return const SizedBox.shrink();
+            final title = product['title'] ?? 'Product';
+            final productId = product['_id'] ?? product;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => _ReviewProductWrapper(
+                          product: product,
+                          productId: productId.toString(),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.star_outline_rounded, size: 16),
+                  label: Text(
+                    'Review "$title"',
+                    style: AppTextStyles.label.copyWith(color: AppColors.coral),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.coral,
+                    side: const BorderSide(color: AppColors.coral),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -1148,6 +1245,80 @@ class _Card extends StatelessWidget {
         ],
       ),
       child: child,
+    );
+  }
+}
+
+// Wrapper that loads fresh product data and opens ProductDetailsScreen
+class _ReviewProductWrapper extends StatelessWidget {
+  final dynamic product;
+  final String productId;
+  const _ReviewProductWrapper({required this.product, required this.productId});
+
+  @override
+  Widget build(BuildContext context) {
+    // Use the product data from the order (already populated by backend)
+    return _ReviewProductDetails(product: product);
+  }
+}
+
+class _ReviewProductDetails extends StatelessWidget {
+  final dynamic product;
+  const _ReviewProductDetails({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    // Import ProductDetailsScreen at top of file, then navigate
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(product['title'] ?? 'Product',
+            style: AppTextStyles.screenTitle),
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.star_outline_rounded,
+                size: 48, color: AppColors.coral),
+            const SizedBox(height: 16),
+            Text(
+              'Tap the product to write a review',
+              style: AppTextStyles.bodyMuted,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                // Navigate to product details which has the review modal
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProductDetailsScreen(product: product),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.coral,
+                foregroundColor: AppColors.ink,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text('Open product',
+                  style: AppTextStyles.cardTitle.copyWith(fontSize: 13)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
