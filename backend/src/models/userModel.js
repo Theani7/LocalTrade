@@ -86,11 +86,19 @@ const userSchema = new mongoose.Schema(
       default: false,
       select: false,
     },
-    passwordResetToken: {
+    passwordResetOtp: {
       type: String,
       select: false,
     },
-    passwordResetExpires: {
+    passwordResetOtpExpires: {
+      type: Date,
+      select: false,
+    },
+    passwordResetTempToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetTempTokenExpires: {
       type: Date,
       select: false,
     },

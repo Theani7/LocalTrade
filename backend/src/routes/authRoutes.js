@@ -13,6 +13,7 @@ router.patch('/profile', protect, upload.single('profileImage'), authController.
 router.patch('/change-password', protect, authController.changePassword);
 router.patch('/force-change-password', protect, authController.forceChangePassword);
 router.post('/forgot-password', authController.forgotPassword);
-router.patch('/reset-password/:token', authController.resetPassword);
+router.post('/verify-otp', authController.verifyOtp);
+router.patch('/reset-password-with-otp', authController.resetPasswordWithOtp);
 
 module.exports = router;

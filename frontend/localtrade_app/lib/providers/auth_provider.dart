@@ -144,11 +144,28 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> resetPassword(String token, String password) async {
+  Future<String?> verifyOtp(String email, String otp) async {
     _setLoading(true);
     _error = null;
     try {
-      final result = await _authService.resetPassword(token, password);
+      final result = await _authService.verifyOtp(email, otp);
+      _setLoading(false);
+      if (result['data'] != null && result['data']['tempToken'] != null) {
+        return result['data']['tempToken'] as String?;
+      }
+      return null;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _setLoading(false);
+      return null;
+    }
+  }
+
+  Future<String?> resetPasswordWithOtp(String tempToken, String password) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final result = await _authService.resetPasswordWithOtp(tempToken, password);
       _setLoading(false);
       return result['message'] as String?;
     } catch (e) {

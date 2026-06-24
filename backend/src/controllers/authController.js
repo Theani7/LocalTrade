@@ -1,6 +1,6 @@
 const User = require('../models/userModel');
 const crypto = require('crypto');
-const { sendToken, createPasswordResetToken } = require('../utils/authUtils');
+const { sendToken, generateOtp, createTempResetToken } = require('../utils/authUtils');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const { sendEmail } = require('../config/email');
@@ -292,7 +292,7 @@ exports.forceChangePassword = catchAsync(async (req, res, next) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Forgot Password
+// Forgot Password — Send OTP
 // ─────────────────────────────────────────────────────────────────────────────
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   const { email } = req.body;
@@ -303,42 +303,40 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   const user = await User.findOne({ email });
 
-  // Always respond with the same message regardless of whether email exists
-  // to prevent email enumeration
   if (!user) {
     return res.status(200).json({
       success: true,
       status: 'success',
-      message: 'If an account with that email exists, reset instructions have been sent.',
+      message: 'If an account with that email exists, an OTP has been sent.',
     });
   }
 
-  const { rawToken, hashedToken, expires } = createPasswordResetToken();
-  user.passwordResetToken = hashedToken;
-  user.passwordResetExpires = expires;
+  const { otp, hashedOtp, expires } = generateOtp();
+  user.passwordResetOtp = hashedOtp;
+  user.passwordResetOtpExpires = expires;
+  user.passwordResetTempToken = undefined;
+  user.passwordResetTempTokenExpires = undefined;
   await user.save({ validateBeforeSave: false });
-
-  const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${rawToken}`;
 
   try {
     await sendEmail({
       to: user.email,
-      subject: 'LocalTrade — Password Reset Request',
+      subject: 'LocalTrade — Password Reset OTP',
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2>Password Reset</h2>
           <p>You requested a password reset for your LocalTrade account.</p>
-          <p>Click the link below to reset your password. This link expires in 10 minutes.</p>
-          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background: #FF6F52; color: #fff; text-decoration: none; border-radius: 8px; margin: 16px 0;">
-            Reset password
-          </a>
+          <p>Use the following OTP to reset your password. It expires in 10 minutes.</p>
+          <div style="font-size: 32px; font-weight: 700; letter-spacing: 8px; text-align: center; padding: 20px; background: #FBF5EA; border-radius: 8px; margin: 16px 0; color: #2B2620;">
+            ${otp}
+          </div>
           <p style="color: #6E6557; font-size: 12px;">If you didn't request this, please ignore this email.</p>
         </div>
       `,
     });
   } catch (err) {
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
+    user.passwordResetOtp = undefined;
+    user.passwordResetOtpExpires = undefined;
     await user.save({ validateBeforeSave: false });
     return next(new AppError('Failed to send reset email. Please try again later.', 500));
   }
@@ -346,38 +344,81 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     status: 'success',
-    message: 'If an account with that email exists, reset instructions have been sent.',
+    message: 'If an account with that email exists, an OTP has been sent.',
   });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Reset Password
+// Verify OTP
 // ─────────────────────────────────────────────────────────────────────────────
-exports.resetPassword = catchAsync(async (req, res, next) => {
-  const { token } = req.params;
-  const { password } = req.body;
+exports.verifyOtp = catchAsync(async (req, res, next) => {
+  const { email, otp } = req.body;
 
-  if (!token) {
-    return next(new AppError('Reset token is required', 400));
+  if (!email || !otp) {
+    return next(new AppError('Email and OTP are required', 400));
+  }
+
+  const user = await User.findOne({ email }).select('+passwordResetOtp +passwordResetOtpExpires');
+
+  if (!user || !user.passwordResetOtp || !user.passwordResetOtpExpires) {
+    return next(new AppError('No reset request found. Please request a new OTP.', 400));
+  }
+
+  if (user.passwordResetOtpExpires < Date.now()) {
+    user.passwordResetOtp = undefined;
+    user.passwordResetOtpExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(new AppError('OTP has expired. Please request a new one.', 400));
+  }
+
+  const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+  if (user.passwordResetOtp !== hashedOtp) {
+    return next(new AppError('Invalid OTP. Please try again.', 400));
+  }
+
+  const { raw, hashed, expires } = createTempResetToken();
+  user.passwordResetTempToken = hashed;
+  user.passwordResetTempTokenExpires = expires;
+  user.passwordResetOtp = undefined;
+  user.passwordResetOtpExpires = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    message: 'OTP verified successfully.',
+    data: { tempToken: raw },
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reset Password (after OTP verification)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.resetPasswordWithOtp = catchAsync(async (req, res, next) => {
+  const { tempToken, password } = req.body;
+
+  if (!tempToken) {
+    return next(new AppError('Temporary token is required. Please verify OTP first.', 400));
   }
   if (!password || password.length < 6) {
     return next(new AppError('Password must be at least 6 characters', 400));
   }
 
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const hashedToken = crypto.createHash('sha256').update(tempToken).digest('hex');
 
   const user = await User.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
-  });
+    passwordResetTempToken: hashedToken,
+    passwordResetTempTokenExpires: { $gt: Date.now() },
+  }).select('+passwordResetTempToken +passwordResetTempTokenExpires');
 
   if (!user) {
-    return next(new AppError('Token is invalid or has expired', 400));
+    return next(new AppError('Session expired. Please verify OTP again.', 400));
   }
 
   user.password = password;
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
+  user.passwordResetTempToken = undefined;
+  user.passwordResetTempTokenExpires = undefined;
   await user.save();
 
   res.status(200).json({

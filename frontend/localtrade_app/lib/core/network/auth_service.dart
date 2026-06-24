@@ -161,8 +161,28 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> resetPassword(String token, String password) async {
-    final response = await _apiService.patch('/auth/reset-password/$token', body: {
+  Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
+    final response = await _apiService.post('/auth/verify-otp', body: {
+      'email': email,
+      'otp': otp,
+    });
+
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'OTP verification failed');
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPasswordWithOtp(String tempToken, String password) async {
+    final response = await _apiService.patch('/auth/reset-password-with-otp', body: {
+      'tempToken': tempToken,
       'password': password,
     });
 

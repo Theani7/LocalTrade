@@ -20,11 +20,18 @@ const sendToken = (user, statusCode, res) => {
   });
 };
 
-const createPasswordResetToken = () => {
-  const rawToken = crypto.randomBytes(32).toString('hex');
-  const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+const generateOtp = () => {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
   const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
-  return { rawToken, hashedToken, expires };
+  return { otp, hashedOtp, expires };
 };
 
-module.exports = { signToken, sendToken, createPasswordResetToken };
+const createTempResetToken = () => {
+  const raw = crypto.randomBytes(32).toString('hex');
+  const hashed = crypto.createHash('sha256').update(raw).digest('hex');
+  const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
+  return { raw, hashed, expires };
+};
+
+module.exports = { signToken, sendToken, generateOtp, createTempResetToken };
