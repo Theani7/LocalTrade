@@ -1570,13 +1570,15 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                           ),
                           const SizedBox(width: 8),
                           // Price + status
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label),
-                              const SizedBox(height: 4),
-                              _buildProductStatusChip(isAvailable),
-                            ],
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                const SizedBox(height: 4),
+                                _buildProductStatusChip(isAvailable),
+                              ],
+                            ),
                           ),
                           const SizedBox(width: 8),
                           // Delete button
