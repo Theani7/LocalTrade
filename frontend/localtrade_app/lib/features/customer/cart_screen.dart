@@ -163,24 +163,29 @@ class _CartBodyState extends State<CartBody> {
           ),
         ),
         Expanded(
-          child: ListView(
+          child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            children: [
-              ...cart.itemsByVendor.entries.map((entry) {
+            itemCount: cart.itemsByVendor.entries.length + 3,
+            itemBuilder: (context, index) {
+              if (index < cart.itemsByVendor.entries.length) {
+                final entry = cart.itemsByVendor.entries.elementAt(index);
                 final rawName = entry.value.first.vendorName;
-                final vendorName =
-                    rawName.isNotEmpty ? rawName : 'Local vendor';
+                final vendorName = rawName.isNotEmpty ? rawName : 'Local vendor';
                 final vendorItems = entry.value;
                 return _VendorGroupCard(
                   vendorName: vendorName,
                   items: vendorItems,
                   cart: cart,
                 );
-              }),
-              const SizedBox(height: 12),
-              _VendorNoteCard(noteController: _noteController),
-              const SizedBox(height: 100),
-            ],
+              }
+              if (index == cart.itemsByVendor.entries.length) {
+                return const SizedBox(height: 12);
+              }
+              if (index == cart.itemsByVendor.entries.length + 1) {
+                return _VendorNoteCard(noteController: _noteController);
+              }
+              return const SizedBox(height: 100);
+            },
           ),
         ),
         _buildBottomBar(context, cart),
@@ -701,15 +706,15 @@ class _EmptyCartBody extends StatelessWidget {
   const _EmptyCartBody({this.onBrowseProducts, this.onCategoryTap});
 
   static const _categoryIcons = {
-    'Vegetables': '🥬',
-    'Dairy': '🥛',
-    'Handicrafts': '🎨',
-    'Clothing': '👕',
-    'Local Goods': '🌾',
-    'Tailoring': '✂️',
-    'Groceries': '🧺',
-    'Bakery': '🍞',
-    'Meat': '🥩',
+    'Vegetables': Icons.eco_rounded,
+    'Dairy': Icons.local_drink_rounded,
+    'Handicrafts': Icons.handyman_rounded,
+    'Clothing': Icons.checkroom_rounded,
+    'Local Goods': Icons.store_rounded,
+    'Tailoring': Icons.content_cut_rounded,
+    'Groceries': Icons.shopping_cart_rounded,
+    'Bakery': Icons.breakfast_dining_rounded,
+    'Meat': Icons.restaurant_rounded,
   };
 
   @override
@@ -886,9 +891,10 @@ class _EmptyCartBody extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          _categoryIcons[name] ?? '📦',
-                          style: const TextStyle(fontSize: 14),
+                        Icon(
+                          _categoryIcons[name] ?? Icons.category_rounded,
+                          size: 16,
+                          color: AppColors.muted,
                         ),
                         const SizedBox(width: 6),
                         Text(

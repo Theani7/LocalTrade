@@ -178,6 +178,7 @@ class _FadeScaleInState extends State<FadeScaleIn>
     return TickBuilder(
       listenable: _ctrl,
       builder: (context, _) {
+        if (MediaQuery.of(context).disableAnimations) return widget.child;
         return Opacity(
           opacity: _opacity.value,
           child: Transform.scale(scale: _scale.value, child: widget.child),
@@ -234,6 +235,7 @@ class _FadeSlideInState extends State<FadeSlideIn>
     return TickBuilder(
       listenable: _ctrl,
       builder: (context, _) {
+        if (MediaQuery.of(context).disableAnimations) return widget.child;
         return Opacity(
           opacity: _opacity.value,
           child: Transform.translate(

@@ -1090,36 +1090,47 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
               child: RefreshIndicator(
                 onRefresh: provider.fetchVendors,
                 color: AppColors.coral,
-                child: filteredList.isEmpty
+                child: filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true)
                     ? EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No $_selectedStatus vendors found.')
-                    : ListView(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        children: [
-                          // Pending section (only when filter is All or Pending)
-                          if (_selectedStatus == 'All' || _selectedStatus == 'Pending') ...[
-                            if (pendingVendors.isNotEmpty) ...[
-                              Text('Pending approval', style: AppTextStyles.label.copyWith(color: AppColors.warningDark)),
-                              const SizedBox(height: 8),
-                              ...pendingVendors.map((vendor) => _buildPendingVendorCard(context, vendor, provider)),
-                              const SizedBox(height: 16),
-                            ],
-                          ],
-
-                          // Other vendors (only when filter is All or not Pending)
-                          if (_selectedStatus != 'Pending') ...[
-                            if (filteredList.isNotEmpty) ...[
-                              if (_selectedStatus == 'All') Text('All vendors', style: AppTextStyles.label),
-                              const SizedBox(height: 8),
-                              ...filteredList.map((vendor) => _buildApprovedVendorCard(context, vendor, provider)),
-                            ],
-                          ],
-                        ],
-                      ),
+                    : _buildVendorListView(pendingVendors, filteredList, context, provider),
               ),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildVendorListView(
+    List<dynamic> pendingVendors,
+    List<dynamic> filteredList,
+    BuildContext context,
+    AdminProvider provider,
+  ) {
+    final items = <Widget>[];
+    if ((_selectedStatus == 'All' || _selectedStatus == 'Pending') && pendingVendors.isNotEmpty) {
+      items.add(Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text('Pending approval', style: AppTextStyles.label.copyWith(color: AppColors.warningDark)),
+      ));
+      items.add(const SizedBox(height: 8));
+      items.addAll(pendingVendors.map((v) => _buildPendingVendorCard(context, v, provider)));
+      items.add(const SizedBox(height: 16));
+    }
+    if (_selectedStatus != 'Pending' && filteredList.isNotEmpty) {
+      if (_selectedStatus == 'All') {
+        items.add(Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text('All vendors', style: AppTextStyles.label),
+        ));
+      }
+      items.add(const SizedBox(height: 8));
+      items.addAll(filteredList.map((v) => _buildApprovedVendorCard(context, v, provider)));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: items.length,
+      itemBuilder: (_, i) => items[i],
     );
   }
 

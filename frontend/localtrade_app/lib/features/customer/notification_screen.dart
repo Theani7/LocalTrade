@@ -64,62 +64,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
             onRefresh: provider.fetchNotifications,
             color: AppColors.coral,
             backgroundColor: AppColors.surface,
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (scrollNotification) {
-                if (scrollNotification.metrics.pixels >=
-                    scrollNotification.metrics.maxScrollExtent - 200 &&
-                    provider.hasMore &&
-                    !provider.isFetchingMore) {
-                  provider.loadMoreNotifications();
-                }
-                return false;
-              },
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                children: [
-                  // Segmented control
-                  const SizedBox(height: 8),
-                  _buildSegmentedControl(important, promotions),
-                  const SizedBox(height: 20),
-
-                  // Notification groups
-                  if (unread.isNotEmpty) ...[
-                    _buildSectionLabel('Unread'),
-                    const SizedBox(height: 8),
-                    ...unread.map((n) => _buildNotificationCard(n, false, provider)),
-                    const SizedBox(height: 16),
-                  ],
-
-                  if (read.isNotEmpty) ...[
-                    _buildSectionLabel('Earlier'),
-                    const SizedBox(height: 8),
-                    ...read.map((n) => _buildNotificationCard(n, true, provider)),
-                  ],
-
-                  if (unread.isEmpty && read.isEmpty)
-                    _buildEmptyState(),
-
-                  // Load more indicator
-                  if (provider.hasMore)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.coral,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (scrollNotification) {
+                  if (scrollNotification.metrics.pixels >=
+                      scrollNotification.metrics.maxScrollExtent - 200 &&
+                      provider.hasMore &&
+                      !provider.isFetchingMore) {
+                    provider.loadMoreNotifications();
+                  }
+                  return false;
+                },
+                child: _buildNotificationList(important, promotions, unread, read, provider),
               ),
-            ),
           );
         },
       ),
@@ -652,6 +608,48 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // ── Notification list ──────────────────────────────────────────
+  Widget _buildNotificationList(
+    List<dynamic> important,
+    List<dynamic> promotions,
+    List<dynamic> unread,
+    List<dynamic> read,
+    NotificationProvider provider,
+  ) {
+    final items = <Widget>[];
+    items.add(const SizedBox(height: 8));
+    items.add(_buildSegmentedControl(important, promotions));
+    items.add(const SizedBox(height: 20));
+    if (unread.isNotEmpty) {
+      items.add(_buildSectionLabel('Unread'));
+      items.add(const SizedBox(height: 8));
+      items.addAll(unread.map((n) => _buildNotificationCard(n, false, provider)));
+      items.add(const SizedBox(height: 16));
+    }
+    if (read.isNotEmpty) {
+      items.add(_buildSectionLabel('Earlier'));
+      items.add(const SizedBox(height: 8));
+      items.addAll(read.map((n) => _buildNotificationCard(n, true, provider)));
+    }
+    if (unread.isEmpty && read.isEmpty) {
+      items.add(_buildEmptyState());
+    }
+    if (provider.hasMore) {
+      items.add(const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral)),
+        ),
+      ));
+    }
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      itemCount: items.length,
+      itemBuilder: (_, i) => items[i],
     );
   }
 

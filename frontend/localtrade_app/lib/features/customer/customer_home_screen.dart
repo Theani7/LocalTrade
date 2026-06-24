@@ -144,96 +144,14 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
   @override
   Widget build(BuildContext context) {
     try {
-      final productProvider = Provider.of<ProductProvider>(context);
-      final notifProv = Provider.of<NotificationProvider>(context);
       final authProvider = Provider.of<AuthProvider>(context);
       final userName = authProvider.user?['fullName']?.split(' ')[0] ?? 'Guest';
 
       return Column(
         children: [
           // ── Header ──
-          SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hello, $userName',
-                      style: AppTextStyles.bodyMuted,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Discover local products',
-                      style: AppTextStyles.screenTitle,
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  onTap: widget.onNotificationTap,
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x0D2B2620),
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.center,
-                      children: [
-                        const Icon(
-                          Icons.notifications_outlined,
-                          size: 20,
-                          color: AppColors.ink,
-                        ),
-                        if (notifProv.unreadCount > 0)
-                          Positioned(
-                            right: -2,
-                            top: -2,
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: const BoxDecoration(
-                                color: AppColors.coral,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  notifProv.unreadCount > 9
-                                      ? '9+'
-                                      : '${notifProv.unreadCount}',
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.ink,
-                                    height: 1,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 14),
+          _buildHeader(userName),
+          const SizedBox(height: 14),
 
         // ── Search ──
         Padding(
@@ -429,7 +347,9 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
           child: RefreshIndicator(
             onRefresh: () async => _fetchProducts(),
             color: AppColors.coral,
-            child: _buildProductList(productProvider),
+            child: Consumer<ProductProvider>(
+              builder: (context, provider, _) => _buildProductList(provider),
+            ),
           ),
         ),
       ],
@@ -445,51 +365,111 @@ class _CustomerHomeBodyState extends State<CustomerHomeBody> {
     }
   }
 
+  Widget _buildHeader(String userName) {
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Hello, $userName', style: AppTextStyles.bodyMuted),
+                const SizedBox(height: 2),
+                Text('Discover local products', style: AppTextStyles.screenTitle),
+              ],
+            ),
+            Consumer<NotificationProvider>(
+              builder: (context, notifProv, _) => GestureDetector(
+                onTap: widget.onNotificationTap,
+                child: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    shape: BoxShape.circle,
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x0D2B2620), blurRadius: 6, offset: Offset(0, 2)),
+                    ],
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      const Icon(Icons.notifications_outlined, size: 20, color: AppColors.ink),
+                      if (notifProv.unreadCount > 0)
+                        Positioned(
+                          right: -2, top: -2,
+                          child: Container(
+                            width: 16, height: 16,
+                            decoration: const BoxDecoration(color: AppColors.coral, shape: BoxShape.circle),
+                            child: Center(
+                              child: Text(
+                                notifProv.unreadCount > 9 ? '9+' : '${notifProv.unreadCount}',
+                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: AppColors.ink, height: 1),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildProductList(ProductProvider provider) {
     if (provider.isLoading && provider.products.isEmpty) {
-      return ListView(
+      return ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: List.generate(
-          6,
-          (_) => const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: ProductCardSkeleton(),
-          ),
+        itemCount: 6,
+        itemBuilder: (_, __) => const Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: ProductCardSkeleton(),
         ),
       );
     }
 
     if (provider.error != null && provider.products.isEmpty) {
-      return ListView(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.15,
-          ),
-          EmptyState(
-            icon: Icons.error_outline_rounded,
-            title: 'Something went wrong',
-            message: provider.error!,
-            onAction: () => _fetchProducts(),
-            actionLabel: 'Try again',
-          ),
-        ],
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.15,
+            ),
+            EmptyState(
+              icon: Icons.error_outline_rounded,
+              title: 'Something went wrong',
+              message: provider.error!,
+              onAction: () => _fetchProducts(),
+              actionLabel: 'Try again',
+            ),
+          ],
+        ),
       );
     }
 
     if (provider.products.isEmpty) {
-      return ListView(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.15,
-          ),
-          EmptyState(
-            icon: Icons.search_off_rounded,
-            title: 'No products found',
-            message: 'Try searching for something else or browse another category.',
-            onAction: _clearAllFilters,
-            actionLabel: 'View all products',
-          ),
-        ],
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.15,
+            ),
+            EmptyState(
+              icon: Icons.search_off_rounded,
+              title: 'No products found',
+              message: 'Try searching for something else or browse another category.',
+              onAction: _clearAllFilters,
+              actionLabel: 'View all products',
+            ),
+          ],
+        ),
       );
     }
 

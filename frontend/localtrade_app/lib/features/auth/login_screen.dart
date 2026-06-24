@@ -55,7 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
         final role = authProvider.user?['role'];
         final status = authProvider.user?['vendorApprovalStatus'];
-        debugPrint('Login success: role=$role, status=$status');
 
         if (role == 'admin') {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminShell()));

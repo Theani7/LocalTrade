@@ -115,12 +115,9 @@ class _SplashScreenState extends State<SplashScreen>
     final splashFuture = Future.delayed(const Duration(seconds: 2));
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    debugPrint('Splash: waiting for auth.ready...');
     await auth.ready;
-    debugPrint('Splash: auth.ready done. isAuthenticated=${auth.isAuthenticated}, userRole=${auth.user?["role"]}, userId=${auth.user?["_id"]}');
 
     final authFuture = auth.isAuthenticated ? auth.validateToken() : Future.value(false);
-    debugPrint('Splash: calling validateToken=${auth.isAuthenticated}');
 
     await Future.wait([splashFuture, authFuture]);
 
@@ -128,7 +125,6 @@ class _SplashScreenState extends State<SplashScreen>
     if (auth.isAuthenticated && mounted) {
       Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
     }
-    debugPrint('Splash: all futures done. isAuthenticated=${auth.isAuthenticated}, userRole=${auth.user?["role"]}, userId=${auth.user?["_id"]}');
 
     if (!mounted) return;
     _navigate();
@@ -137,12 +133,9 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigate() {
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
-    debugPrint('Splash _navigate: isAuthenticated=${auth.isAuthenticated}, role=${auth.user?["role"]}, keys=${auth.user?.keys.toList()}');
-
     if (auth.isAuthenticated) {
       final role = auth.user?['role'];
       final status = auth.user?['vendorApprovalStatus'];
-      debugPrint('Splash routing: role=$role, status=$status, user=${auth.user != null}');
 
       if (role == 'admin') {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminShell()));

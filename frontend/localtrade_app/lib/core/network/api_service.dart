@@ -11,6 +11,10 @@ class ApiService {
   final _storage = const FlutterSecureStorage();
   final _connectivity = ConnectivityService();
 
+  void dispose() {
+    _client.close();
+  }
+
   Future<http.Response> get(String endpoint, {Map<String, String>? headers}) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');

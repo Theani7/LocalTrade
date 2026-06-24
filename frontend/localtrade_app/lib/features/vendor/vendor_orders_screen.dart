@@ -67,15 +67,17 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                       onRefresh: () async => orderProvider.fetchVendorOrders(),
                       color: AppColors.coral,
                       child: filtered.isEmpty
-                          ? ListView(
-                              children: const [
-                                SizedBox(height: 80),
-                                EmptyState(
-                                  icon: Icons.receipt_long_outlined,
-                                  title: 'No matching orders',
-                                  message: 'Try a different filter.',
-                                ),
-                              ],
+                          ? SingleChildScrollView(
+                              child: Column(
+                                children: const [
+                                  SizedBox(height: 80),
+                                  EmptyState(
+                                    icon: Icons.receipt_long_outlined,
+                                    title: 'No matching orders',
+                                    message: 'Try a different filter.',
+                                  ),
+                                ],
+                              ),
                             )
                           : NotificationListener<ScrollNotification>(
                               onNotification: (notification) {
