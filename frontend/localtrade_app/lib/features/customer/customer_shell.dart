@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/cart_provider.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
+import '../../widgets/connection_status_banner.dart';
 import 'customer_home_screen.dart';
 import 'cart_screen.dart';
 import 'customer_orders_screen.dart';
@@ -43,23 +44,30 @@ class _CustomerShellState extends State<CustomerShell> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _currentIndex == 0
-          ? CustomerHomeBody(
-              key: _homeKey,
-              onNotificationTap: () => AuthGuard.requireAuthRoute(
-                context,
-                const NotificationScreen(),
-              ),
-              cartIconKey: _cartIconKey,
-            )
-          : _currentIndex == 1
-              ? CartBody(
-                  onBrowseProducts: () => _switchTab(0),
-                  onCategoryTap: _onCategoryTap,
-                )
-              : _currentIndex == 2
-                  ? const CustomerOrdersBody()
-                  : const CustomerProfileBody(),
+      body: Column(
+        children: [
+          const ConnectionStatusBanner(),
+          Expanded(
+            child: _currentIndex == 0
+                ? CustomerHomeBody(
+                    key: _homeKey,
+                    onNotificationTap: () => AuthGuard.requireAuthRoute(
+                      context,
+                      const NotificationScreen(),
+                    ),
+                    cartIconKey: _cartIconKey,
+                  )
+                : _currentIndex == 1
+                    ? CartBody(
+                        onBrowseProducts: () => _switchTab(0),
+                        onCategoryTap: _onCategoryTap,
+                      )
+                    : _currentIndex == 2
+                        ? const CustomerOrdersBody()
+                        : const CustomerProfileBody(),
+          ),
+        ],
+      ),
       bottomNavigationBar: _CustomerBottomNav(
         currentIndex: _currentIndex,
         cartItemCount: cart.itemCount,

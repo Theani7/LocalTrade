@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../core/network/category_service.dart';
+import '../core/utils/cache_manager.dart';
 
 class CategoryProvider extends ChangeNotifier {
   final CategoryService _service = CategoryService();
+
+  static const String _activeCacheKey = 'active_categories';
+  static const String _allCacheKey = 'all_categories';
 
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = false;
@@ -32,8 +36,15 @@ class CategoryProvider extends ChangeNotifier {
     _safeNotifyListeners();
     try {
       _categories = await _service.getActiveCategories();
+      await CacheManager.cacheData(_activeCacheKey, _categories);
     } catch (e) {
       _error = e.toString();
+      if (_categories.isEmpty) {
+        final cached = await CacheManager.getCachedData(_activeCacheKey);
+        if (cached != null) {
+          _categories = List<Map<String, dynamic>>.from(cached);
+        }
+      }
     } finally {
       _isLoading = false;
       _safeNotifyListeners();
@@ -42,9 +53,15 @@ class CategoryProvider extends ChangeNotifier {
 
   Future<List<Map<String, dynamic>>> fetchAllCategories() async {
     try {
-      return await _service.getAllCategories();
+      final result = await _service.getAllCategories();
+      await CacheManager.cacheData(_allCacheKey, result);
+      return result;
     } catch (e) {
       _error = e.toString();
+      final cached = await CacheManager.getCachedData(_allCacheKey);
+      if (cached != null) {
+        return List<Map<String, dynamic>>.from(cached);
+      }
       return [];
     }
   }

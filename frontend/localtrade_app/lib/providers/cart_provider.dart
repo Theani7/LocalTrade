@@ -155,6 +155,45 @@ class CartProvider with ChangeNotifier {
     _safeNotifyListeners();
   }
 
+  /// Bulk-add items for reorder. Each entry: {productId, title, price, priceUnit, imageUrl, vendorId, vendorName, quantity}
+  /// Items from the same vendor get grouped. If an item already exists in cart, quantity is set to the reorder quantity.
+  void addItems(List<Map<String, dynamic>> reorderItems) {
+    for (final item in reorderItems) {
+      final productId = item['productId']?.toString() ?? '';
+      if (productId.isEmpty) continue;
+
+      final quantity = item['quantity'] ?? 1;
+      if (_items.containsKey(productId)) {
+        _items.update(
+          productId,
+          (existing) => CartItem(
+            id: existing.id,
+            title: existing.title,
+            price: existing.price,
+            priceUnit: existing.priceUnit,
+            imageUrl: existing.imageUrl,
+            vendorId: existing.vendorId,
+            vendorName: existing.vendorName,
+            quantity: quantity,
+          ),
+        );
+      } else {
+        _items[productId] = CartItem(
+          id: productId,
+          title: item['title'] ?? '',
+          price: (item['price'] ?? 0).toDouble(),
+          priceUnit: item['priceUnit'] ?? 'piece',
+          imageUrl: item['imageUrl'] ?? '',
+          vendorId: item['vendorId'] ?? '',
+          vendorName: item['vendorName'] ?? '',
+          quantity: quantity,
+        );
+      }
+    }
+    _saveCart();
+    _safeNotifyListeners();
+  }
+
   void updateQuantity(String productId, int quantity) {
     if (!_items.containsKey(productId)) return;
     if (quantity <= 0) {

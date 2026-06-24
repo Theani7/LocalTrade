@@ -4,21 +4,26 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_constants.dart';
+import '../services/connectivity_service.dart';
 
 class ApiService {
   final http.Client _client = http.Client();
   final _storage = const FlutterSecureStorage();
+  final _connectivity = ConnectivityService();
 
   Future<http.Response> get(String endpoint, {Map<String, String>? headers}) async {
     try {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
       final response = await _client.get(url, headers: await _getHeaders(headers))
           .timeout(const Duration(seconds: 15));
+      _connectivity.onApiSuccess();
       return _handleResponse(response);
     } on http.ClientException {
+      _connectivity.onApiError();
       throw Exception('Could not connect to server. Please ensure the backend is running.');
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        _connectivity.onApiError();
         throw Exception('No internet connection. Please check your network.');
       }
       rethrow;
@@ -33,9 +38,11 @@ class ApiService {
         headers: await _getHeaders(headers),
         body: json.encode(body ?? {}),
       ).timeout(const Duration(seconds: 20));
+      _connectivity.onApiSuccess();
       return _handleResponse(response);
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        _connectivity.onApiError();
         throw Exception('No internet connection.');
       }
       rethrow;
@@ -50,9 +57,11 @@ class ApiService {
         headers: await _getHeaders(headers),
         body: json.encode(body ?? {}),
       ).timeout(const Duration(seconds: 20));
+      _connectivity.onApiSuccess();
       return _handleResponse(response);
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        _connectivity.onApiError();
         throw Exception('No internet connection.');
       }
       rethrow;
@@ -64,9 +73,11 @@ class ApiService {
       final url = Uri.parse('${AppConstants.baseUrl}$endpoint');
       final response = await _client.delete(url, headers: await _getHeaders(headers))
           .timeout(const Duration(seconds: 20));
+      _connectivity.onApiSuccess();
       return _handleResponse(response);
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        _connectivity.onApiError();
         throw Exception('No internet connection.');
       }
       rethrow;
@@ -111,9 +122,11 @@ class ApiService {
       }
 
       final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      _connectivity.onApiSuccess();
       return await http.Response.fromStream(streamedResponse);
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection refused')) {
+        _connectivity.onApiError();
         throw Exception('No internet connection during upload.');
       }
       rethrow;

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../core/network/feedback_service.dart';
+import '../core/utils/cache_manager.dart';
 
 class FeedbackProvider with ChangeNotifier {
   final FeedbackService _feedbackService = FeedbackService();
   
+  static const String _cacheKey = 'feedback';
+
   List<dynamic> _feedbackList = [];
   Map<String, dynamic>? _stats;
   bool _isLoading = false;
@@ -38,8 +41,16 @@ class FeedbackProvider with ChangeNotifier {
       final result = await _feedbackService.getAllFeedback();
       _feedbackList = result['data']['feedback'];
       _stats = result['data']['stats'];
+      await CacheManager.cacheData(_cacheKey, result);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_feedbackList.isEmpty) {
+        final cached = await CacheManager.getCachedData(_cacheKey);
+        if (cached != null) {
+          _feedbackList = cached['data']['feedback'] ?? [];
+          _stats = cached['data']['stats'];
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -1,9 +1,13 @@
 import 'package:flutter/foundation.dart';
 import '../core/network/product_service.dart';
+import '../core/utils/cache_manager.dart';
 
 class ProductProvider with ChangeNotifier {
   final ProductService _productService = ProductService();
   
+  static const String _catalogCacheKey = 'product_catalog';
+  static const String _myProductsCacheKey = 'my_products';
+
   List<dynamic> _products = [];
   List<dynamic> _myProducts = [];
   bool _isLoading = false;
@@ -103,8 +107,21 @@ class ProductProvider with ChangeNotifier {
         _currentPage = 2; // Next page to fetch
       }
 
+      await CacheManager.cacheData(_catalogCacheKey, {
+        'data': {'products': _products},
+        'totalPages': _totalPages,
+        'totalCount': _totalCount,
+      });
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_products.isEmpty) {
+        final cached = await CacheManager.getCachedData(_catalogCacheKey);
+        if (cached != null) {
+          _products = List<dynamic>.from(cached['data']['products'] ?? []);
+          _totalPages = cached['totalPages'] ?? 1;
+          _totalCount = cached['totalCount'] ?? _products.length;
+        }
+      }
     } finally {
       _setLoading(false);
       _isFetchingMore = false;
@@ -161,8 +178,18 @@ class ProductProvider with ChangeNotifier {
       } else {
         _myHasMore = false;
       }
+      await CacheManager.cacheData(_myProductsCacheKey, result);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_myProducts.isEmpty) {
+        final cached = await CacheManager.getCachedData(_myProductsCacheKey);
+        if (cached != null) {
+          _myProducts = List<dynamic>.from(cached['data']['products'] ?? []);
+          _myTotalPages = cached['totalPages'] ?? 1;
+          _myTotalResults = cached['totalResults'] ?? _myProducts.length;
+          _myHasMore = _myCurrentPage < _myTotalPages;
+        }
+      }
     } finally {
       _setLoading(false);
     }

@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../core/network/notification_service.dart';
+import '../core/utils/cache_manager.dart';
 
 class NotificationProvider with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
+
+  static const String _cacheKey = 'notifications';
+
   List<dynamic> _notifications = [];
   bool _isLoading = false;
   bool _isFetchingMore = false;
@@ -39,8 +43,21 @@ class NotificationProvider with ChangeNotifier {
       } else {
         _hasMore = false;
       }
+      await CacheManager.cacheData(_cacheKey, result);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_notifications.isEmpty) {
+        final cached = await CacheManager.getCachedData(_cacheKey);
+        if (cached != null) {
+          final data = cached['data'] as Map<String, dynamic>?;
+          _notifications = (data?['notifications'] as List<dynamic>?) ?? [];
+          final totalPages = cached['totalPages'];
+          if (totalPages != null) {
+            _totalPages = totalPages as int;
+            _hasMore = _currentPage < _totalPages;
+          }
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();

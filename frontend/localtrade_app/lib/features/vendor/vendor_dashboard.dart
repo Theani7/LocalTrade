@@ -9,6 +9,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/vendor_order_status_badge.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../widgets/connection_status_banner.dart';
 import '../../core/utils/app_animations.dart';
 import 'vendor_orders_screen.dart';
 import 'vendor_inventory_screen.dart';
@@ -47,7 +48,12 @@ class _VendorDashboardState extends State<VendorDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _screens[_currentIndex],
+      body: Column(
+        children: [
+          const ConnectionStatusBanner(),
+          Expanded(child: _screens[_currentIndex]),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

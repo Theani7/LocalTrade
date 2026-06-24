@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../core/network/admin_service.dart';
+import '../core/utils/cache_manager.dart';
 
 class AdminProvider with ChangeNotifier {
   final AdminService _adminService = AdminService();
   
+  static const String _analyticsCacheKey = 'admin_analytics';
+  static const String _usersCacheKey = 'admin_users';
+  static const String _vendorsCacheKey = 'admin_vendors';
+  static const String _productsCacheKey = 'admin_products';
+  static const String _ordersCacheKey = 'admin_orders';
+
   Map<String, dynamic>? _analytics;
   List<dynamic> _users = [];
   List<dynamic> _vendors = [];
@@ -47,8 +54,15 @@ class AdminProvider with ChangeNotifier {
     try {
       final result = await _adminService.getSystemAnalytics();
       _analytics = result['data'];
+      await CacheManager.cacheData(_analyticsCacheKey, result);
     } catch (e) {
       _error = e.toString();
+      if (_analytics == null) {
+        final cached = await CacheManager.getCachedData(_analyticsCacheKey);
+        if (cached != null) {
+          _analytics = cached['data'];
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -82,8 +96,20 @@ class AdminProvider with ChangeNotifier {
       
       _hasMoreUsers = _usersPage < (result['totalPages'] ?? 1);
       if (_hasMoreUsers) _usersPage++;
+
+      if (refresh) {
+        await CacheManager.cacheData(_usersCacheKey, result);
+      }
     } catch (e) {
       _error = e.toString();
+      if (_users.isEmpty) {
+        final cached = await CacheManager.getCachedData(_usersCacheKey);
+        if (cached != null) {
+          _users = List<dynamic>.from(cached['data']['users'] ?? []);
+          _userStats = cached['data']['stats'];
+          _hasMoreUsers = false;
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -117,8 +143,20 @@ class AdminProvider with ChangeNotifier {
 
       _hasMoreVendors = _vendorsPage < (result['totalPages'] ?? 1);
       if (_hasMoreVendors) _vendorsPage++;
+
+      if (refresh) {
+        await CacheManager.cacheData(_vendorsCacheKey, result);
+      }
     } catch (e) {
       _error = e.toString();
+      if (_vendors.isEmpty) {
+        final cached = await CacheManager.getCachedData(_vendorsCacheKey);
+        if (cached != null) {
+          _vendors = List<dynamic>.from(cached['data']['vendors'] ?? []);
+          _vendorStats = cached['data']['stats'];
+          _hasMoreVendors = false;
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -152,8 +190,20 @@ class AdminProvider with ChangeNotifier {
 
       _hasMoreProducts = _productsPage < (result['totalPages'] ?? 1);
       if (_hasMoreProducts) _productsPage++;
+
+      if (refresh) {
+        await CacheManager.cacheData(_productsCacheKey, result);
+      }
     } catch (e) {
       _error = e.toString();
+      if (_products.isEmpty) {
+        final cached = await CacheManager.getCachedData(_productsCacheKey);
+        if (cached != null) {
+          _products = List<dynamic>.from(cached['data']['products'] ?? []);
+          _productStats = cached['data']['stats'];
+          _hasMoreProducts = false;
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -187,8 +237,20 @@ class AdminProvider with ChangeNotifier {
 
       _hasMoreOrders = _ordersPage < (result['totalPages'] ?? 1);
       if (_hasMoreOrders) _ordersPage++;
+
+      if (refresh) {
+        await CacheManager.cacheData(_ordersCacheKey, result);
+      }
     } catch (e) {
       _error = e.toString();
+      if (_orders.isEmpty) {
+        final cached = await CacheManager.getCachedData(_ordersCacheKey);
+        if (cached != null) {
+          _orders = List<dynamic>.from(cached['data']['orders'] ?? []);
+          _orderStats = cached['data']['stats'];
+          _hasMoreOrders = false;
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -431,8 +432,37 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
                                 ),
                               ] else
                                 const Spacer(),
-                              // Chevron
-                              const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
+                              // Reorder button for delivered orders
+                              if (status == 'Delivered')
+                                GestureDetector(
+                                  onTap: () => _handleReorder(context, order),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.coralLight,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.replay_rounded, size: 12, color: AppColors.coralDark),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Reorder',
+                                          style: AppTextStyles.label.copyWith(
+                                            color: AppColors.coralDark,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              if (status != 'Delivered') ...[
+                                const Spacer(),
+                                // Chevron
+                                const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
+                              ],
                             ],
                           ),
                         ),
@@ -516,6 +546,88 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
       case 'packet': return 'pkt';
       case 'bundle': return 'bundle';
       default: return '';
+    }
+  }
+
+  void _handleReorder(BuildContext context, Map<String, dynamic> order) {
+    final products = order['products'] as List? ?? [];
+    if (products.isEmpty) return;
+
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    final reorderItems = <Map<String, dynamic>>[];
+    final skippedItems = <String>[];
+
+    for (final p in products) {
+      final productData = p['product'];
+      if (productData is! Map) continue;
+
+      final productId = (productData['_id'] ?? '').toString();
+      if (productId.isEmpty) continue;
+
+      final stock = productData['stockQuantity'] ?? 0;
+      final status = productData['productStatus'] ?? 'Available';
+
+      if (stock <= 0 || status != 'Available') {
+        skippedItems.add(productData['title'] ?? 'Item');
+        continue;
+      }
+
+      final quantity = (p['quantity'] ?? 1) as int;
+      final clampedQty = quantity > stock ? stock : quantity;
+
+      reorderItems.add({
+        'productId': productId,
+        'title': productData['title'] ?? '',
+        'price': p['price'] ?? productData['price'] ?? 0,
+        'priceUnit': p['priceUnit'] ?? productData['priceUnit'] ?? 'piece',
+        'imageUrl': (productData['images'] as List?)?.isNotEmpty == true
+            ? productData['images'][0]
+            : '',
+        'vendorId': (order['vendorId'] is Map
+                ? order['vendorId']['_id']
+                : order['vendorId'])
+            ?.toString() ??
+            '',
+        'vendorName': (order['vendorId'] is Map
+                ? (order['vendorId']['shopName'] ??
+                    order['vendorId']['fullName'])
+                : '')
+            ?.toString() ??
+            '',
+        'quantity': clampedQty,
+      });
+    }
+
+    if (reorderItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('None of the items are available for reorder'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    cart.addItems(reorderItems);
+
+    if (context.mounted) {
+      String message = '${reorderItems.length} item${reorderItems.length == 1 ? '' : 's'} added to cart';
+      if (skippedItems.isNotEmpty) {
+        message += ' (${skippedItems.length} unavailable)';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: AppColors.coral,
+            onPressed: () {
+              Navigator.pushNamed(context, '/cart');
+            },
+          ),
+        ),
+      );
     }
   }
 }

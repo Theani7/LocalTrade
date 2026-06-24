@@ -1,9 +1,13 @@
 import 'package:flutter/foundation.dart';
 import '../core/network/order_service.dart';
+import '../core/utils/cache_manager.dart';
 
 class OrderProvider with ChangeNotifier {
   final OrderService _orderService = OrderService();
   
+  static const String _myOrdersCacheKey = 'my_orders';
+  static const String _vendorOrdersCacheKey = 'vendor_orders';
+
   List<dynamic> _orders = [];
   List<dynamic> _vendorOrders = [];
   bool _isLoading = false;
@@ -44,8 +48,18 @@ class OrderProvider with ChangeNotifier {
       } else {
         _myHasMore = false;
       }
+      await CacheManager.cacheData(_myOrdersCacheKey, result);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_orders.isEmpty) {
+        final cached = await CacheManager.getCachedData(_myOrdersCacheKey);
+        if (cached != null) {
+          _orders = List<dynamic>.from(cached['data']['orders'] ?? []);
+          _myTotalPages = cached['totalPages'] ?? 1;
+          _myTotalResults = cached['totalResults'] ?? _orders.length;
+          _myHasMore = _myCurrentPage < _myTotalPages;
+        }
+      }
     } finally {
       _setLoading(false);
     }
@@ -89,8 +103,18 @@ class OrderProvider with ChangeNotifier {
       } else {
         _hasMore = false;
       }
+      await CacheManager.cacheData(_vendorOrdersCacheKey, result);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_vendorOrders.isEmpty) {
+        final cached = await CacheManager.getCachedData(_vendorOrdersCacheKey);
+        if (cached != null) {
+          _vendorOrders = List<dynamic>.from(cached['data']['orders'] ?? []);
+          _totalPages = cached['totalPages'] ?? 1;
+          _totalResults = cached['totalResults'] ?? _vendorOrders.length;
+          _hasMore = _currentPage < _totalPages;
+        }
+      }
     } finally {
       _setLoading(false);
     }

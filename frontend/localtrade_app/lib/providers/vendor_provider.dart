@@ -1,9 +1,13 @@
 import 'package:flutter/foundation.dart';
 import '../core/network/vendor_service.dart';
+import '../core/utils/cache_manager.dart';
 
 class VendorProvider with ChangeNotifier {
   final VendorService _vendorService = VendorService();
   
+  static const String _analyticsCacheKey = 'vendor_analytics';
+  static const String _profileCacheKey = 'vendor_profile';
+
   Map<String, dynamic>? _analytics;
   Map<String, dynamic>? _profile;
   bool _isLoading = false;
@@ -22,8 +26,15 @@ class VendorProvider with ChangeNotifier {
     try {
       final result = await _vendorService.getAnalytics();
       _analytics = result['data'];
+      await CacheManager.cacheData(_analyticsCacheKey, result);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_analytics == null) {
+        final cached = await CacheManager.getCachedData(_analyticsCacheKey);
+        if (cached != null) {
+          _analytics = cached['data'];
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -38,8 +49,15 @@ class VendorProvider with ChangeNotifier {
     try {
       final result = await _vendorService.getProfile();
       _profile = result['data']['vendor'];
+      await CacheManager.cacheData(_profileCacheKey, result);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
+      if (_profile == null) {
+        final cached = await CacheManager.getCachedData(_profileCacheKey);
+        if (cached != null) {
+          _profile = cached['data']['vendor'];
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();

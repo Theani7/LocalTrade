@@ -12,6 +12,7 @@ import '../../core/utils/auth_guard.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/review_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../widgets/skeleton_loaders.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
@@ -777,14 +778,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Reorder coming soon'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
+              onPressed: _handleReorder,
               icon: const Icon(Icons.replay_rounded, size: 18),
               label: Text('Reorder', style: AppTextStyles.cardTitle.copyWith(fontSize: 13, color: AppColors.ink)),
               style: ElevatedButton.styleFrom(
@@ -946,6 +940,91 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         ],
       ),
     );
+  }
+
+  // ── Reorder ──────────────────────────────────────────────────────────────
+  void _handleReorder() {
+    if (_order == null) return;
+
+    final products = _order['products'] as List? ?? [];
+    if (products.isEmpty) return;
+
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    final reorderItems = <Map<String, dynamic>>[];
+    final skippedItems = <String>[];
+
+    for (final p in products) {
+      final productData = p['product'];
+      if (productData is! Map) continue;
+
+      final productId = (productData['_id'] ?? '').toString();
+      if (productId.isEmpty) continue;
+
+      final stock = productData['stockQuantity'] ?? 0;
+      final status = productData['productStatus'] ?? 'Available';
+
+      if (stock <= 0 || status != 'Available') {
+        skippedItems.add(productData['title'] ?? 'Item');
+        continue;
+      }
+
+      final quantity = (p['quantity'] ?? 1) as int;
+      final clampedQty = quantity > stock ? stock : quantity;
+
+      reorderItems.add({
+        'productId': productId,
+        'title': productData['title'] ?? '',
+        'price': p['price'] ?? productData['price'] ?? 0,
+        'priceUnit': p['priceUnit'] ?? productData['priceUnit'] ?? 'piece',
+        'imageUrl': (productData['images'] as List?)?.isNotEmpty == true
+            ? productData['images'][0]
+            : '',
+        'vendorId': (_order['vendorId'] is Map
+                ? _order['vendorId']['_id']
+                : _order['vendorId'])
+            ?.toString() ??
+            '',
+        'vendorName': (_order['vendorId'] is Map
+                ? (_order['vendorId']['shopName'] ??
+                    _order['vendorId']['fullName'])
+                : '')
+            ?.toString() ??
+            '',
+        'quantity': clampedQty,
+      });
+    }
+
+    if (reorderItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('None of the items are available for reorder'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    cart.addItems(reorderItems);
+
+    if (mounted) {
+      String message = '${reorderItems.length} item${reorderItems.length == 1 ? '' : 's'} added to cart';
+      if (skippedItems.isNotEmpty) {
+        message += ' (${skippedItems.length} unavailable)';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: AppColors.coral,
+            onPressed: () {
+              Navigator.pushNamed(context, '/cart');
+            },
+          ),
+        ),
+      );
+    }
   }
 
   // ── Cancel Modal ──────────────────────────────────────────────────────────
