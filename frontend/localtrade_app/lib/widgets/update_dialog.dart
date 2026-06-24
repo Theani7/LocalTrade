@@ -69,12 +69,17 @@ class _UpdateDialogState extends State<UpdateDialog> {
 
   Future<void> _installApk() async {
     if (_downloadPath == null) return;
-    try {
-      await OpenFilex.open(_downloadPath!);
-    } catch (e) {
+    final result = await OpenFilex.open(
+      _downloadPath!,
+      type: 'application/vnd.android.package-archive',
+    );
+    if (result.type != ResultType.done) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open APK: $e')),
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: AppColors.danger,
+        ),
       );
     }
   }
