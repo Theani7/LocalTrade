@@ -6,10 +6,12 @@ import 'dart:convert';
 import '../../providers/vendor_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/category_provider.dart';
+import '../../core/services/update_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/app_animations.dart';
+import '../../widgets/update_dialog.dart';
 import '../common/change_password_screen.dart';
 import '../common/logout_dialog.dart';
 
@@ -379,6 +381,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                   _buildInfoBanner(),
                   const SizedBox(height: 16),
                   _buildChangePasswordSection(),
+                  const SizedBox(height: 16),
+                  _buildUpdateSection(),
                   const SizedBox(height: 16),
                   _buildLogoutSection(),
                   const SizedBox(height: 80),
@@ -1261,6 +1265,74 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                       const SizedBox(height: 2),
                       Text(
                         'Update your password',
+                        style: AppTextStyles.caption,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.muted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Check for updates section
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildUpdateSection() {
+    final cached = UpdateService().cached;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () async {
+            final info = await UpdateService().checkForUpdate(force: true);
+            if (context.mounted) {
+              UpdateDialog.show(context, info, fromManualCheck: true);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.blueLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.system_update_outlined, size: 20, color: AppColors.blueDark),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Check for updates', style: AppTextStyles.cardTitle),
+                      const SizedBox(height: 2),
+                      Text(
+                        cached != null && cached.hasUpdate
+                            ? 'v${cached.latestVersion} available'
+                            : 'App version v${cached?.currentVersion ?? '...'}',
                         style: AppTextStyles.caption,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

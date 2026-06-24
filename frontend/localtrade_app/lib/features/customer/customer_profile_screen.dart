@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../core/services/update_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -13,6 +14,7 @@ import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../widgets/update_dialog.dart';
 import 'customer_orders_screen.dart';
 import 'notification_screen.dart';
 import 'help_support_screen.dart';
@@ -624,6 +626,8 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
                 SlideFadePageRoute(builder: (_) => const ChangePasswordScreen())),
           ),
           const Divider(height: 1, indent: 52),
+          _buildUpdateTile(),
+          const Divider(height: 1, indent: 52),
           _buildAddressTile(user, hasAddress),
         ],
       ),
@@ -693,6 +697,25 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildUpdateTile() {
+    final cached = UpdateService().cached;
+    return _buildSettingsTile(
+      icon: Icons.system_update_outlined,
+      title: 'Check for updates',
+      subtitle: cached != null && cached.hasUpdate
+          ? 'v${cached.latestVersion} available'
+          : 'App version v${cached?.currentVersion ?? '...'}',
+      iconBg: AppColors.blueLight,
+      iconColor: AppColors.blueDark,
+      onTap: () async {
+        final updateInfo = await UpdateService().checkForUpdate(force: true);
+        if (context.mounted) {
+          UpdateDialog.show(context, updateInfo, fromManualCheck: true);
+        }
+      },
     );
   }
 

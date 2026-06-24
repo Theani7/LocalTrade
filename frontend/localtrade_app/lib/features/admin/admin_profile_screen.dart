@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/services/update_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/app_animations.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/update_dialog.dart';
 import '../common/change_password_screen.dart';
 import '../common/logout_dialog.dart';
 
@@ -118,6 +120,66 @@ class AdminProfileScreen extends StatelessWidget {
                   Navigator.push(context, SlideFadePageRoute(builder: (_) => const ChangePasswordScreen()));
                 }),
               ],
+            ),
+            const SizedBox(height: 16),
+
+            // Check for updates
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  boxShadow: [BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    onTap: () async {
+                      final info = await UpdateService().checkForUpdate(force: true);
+                      if (context.mounted) {
+                        UpdateDialog.show(context, info, fromManualCheck: true);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.blueLight,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.system_update_outlined, size: 20, color: AppColors.blueDark),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Check for updates', style: AppTextStyles.cardTitle),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Tap to check for new version',
+                                  style: AppTextStyles.caption,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.muted),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 24),
 
