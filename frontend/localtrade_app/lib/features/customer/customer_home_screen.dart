@@ -54,10 +54,10 @@ class CustomerHomeBody extends StatefulWidget {
   });
 
   @override
-  State<CustomerHomeBody> createState() => _CustomerHomeBodyState();
+  State<CustomerHomeBody> createState() => CustomerHomeBodyState();
 }
 
-class _CustomerHomeBodyState extends State<CustomerHomeBody> {
+class CustomerHomeBodyState extends State<CustomerHomeBody> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 

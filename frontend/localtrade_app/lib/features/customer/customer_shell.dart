@@ -21,19 +21,18 @@ class CustomerShell extends StatefulWidget {
 class _CustomerShellState extends State<CustomerShell> {
   int _currentIndex = 0;
   final GlobalKey _cartIconKey = GlobalKey();
-  final GlobalKey _homeKey = GlobalKey();
+  final GlobalKey<CustomerHomeBodyState> _homeKey = GlobalKey<CustomerHomeBodyState>();
 
   void _switchTab(int index) {
     setState(() => _currentIndex = index);
   }
 
   void _onCategoryTap(String category) {
-    // Switch to home tab first, then set category after build
     _switchTab(0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = _homeKey.currentState;
       if (state != null) {
-        (state as dynamic).setCategory(category);
+        state.setCategory(category);
       }
     });
   }
