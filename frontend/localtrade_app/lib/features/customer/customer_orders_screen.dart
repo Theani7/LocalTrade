@@ -232,12 +232,19 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
                     'Local vendor';
                 final totalAmount = order['totalAmount'] ?? 0;
 
-                // Extract product names
+                // Extract product names with units
                 final productNames = <String>[];
+                String? firstQtyUnit;
                 for (final p in products) {
                   final productData = p['product'];
                   final title = productData is Map ? (productData['title'] ?? '') : '';
+                  final qty = p['quantity'] ?? 1;
+                  final pUnit = p['priceUnit'] ?? 'piece';
+                  final uLabel = _unitLabel(pUnit);
                   if (title.isNotEmpty) productNames.add(title);
+                  if (firstQtyUnit == null && qty > 0) {
+                    firstQtyUnit = '${qty.toInt()}${uLabel.isNotEmpty ? ' $uLabel' : ''}';
+                  }
                 }
 
                 // Get first product image
@@ -374,6 +381,13 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
                                         ),
                                       ],
                                     ),
+                                    if (firstQtyUnit != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        firstQtyUnit,
+                                        style: AppTextStyles.caption.copyWith(color: AppColors.coral),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -491,5 +505,17 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
         ],
       ),
     );
+  }
+
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
   }
 }

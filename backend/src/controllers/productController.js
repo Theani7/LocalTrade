@@ -146,6 +146,8 @@ exports.createProduct = catchAsync(async (req, res, next) => {
     vendorId: req.user.id,
     vendorName: req.user.shopName || req.user.fullName,
     location: req.user.address
+      ? [req.user.address.street, req.user.address.city, req.user.address.state].filter(Boolean).join(', ')
+      : ''
   };
 
   // Handle Image Uploads

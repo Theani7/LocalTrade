@@ -12,6 +12,7 @@ router.get('/analytics', adminController.getSystemAnalytics);
 router.get('/analytics/export', adminController.exportAnalytics);
 router.get('/users', adminController.getAllUsers);
 router.get('/vendors', adminController.getAllVendors);
+router.get('/vendors/:id', adminController.getVendorDetail);
 router.get('/products', adminController.getAllProducts);
 router.get('/products/:id', adminController.getProduct);
 router.get('/orders', adminController.getAllOrders);

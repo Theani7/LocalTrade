@@ -197,6 +197,20 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
 
   const totalCount = await User.countDocuments(filter);
 
+  const vendorIds = vendors.map(v => v._id);
+  const productCounts = await Product.aggregate([
+    { $match: { vendorId: { $in: vendorIds } } },
+    { $group: { _id: '$vendorId', count: { $sum: 1 } } },
+  ]);
+  const countMap = {};
+  for (const pc of productCounts) {
+    countMap[pc._id.toString()] = pc.count;
+  }
+  const vendorsWithCounts = vendors.map(v => ({
+    ...v.toObject(),
+    productCount: countMap[v._id.toString()] || 0,
+  }));
+
   res.status(200).json({
     success: true,
     status: 'success',
@@ -205,7 +219,7 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
     totalPages: Math.ceil(totalCount / limit),
     results: vendors.length,
     data: {
-      vendors,
+      vendors: vendorsWithCounts,
       stats: {
         totalVendors,
         approvedVendors,
@@ -336,6 +350,76 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
         deliveredOrders,
         cancelledOrders,
       }
+    }
+  });
+});
+
+// @desc    Get vendor detail with stats
+// @route   GET /api/v1/admin/vendors/:id
+// @access  Private/Admin
+exports.getVendorDetail = catchAsync(async (req, res, next) => {
+  const vendor = await User.findById(req.params.id).select('-password');
+
+  if (!vendor || vendor.role !== 'vendor') {
+    return next(new AppError('No vendor found with that ID', 404));
+  }
+
+  const vendorId = vendor._id;
+
+  const totalProducts = await Product.countDocuments({ vendorId });
+  const availableProducts = await Product.countDocuments({ vendorId, productStatus: 'Available' });
+  const outOfStockProducts = await Product.countDocuments({ vendorId, productStatus: 'OutOfStock' });
+
+  const orderStats = await Order.aggregate([
+    { $match: { vendorId: vendorId } },
+    {
+      $group: {
+        _id: null,
+        totalOrders: { $sum: 1 },
+        deliveredOrders: {
+          $sum: { $cond: [{ $eq: ['$orderStatus', 'Delivered'] }, 1, 0] }
+        },
+        pendingOrders: {
+          $sum: { $cond: [{ $eq: ['$orderStatus', 'Pending'] }, 1, 0] }
+        },
+        cancelledOrders: {
+          $sum: { $cond: [{ $eq: ['$orderStatus', 'Cancelled'] }, 1, 0] }
+        },
+        totalRevenue: {
+          $sum: {
+            $cond: [{ $eq: ['$orderStatus', 'Delivered'] }, '$totalAmount', 0]
+          }
+        },
+      }
+    }
+  ]);
+
+  const stats = orderStats[0] || {
+    totalOrders: 0,
+    deliveredOrders: 0,
+    pendingOrders: 0,
+    cancelledOrders: 0,
+    totalRevenue: 0,
+  };
+
+  const recentOrders = await Order.find({ vendorId })
+    .populate('customerId', 'fullName')
+    .sort('-createdAt')
+    .limit(5)
+    .select('orderStatus totalAmount createdAt customerId');
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    data: {
+      vendor,
+      stats: {
+        totalProducts,
+        availableProducts,
+        outOfStockProducts,
+        ...stats,
+      },
+      recentOrders,
     }
   });
 });

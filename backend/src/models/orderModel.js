@@ -28,6 +28,10 @@ const orderSchema = new mongoose.Schema(
           type: Number,
           required: [true, 'Product must have a price at time of order'],
         },
+        priceUnit: {
+          type: String,
+          default: 'piece',
+        },
       },
     ],
     totalAmount: {

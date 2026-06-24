@@ -14,6 +14,7 @@ import '../../core/utils/app_animations.dart';
 import '../../widgets/status_badge.dart';
 import '../customer/notification_screen.dart';
 import 'admin_product_detail_screen.dart';
+import 'admin_vendor_detail_screen.dart';
 import 'admin_categories_screen.dart';
 
 class AdminStatTile extends StatelessWidget {
@@ -1224,7 +1225,16 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
 
     return Opacity(
       opacity: isSuspended ? 0.75 : 1.0,
-      child: Container(
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            SlideFadePageRoute(
+              builder: (_) => AdminVendorDetailScreen(vendorId: vendor['_id']),
+            ),
+          );
+        },
+        child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -1293,6 +1303,7 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

@@ -544,6 +544,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         : '';
     final quantity = p['quantity'] ?? 1;
     final unitPrice = p['price'] ?? 0;
+    final priceUnit = p['priceUnit'] ?? 'piece';
+    final unitLabel = _unitLabel(priceUnit);
     final lineTotal = unitPrice * quantity;
     final stock = product['stockQuantity'] ?? 0;
 
@@ -588,12 +590,12 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 Row(
                   children: [
                     Text(
-                      'Qty: $quantity',
+                      'Qty: $quantity${unitLabel.isNotEmpty ? ' $unitLabel' : ''}',
                       style: AppTextStyles.caption,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'x Rs. $unitPrice',
+                      'x Rs. $unitPrice${unitLabel.isNotEmpty ? '/$unitLabel' : ''}',
                       style: AppTextStyles.caption,
                     ),
                   ],
@@ -1507,6 +1509,18 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         return Icons.cancel_outlined;
       default:
         return Icons.schedule_rounded;
+    }
+  }
+
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
     }
   }
 }

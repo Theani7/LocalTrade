@@ -152,6 +152,21 @@ class AdminService {
     }
   }
 
+  Future<Map<String, dynamic>> getVendorDetail(String vendorId) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.get(
+      '/admin/vendors/$vendorId',
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to load vendor');
+    }
+  }
+
   Future<String> exportAnalytics({String type = 'overview'}) async {
     final token = await _authService.getToken();
     final response = await _apiService.get(

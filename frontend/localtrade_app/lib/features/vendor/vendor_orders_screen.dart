@@ -334,6 +334,8 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
               String? imageUrl;
               int qty = p['quantity'] ?? 1;
               int price = p['price'] ?? 0;
+              String priceUnit = p['priceUnit'] ?? 'piece';
+              String pUnitLabel = _unitLabel(priceUnit);
 
               if (productData is Map) {
                 title = productData['title'] ?? 'Product';
@@ -401,7 +403,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Qty: $qty',
+                            'Qty: $qty${pUnitLabel.isNotEmpty ? ' $pUnitLabel' : ''}',
                             style: AppTextStyles.caption,
                           ),
                         ],
@@ -409,7 +411,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                     ),
                     // Price
                     Text(
-                      'Rs. $price',
+                      'Rs. $price${pUnitLabel.isNotEmpty ? '/$pUnitLabel' : ''}',
                       style: AppTextStyles.cardTitle.copyWith(
                         color: isCancelled ? AppColors.muted : AppColors.ink,
                       ),
@@ -679,5 +681,17 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
       return parts.join(', ');
     }
     return raw?.toString() ?? '';
+  }
+
+  String _unitLabel(String unit) {
+    switch (unit) {
+      case 'kg': return 'kg';
+      case '100g': return '100g';
+      case 'liter': return 'L';
+      case 'dozen': return 'dozen';
+      case 'packet': return 'pkt';
+      case 'bundle': return 'bundle';
+      default: return '';
+    }
   }
 }

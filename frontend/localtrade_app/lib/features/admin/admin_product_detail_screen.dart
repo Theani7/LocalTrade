@@ -82,7 +82,8 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
     final createdAt = product['createdAt'];
     final updatedAt = product['updatedAt'];
     final category = product['category'] ?? '';
-    final location = product['location'] ?? '';
+    final rawLocation = product['location'] ?? '';
+    final location = rawLocation is Map ? _formatAddress(rawLocation) : rawLocation.toString();
 
     return SingleChildScrollView(
       child: Column(
@@ -213,10 +214,13 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
                   _buildCard(
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Icon(Icons.location_on_outlined, size: 16, color: AppColors.muted),
                           const SizedBox(width: 6),
-                          Text(location, style: AppTextStyles.bodyMuted),
+                          Expanded(
+                            child: Text(location, style: AppTextStyles.bodyMuted),
+                          ),
                         ],
                       ),
                     ],

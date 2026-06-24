@@ -95,6 +95,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
         product: productId,
         quantity: item.quantity,
         price: updatedProduct.price,
+        priceUnit: updatedProduct.priceUnit || 'piece',
       });
     }
 
