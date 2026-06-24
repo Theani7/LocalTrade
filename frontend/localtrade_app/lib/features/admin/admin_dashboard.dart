@@ -146,8 +146,8 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      child: Row(
-        children: [
+                      child: Row(
+                        children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1569,30 +1569,36 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Price + status
+                          // Price + status + delete
                           Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            fit: FlexFit.loose,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: 4),
-                                _buildProductStatusChip(isAvailable),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    const SizedBox(height: 4),
+                                    _buildProductStatusChip(isAvailable),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: isDeleting ? AppColors.mutedLight : AppColors.dangerLight,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: isDeleting
+                                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                         : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                                  ),
+                                ),
                               ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Delete button
-                          GestureDetector(
-                            onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isDeleting ? AppColors.mutedLight : AppColors.dangerLight,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: isDeleting
-                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
-                                   : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
                             ),
                           ),
                         ],
