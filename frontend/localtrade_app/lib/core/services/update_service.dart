@@ -29,11 +29,18 @@ class UpdateService {
 
   UpdateInfo? get cached => _cachedInfo;
 
+  static const String _fallbackVersion = '2.1.1';
+
   Future<UpdateInfo> checkForUpdate({bool force = false}) async {
     if (_cachedInfo != null && !force) return _cachedInfo!;
 
-    final info = await PackageInfo.fromPlatform();
-    final currentVersion = info.version;
+    String currentVersion;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      currentVersion = info.version;
+    } catch (_) {
+      currentVersion = _fallbackVersion;
+    }
 
     try {
       final uri = Uri.parse('https://api.github.com/repos/$_repo/releases/latest');
