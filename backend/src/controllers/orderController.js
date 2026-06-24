@@ -299,7 +299,7 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   // Send notification to customer
   await sendNotification(
     order.customerId,
-    'Order ${status.toLowerCase()}',
+    `Order ${status.toLowerCase()}`,
     `Your order #${order._id.toString().substring(18)} is now ${status.toLowerCase()}.`,
     { orderId: order._id.toString(), type: 'order_update' },
     'Order'
