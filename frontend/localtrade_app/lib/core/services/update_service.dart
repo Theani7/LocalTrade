@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 
 class UpdateInfo {
   final bool hasUpdate;
@@ -29,7 +31,7 @@ class UpdateService {
 
   UpdateInfo? get cached => _cachedInfo;
 
-  static const String _fallbackVersion = '2.2.0';
+  static const String _fallbackVersion = '2.2.1';
 
   Future<UpdateInfo> checkForUpdate({bool force = false}) async {
     if (_cachedInfo != null && !force) return _cachedInfo!;
@@ -60,18 +62,30 @@ class UpdateService {
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final latestTag = (data['tag_name'] as String?)?.replaceFirst('v', '') ?? currentVersion;
-      final releaseNotes = (data['body'] as String?) ?? '';
-      final downloadUrl = (data['html_url'] as String?) ?? 'https://github.com/$_repo/releases/latest';
+      final tag = (data['tag_name'] as String?)?.replaceFirst('v', '') ?? currentVersion;
 
-      final hasUpdate = _isNewer(latestTag, currentVersion);
+      String apkUrl = 'https://github.com/$_repo/releases/latest';
+      final assets = data['assets'] as List<dynamic>?;
+      if (assets != null) {
+        for (final asset in assets) {
+          final name = asset['name'] as String? ?? '';
+          if (name.endsWith('.apk')) {
+            apkUrl = asset['browser_download_url'] as String? ?? apkUrl;
+            break;
+          }
+        }
+      }
+
+      final releaseNotes = (data['body'] as String?) ?? '';
+
+      final hasUpdate = _isNewer(tag, currentVersion);
 
       _cachedInfo = UpdateInfo(
         hasUpdate: hasUpdate,
         currentVersion: currentVersion,
-        latestVersion: latestTag,
+        latestVersion: tag,
         releaseNotes: releaseNotes,
-        downloadUrl: downloadUrl,
+        downloadUrl: apkUrl,
       );
     } catch (_) {
       _cachedInfo ??= UpdateInfo(
@@ -84,6 +98,29 @@ class UpdateService {
     }
 
     return _cachedInfo!;
+  }
+
+  Future<String> downloadApk({
+    required String url,
+    required void Function(int received, int total) onProgress,
+  }) async {
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/localtrade_update.apk');
+
+    final response = await http.Client().send(http.Request('GET', Uri.parse(url)));
+    final total = response.contentLength ?? -1;
+    final sink = file.openWrite(mode: FileMode.write);
+    int received = 0;
+
+    await for (final chunk in response.stream) {
+      sink.add(chunk);
+      received += chunk.length;
+      onProgress(received, total);
+    }
+
+    await sink.flush();
+    await sink.close();
+    return file.path;
   }
 
   bool _isNewer(String latest, String current) {
