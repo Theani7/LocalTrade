@@ -48,6 +48,10 @@ const categoryRoutes = require('./routes/categoryRoutes');
 
 const app = express();
 
+// Trust proxy — required when running behind a reverse proxy (Render, Nginx, etc.)
+// so that rate limiting and req.ip correctly read the real client IP from X-Forwarded-For.
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet({
   crossOriginResourcePolicy: false,
