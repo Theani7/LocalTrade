@@ -6,6 +6,7 @@ import '../../providers/vendor_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 import '../../core/utils/app_animations.dart';
@@ -70,10 +71,9 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
+      body: Column(
           children: [
             _buildHeader(),
             _buildFilterChips(),
@@ -160,7 +160,6 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -565,24 +564,24 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
             onPressed: () async {
               final messenger = ScaffoldMessenger.of(context);
               final provider = Provider.of<ProductProvider>(context, listen: false);
+              final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
               Navigator.pop(context);
               final success = await provider.deleteProduct(product['_id']);
-              if (success && mounted) {
-                Provider.of<VendorProvider>(context, listen: false).fetchAnalytics();
+              if (!mounted) return;
+              if (success) {
+                vendorProvider.fetchAnalytics();
               }
-              if (mounted) {
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(success
-                        ? '"$title" deleted'
-                        : 'Failed to delete product'),
-                    backgroundColor: success ? AppColors.success : AppColors.danger,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
-                  ),
-                );
-              }
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(success
+                      ? '"$title" deleted'
+                      : 'Failed to delete product'),
+                  backgroundColor: success ? AppColors.success : AppColors.danger,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+                ),
+              );
             },
             child: const Text('Delete'),
           ),

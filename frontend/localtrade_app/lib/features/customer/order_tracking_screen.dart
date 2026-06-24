@@ -13,6 +13,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/review_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
@@ -166,7 +167,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(

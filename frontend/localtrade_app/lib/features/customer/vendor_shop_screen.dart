@@ -6,6 +6,7 @@ import '../../core/utils/cloudinary_helper.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/skeleton_loaders.dart';
 
@@ -48,7 +49,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
     }
     final logoUrl = widget.vendor['shopLogo'] ?? '';
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [

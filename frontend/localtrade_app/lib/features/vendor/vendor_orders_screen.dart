@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/cloudinary_helper.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/vendor_order_status_badge.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -31,7 +32,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, _) {
@@ -613,6 +614,8 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final orderProvider =
         Provider.of<OrderProvider>(context, listen: false);
+    final vendorProvider =
+        Provider.of<VendorProvider>(context, listen: false);
     final success = await orderProvider.updateOrderStatus(
       orderId,
       status,
@@ -623,11 +626,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     setState(() => _updatingOrderId = null);
 
     if (success) {
-      // Refresh dashboard stats after any order status change
-      if (mounted) {
-        Provider.of<VendorProvider>(context, listen: false).fetchAnalytics();
-      }
-
+      vendorProvider.fetchAnalytics();
       String label;
       switch (status) {
         case 'Confirmed':

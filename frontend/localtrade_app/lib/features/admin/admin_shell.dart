@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/admin_provider.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/connection_status_banner.dart';
 import 'admin_dashboard.dart';
 import 'admin_profile_screen.dart';
@@ -28,7 +29,7 @@ class AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [

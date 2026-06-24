@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_scaffold.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -113,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(

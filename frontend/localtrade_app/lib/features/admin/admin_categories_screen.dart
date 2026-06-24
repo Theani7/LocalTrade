@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../providers/category_provider.dart';
+import '../../widgets/app_scaffold.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});
@@ -30,7 +31,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(
@@ -166,9 +167,9 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
               if (controller.text.trim().isEmpty) return;
               final provider = Provider.of<CategoryProvider>(context, listen: false);
               final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(ctx);
               final success = await provider.createCategory(controller.text.trim());
               if (!mounted) return;
-              Navigator.pop(ctx);
               if (success) {
                 _loadCategories();
               } else {
@@ -209,9 +210,9 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
               if (controller.text.trim().isEmpty) return;
               final provider = Provider.of<CategoryProvider>(context, listen: false);
               final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(ctx);
               final success = await provider.updateCategory(cat['_id'], name: controller.text.trim());
               if (!mounted) return;
-              Navigator.pop(ctx);
               if (success) {
                 _loadCategories();
               } else {
@@ -251,9 +252,9 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
             onPressed: () async {
               final provider = Provider.of<CategoryProvider>(context, listen: false);
               final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(ctx);
               final success = await provider.deleteCategory(cat['_id']);
               if (!mounted) return;
-              Navigator.pop(ctx);
               if (success) {
                 _loadCategories();
               } else {

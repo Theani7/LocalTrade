@@ -8,6 +8,7 @@ import '../../providers/category_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../widgets/app_scaffold.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   final dynamic product;
@@ -279,7 +280,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           ),
         );
       },
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: AppColors.background,

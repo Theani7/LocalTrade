@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../widgets/app_scaffold.dart';
 import '../common/logout_dialog.dart';
 
 class VendorPendingScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _VendorPendingScreenState extends State<VendorPendingScreen>
     final isSuspended = status == 'suspended';
     final shopName = user?['shopName'] ?? '';
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(
@@ -53,8 +54,7 @@ class _VendorPendingScreenState extends State<VendorPendingScreen>
         elevation: 0,
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: Padding(
+      body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
@@ -211,7 +211,6 @@ class _VendorPendingScreenState extends State<VendorPendingScreen>
             ],
           ),
         ),
-      ),
     );
   }
 }

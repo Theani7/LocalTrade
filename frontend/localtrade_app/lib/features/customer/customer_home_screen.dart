@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/cart_fly_animation.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/product_card.dart';
@@ -28,7 +29,7 @@ class CustomerHomeScreen extends StatefulWidget {
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: CustomerHomeBody(
         onNotificationTap: () => AuthGuard.requireAuthRoute(

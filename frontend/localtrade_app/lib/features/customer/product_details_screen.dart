@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/review_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'package:intl/intl.dart';
 
@@ -118,7 +119,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ? (widget.product['originalPrice'] ?? 0).toDouble()
             : null;
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [

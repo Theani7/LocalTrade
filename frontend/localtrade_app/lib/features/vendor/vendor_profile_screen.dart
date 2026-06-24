@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/app_animations.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/update_dialog.dart';
 import '../common/change_password_screen.dart';
 import '../common/logout_dialog.dart';
@@ -295,10 +296,9 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           ),
         );
       },
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Form(
+        body: Form(
       key: _formKey,
       child: Column(
         children: [
@@ -393,7 +393,6 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           _buildStickySaveBar(),
         ],
       ),
-        ),
       ),
       ),
     );
@@ -584,7 +583,6 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           ),
         ],
       ),
-      child: Column(children: children),
     );
   }
 
@@ -1305,9 +1303,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap: () async {
             final info = await UpdateService().checkForUpdate(force: true);
-            if (context.mounted) {
-              UpdateDialog.show(context, info, fromManualCheck: true);
-            }
+            if (!mounted) return;
+            UpdateDialog.show(context, info, fromManualCheck: true);
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

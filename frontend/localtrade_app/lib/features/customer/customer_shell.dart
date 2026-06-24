@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/cart_provider.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/connection_status_banner.dart';
 import 'customer_home_screen.dart';
 import 'cart_screen.dart';
@@ -41,7 +42,7 @@ class _CustomerShellState extends State<CustomerShell> {
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [

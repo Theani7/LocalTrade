@@ -11,6 +11,7 @@ import '../../core/utils/cloudinary_helper.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'checkout_screen.dart';
 
@@ -43,7 +44,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,

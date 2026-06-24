@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/feedback_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../widgets/app_scaffold.dart';
 
 class FeedbackSubmissionScreen extends StatefulWidget {
   const FeedbackSubmissionScreen({super.key});
@@ -68,7 +69,7 @@ class _FeedbackSubmissionScreenState extends State<FeedbackSubmissionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Feedback'),

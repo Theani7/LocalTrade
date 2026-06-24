@@ -3,6 +3,7 @@ import '../../core/network/admin_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
 
 class AdminProductDetailScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,

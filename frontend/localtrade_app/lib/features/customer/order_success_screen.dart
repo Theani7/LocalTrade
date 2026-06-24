@@ -3,6 +3,7 @@ import 'package:confetti/confetti.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/app_animations.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/app_button.dart';
 import 'customer_orders_screen.dart';
 
@@ -56,7 +57,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.of(context).disableAnimations;
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [

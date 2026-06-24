@@ -13,6 +13,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
 import '../../widgets/update_dialog.dart';
 import 'customer_orders_screen.dart';
@@ -44,7 +45,7 @@ class CustomerProfileScreen extends StatefulWidget {
 class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('My Account', style: AppTextStyles.screenTitle),
@@ -712,9 +713,8 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
       iconColor: AppColors.blueDark,
       onTap: () async {
         final updateInfo = await UpdateService().checkForUpdate(force: true);
-        if (context.mounted) {
-          UpdateDialog.show(context, updateInfo, fromManualCheck: true);
-        }
+        if (!mounted) return;
+        UpdateDialog.show(context, updateInfo, fromManualCheck: true);
       },
     );
   }
