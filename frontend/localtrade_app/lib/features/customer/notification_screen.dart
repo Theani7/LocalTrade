@@ -3,12 +3,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/product_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
+import 'order_tracking_screen.dart';
+import 'product_details_screen.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -325,6 +328,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return GestureDetector(
       onTap: () {
         if (!isRead) provider.markAsRead(notification['_id']);
+        if (action != null) _handleActionTap(action);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -511,32 +515,63 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   // ── Action chip ──────────────────────────────────────────────
   Widget _buildActionChip(_ActionInfo action) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.coralLight,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            action.label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+    return GestureDetector(
+      onTap: () => _handleActionTap(action),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.coralLight,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              action.label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.coralDark,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.arrow_forward_rounded,
+              size: 14,
               color: AppColors.coralDark,
             ),
-          ),
-          const SizedBox(width: 4),
-          Icon(
-            Icons.arrow_forward_rounded,
-            size: 14,
-            color: AppColors.coralDark,
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  void _handleActionTap(_ActionInfo action) {
+    if (action.orderId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OrderTrackingScreen(orderId: action.orderId!),
+        ),
+      );
+    } else if (action.productId != null) {
+      _navigateToProduct(action.productId!);
+    }
+  }
+
+  void _navigateToProduct(String productId) {
+    final productProvider =
+        Provider.of<ProductProvider>(context, listen: false);
+    final product = productProvider.products.firstWhere(
+      (p) => p['_id'] == productId,
+      orElse: () => null,
+    );
+    if (product != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProductDetailsScreen(product: product),
+        ),
+      );
+    }
   }
 
   // ── Action info from notification data ───────────────────────
@@ -547,9 +582,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final type = notification['type'] as String? ?? '';
     final orderId = data is Map ? data['orderId'] : null;
     final vendorId = data is Map ? data['vendorId'] : null;
+    final productId = data is Map ? data['productId'] : null;
 
     if (type == 'Order' && orderId != null) {
       return _ActionInfo(label: 'View order', orderId: orderId);
+    }
+    if (type == 'Promotional' && productId != null) {
+      return _ActionInfo(label: 'View product', productId: productId);
     }
     if (type == 'Account' && vendorId != null) {
       return _ActionInfo(label: 'Review vendor', vendorId: vendorId);
@@ -654,6 +693,12 @@ class _ActionInfo {
   final String label;
   final String? orderId;
   final String? vendorId;
+  final String? productId;
 
-  const _ActionInfo({required this.label, this.orderId, this.vendorId});
+  const _ActionInfo({
+    required this.label,
+    this.orderId,
+    this.vendorId,
+    this.productId,
+  });
 }

@@ -16,6 +16,8 @@ import 'providers/feedback_provider.dart';
 import 'providers/review_provider.dart';
 import 'providers/category_provider.dart';
 import 'features/common/splash_screen.dart';
+import 'features/customer/order_tracking_screen.dart';
+import 'features/customer/notification_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -93,7 +95,19 @@ void main() async {
               body: body,
               type: type,
               onTap: () {
-                // Could navigate to notification screen or relevant page
+                final orderId = message.data['orderId'];
+                final nav = navigatorKey.currentState;
+                if (nav == null) return;
+
+                if (orderId != null) {
+                  nav.push(MaterialPageRoute(
+                    builder: (_) => OrderTrackingScreen(orderId: orderId),
+                  ));
+                } else {
+                  nav.push(MaterialPageRoute(
+                    builder: (_) => const NotificationScreen(),
+                  ));
+                }
               },
             );
           };
