@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:open_filex/open_filex.dart';
 import '../core/services/update_service.dart';
 import '../core/theme/app_colors.dart';
@@ -200,9 +201,26 @@ class _UpdateDialogState extends State<UpdateDialog> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: SingleChildScrollView(
-                  child: Text(
-                    widget.info.releaseNotes,
-                    style: AppTextStyles.caption.copyWith(height: 1.5),
+                  child: Markdown(
+                    data: widget.info.releaseNotes,
+                    shrinkWrap: true,
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      h1: AppTextStyles.sectionHeading.copyWith(fontSize: 15),
+                      h2: AppTextStyles.sectionHeading.copyWith(fontSize: 14),
+                      h3: AppTextStyles.body.copyWith(fontSize: 13),
+                      p: AppTextStyles.caption.copyWith(height: 1.5),
+                      code: AppTextStyles.caption.copyWith(
+                        backgroundColor: AppColors.divider,
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: AppColors.divider,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      listBullet: AppTextStyles.caption,
+                    ),
                   ),
                 ),
               ),
