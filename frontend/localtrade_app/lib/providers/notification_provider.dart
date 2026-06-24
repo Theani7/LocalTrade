@@ -26,9 +26,15 @@ class NotificationProvider with ChangeNotifier {
     notifyListeners();
     try {
       final result = await _notificationService.getNotifications(page: 1, limit: 20);
-      _notifications = result['data']['notifications'];
-      if (result['totalPages'] != null) {
-        _totalPages = result['totalPages'];
+      if (result['success'] == false) {
+        _error = result['message'] ?? 'Failed to load';
+        return;
+      }
+      final data = result['data'] as Map<String, dynamic>?;
+      _notifications = (data?['notifications'] as List<dynamic>?) ?? [];
+      final totalPages = result['totalPages'];
+      if (totalPages != null) {
+        _totalPages = totalPages as int;
         _hasMore = _currentPage < _totalPages;
       } else {
         _hasMore = false;
@@ -48,10 +54,16 @@ class NotificationProvider with ChangeNotifier {
     try {
       _currentPage++;
       final result = await _notificationService.getNotifications(page: _currentPage, limit: 20);
-      final newNotifications = result['data']['notifications'] as List<dynamic>;
+      if (result['success'] == false) {
+        _currentPage--;
+        return;
+      }
+      final data = result['data'] as Map<String, dynamic>?;
+      final newNotifications = (data?['notifications'] as List<dynamic>?) ?? [];
       _notifications.addAll(newNotifications);
-      if (result['totalPages'] != null) {
-        _totalPages = result['totalPages'];
+      final totalPages = result['totalPages'];
+      if (totalPages != null) {
+        _totalPages = totalPages as int;
         _hasMore = _currentPage < _totalPages;
       } else {
         _hasMore = false;

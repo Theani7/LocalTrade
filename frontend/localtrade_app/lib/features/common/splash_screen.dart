@@ -7,13 +7,10 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/app_animations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
-import '../../core/network/notification_service.dart';
 import '../admin/admin_shell.dart';
 import '../vendor/vendor_dashboard.dart';
 import '../vendor/vendor_pending_screen.dart';
 import '../customer/customer_shell.dart';
-
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,8 +21,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-  final NotificationService _notificationService = NotificationService();
-  StreamSubscription<RemoteMessage>? _messageSubscription;
 
   late final AnimationController _lineCtrl;
   late final Animation<double> _lineWidth;
@@ -119,18 +114,6 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _initializeApp() async {
     final splashFuture = Future.delayed(const Duration(seconds: 2));
 
-    final notificationFuture = _notificationService.init().then((_) {
-      _messageSubscription = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        _notificationService.showLocalNotification(message);
-        if (mounted) {
-          Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
-        }
-      });
-    }).catchError((e) {
-      debugPrint('Notification init error: $e');
-      return null;
-    });
-
     final auth = Provider.of<AuthProvider>(context, listen: false);
     debugPrint('Splash: waiting for auth.ready...');
     await auth.ready;
@@ -139,7 +122,12 @@ class _SplashScreenState extends State<SplashScreen>
     final authFuture = auth.isAuthenticated ? auth.validateToken() : Future.value(false);
     debugPrint('Splash: calling validateToken=${auth.isAuthenticated}');
 
-    await Future.wait([splashFuture, notificationFuture, authFuture]);
+    await Future.wait([splashFuture, authFuture]);
+
+    // Pre-fetch notifications if authenticated so badge count is ready
+    if (auth.isAuthenticated && mounted) {
+      Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+    }
     debugPrint('Splash: all futures done. isAuthenticated=${auth.isAuthenticated}, userRole=${auth.user?["role"]}, userId=${auth.user?["_id"]}');
 
     if (!mounted) return;
@@ -174,7 +162,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _messageSubscription?.cancel();
     _lineCtrl.dispose();
     _nameCtrl.dispose();
     _taglineCtrl.dispose();

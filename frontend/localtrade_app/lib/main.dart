@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
+import 'core/network/notification_service.dart';
+import 'core/widgets/floating_notification.dart';
 import 'providers/auth_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/product_provider.dart';
@@ -16,6 +18,8 @@ import 'providers/category_provider.dart';
 import 'features/common/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -41,6 +45,13 @@ void main() async {
     debugPrint('Firebase initialization failed: $e');
   }
 
+  // Initialize notification service (singleton) — sets up channel + permissions
+  try {
+    await NotificationService().init();
+  } catch (e) {
+    debugPrint('Notification service init error: $e');
+  }
+
   runApp(
     MultiProvider(
       providers: [
@@ -59,7 +70,34 @@ void main() async {
         builder: (context) {
           final cart = Provider.of<CartProvider>(context, listen: false);
           final auth = Provider.of<AuthProvider>(context, listen: false);
+          final notificationProvider =
+              Provider.of<NotificationProvider>(context, listen: false);
           auth.onLogoutCallback = cart.onLogout;
+
+          // Set up foreground FCM handler — shows floating overlay + refreshes provider
+          NotificationService().onForegroundMessage = (message) {
+            final ctx = navigatorKey.currentContext;
+            if (ctx == null) return;
+
+            // Refresh notification list
+            notificationProvider.fetchNotifications();
+
+            // Show in-app floating overlay
+            final title = message.notification?.title ?? 'LocalTrade';
+            final body = message.notification?.body ?? '';
+            final type = message.data['type'] ?? 'System';
+
+            showFloatingNotification(
+              ctx,
+              title: title,
+              body: body,
+              type: type,
+              onTap: () {
+                // Could navigate to notification screen or relevant page
+              },
+            );
+          };
+
           return const LocalTradeApp();
         },
       ),
@@ -76,6 +114,7 @@ class LocalTradeApp extends StatelessWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      navigatorKey: navigatorKey,
       home: const SplashScreen(),
     );
   }
