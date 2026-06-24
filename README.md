@@ -196,16 +196,42 @@ npm run dev                 # Start dev server on port 5000
 ```
 
 ### 3. Frontend
+
 ```bash
 cd frontend/localtrade_app
 flutter pub get
-flutter run                  # Run on device/emulator
+flutter run                  # Run on connected device/emulator
+flutter run -d chrome        # Run on Chrome (web)
 ```
+
+#### Chrome / Web Setup
+
+Running on Chrome is the primary development mode. Follow these steps:
+
+1. **Enable web support** (if not already):
+   ```bash
+   flutter config --enable-web
+   ```
+
+2. **Set the API base URL** in `lib/core/constants/app_constants.dart`:
+   ```dart
+   // For local backend development:
+   static const String baseUrl = 'http://localhost:5000/api/v1';
+   // For production:
+   // static const String baseUrl = 'https://localtrade-backend-jg9l.onrender.com/api/v1';
+   ```
+
+3. **CORS:** The backend at `localtrade-backend-jg9l.onrender.com` has CORS enabled. For local backend, ensure your `.env` includes the Chrome origin (`http://localhost`).
+
+4. **Firebase / Notifications:** Push notifications are blocked on Chrome unless the user grants permission via the browser's notification prompt. The app works without push notifications — Firebase init is skipped gracefully if `firebase_options.dart` is missing.
+
+5. **In-app updates:** The "Check for updates" feature hits the GitHub Releases API. On Chrome, `PackageInfo.fromPlatform()` falls back gracefully, and the download/install flow (APK) is Android-only — the dialog will show the changelog but won't download on web.
 
 Update the API base URL in `lib/core/constants/app_constants.dart`:
 - **Local dev (Android emulator):** `http://10.0.2.2:5000/api/v1`
-- **Local dev (iOS/web):** `http://localhost:5000/api/v1`
-- **Production:** `https://localtrade-backend-jg9l.onrender.com/api/v1`
+- **Local dev (iOS simulator):** `http://localhost:5000/api/v1`
+- **Chrome / web:** `http://localhost:5000/api/v1`
+- **Production (all):** `https://localtrade-backend-jg9l.onrender.com/api/v1`
 
 ### 4. Build
 ```bash
@@ -225,6 +251,7 @@ flutter build ios            # iOS (macOS + Xcode)
 | `node seed-categories.js` | backend | Seed default categories |
 | `node seed-data.js` | backend | Seed sample vendors + products |
 | `flutter run` | frontend | Run app on connected device |
+| `flutter run -d chrome` | frontend | Run app on Chrome (web) |
 | `flutter analyze` | frontend | Lint check |
 | `flutter build apk` | frontend | Build release APK |
 
