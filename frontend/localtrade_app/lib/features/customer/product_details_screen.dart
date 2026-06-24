@@ -33,6 +33,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
   bool _hasPurchased = false;
+  bool _hasReviewed = false;
   String? _selectedSize;
   double _quantity = 1;
 
@@ -43,6 +44,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       Provider.of<ReviewProvider>(context, listen: false)
           .fetchProductReviews(widget.product['_id']);
       _checkPurchaseStatus();
+      _checkIfReviewed();
+    });
+  }
+
+  void _checkIfReviewed() {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final userId = user?['_id'];
+    if (userId == null) return;
+
+    // Wait for reviews to load, then check
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      final reviews = Provider.of<ReviewProvider>(context, listen: false).reviews;
+      final hasReviewed = reviews.any((r) {
+        final rUserId = r['userId']?['_id'] ?? r['userId'];
+        return rUserId?.toString() == userId;
+      });
+      if (mounted) setState(() => _hasReviewed = hasReviewed);
     });
   }
 
@@ -369,7 +388,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           'Reviews',
                           style: AppTextStyles.cardTitle,
                         ),
-                        if (!isAdmin && _hasPurchased)
+                        if (!isAdmin && _hasPurchased && !_hasReviewed)
                           TextButton(
                             onPressed: () => _showReviewModal(context),
                             child: Text('Write a review',
@@ -793,7 +812,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   'Be the first to share your experience',
                   style: AppTextStyles.caption,
                 ),
-                if (_hasPurchased) ...[
+                if (_hasPurchased && !_hasReviewed) ...[
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 40,

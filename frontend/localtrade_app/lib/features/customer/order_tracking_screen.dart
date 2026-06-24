@@ -3,11 +3,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../core/network/order_service.dart';
+import '../../core/network/review_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/cloudinary_helper.dart';
 import '../../core/utils/auth_guard.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/review_provider.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -22,8 +24,10 @@ class OrderTrackingScreen extends StatefulWidget {
 
 class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   final OrderService _orderService = OrderService();
+  final ReviewService _reviewService = ReviewService();
   dynamic _order;
   bool _isLoading = true;
+  final Set<String> _reviewedProductIds = {};
 
   @override
   void initState() {
@@ -39,6 +43,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           _order = result['data']['order'];
           _isLoading = false;
         });
+        _checkReviewedProducts();
       }
     } catch (e) {
       if (mounted) {
@@ -47,6 +52,32 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           SnackBar(content: Text(e.toString())),
         );
       }
+    }
+  }
+
+  void _checkReviewedProducts() {
+    if (_order == null) return;
+    final products = _order['products'] as List? ?? [];
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final userId = user?['_id'];
+    if (userId == null) return;
+
+    for (final p in products) {
+      final product = p['product'];
+      if (product is! Map) continue;
+      final productId = product['_id']?.toString();
+      if (productId == null) continue;
+
+      _reviewService.getProductReviews(productId).then((data) {
+        final reviews = data['data']['reviews'] as List? ?? [];
+        final hasReviewed = reviews.any((r) {
+          final rUserId = r['userId']?['_id'] ?? r['userId'];
+          return rUserId?.toString() == userId;
+        });
+        if (hasReviewed && mounted) {
+          setState(() => _reviewedProductIds.add(productId));
+        }
+      }).catchError((_) {});
     }
   }
 
@@ -793,6 +824,17 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   Widget _buildReviewCtaCard() {
     final products = _order['products'] as List? ?? [];
+    final reviewableProducts = products.where((p) {
+      final product = p['product'];
+      if (product is! Map) return false;
+      final productId = (product['_id'] ?? product).toString();
+      return !_reviewedProductIds.contains(productId);
+    }).toList();
+
+    // All products reviewed — hide the card
+    if (reviewableProducts.isEmpty && products.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       width: double.infinity,
@@ -841,14 +883,46 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             final product = p['product'];
             if (product is! Map) return const SizedBox.shrink();
             final title = product['title'] ?? 'Product';
-            final productId = product['_id'] ?? product;
+            final productId = (product['_id'] ?? product).toString();
+            final alreadyReviewed = _reviewedProductIds.contains(productId);
+
+            if (alreadyReviewed) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  width: double.infinity,
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.successLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline_rounded,
+                          size: 16, color: AppColors.successDark),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '"$title" — reviewed',
+                          style: AppTextStyles.label.copyWith(color: AppColors.successDark),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SizedBox(
                 width: double.infinity,
                 height: 40,
                 child: OutlinedButton.icon(
-                  onPressed: () => _showReviewModal(product, productId.toString()),
+                  onPressed: () => _showReviewModal(product, productId),
                   icon: const Icon(Icons.star_outline_rounded, size: 16),
                   label: Text(
                     'Review "$title"',
