@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -331,11 +332,8 @@ class HelpSupportScreen extends StatelessWidget {
             iconBg: AppColors.successLight,
             iconColor: AppColors.successDark,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Share feature coming soon'),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              Share.share(
+                'Discover local vendors and products on LocalTrade! Support your community and shop locally. Download the app: https://localtrade.app',
               );
             },
           ),

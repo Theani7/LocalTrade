@@ -336,9 +336,8 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                         ? CachedNetworkImage(
                             imageUrl: image,
                             fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted),
-                            ),
+                            placeholder: (context, url) =>
+                              const ShimmerSkeleton(height: 56, width: 56, radius: 12),
                             errorWidget: (context, url, error) => const Icon(
                               Icons.broken_image_outlined,
                               color: AppColors.muted,

@@ -56,6 +56,10 @@ const productSchema = new mongoose.Schema(
       enum: ['Available', 'OutOfStock', 'Inactive'],
       default: 'Available',
     },
+    sizes: {
+      type: [String],
+      default: [],
+    },
     vendorName: {
       type: String,
       trim: true,

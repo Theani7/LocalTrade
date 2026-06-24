@@ -15,6 +15,7 @@ class Product {
   final double ratingsAverage;
   final int ratingsQuantity;
   final DateTime? createdAt;
+  final List<String> sizes;
 
   Product({
     required this.id,
@@ -33,6 +34,7 @@ class Product {
     this.ratingsAverage = 0,
     this.ratingsQuantity = 0,
     this.createdAt,
+    this.sizes = const [],
   });
 
   bool get isAvailable => productStatus == 'Available' && stockQuantity > 0;
@@ -107,6 +109,7 @@ class Product {
       ratingsAverage: (json['ratingsAverage'] ?? 0).toDouble(),
       ratingsQuantity: json['ratingsQuantity'] ?? 0,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
+      sizes: List<String>.from(json['sizes'] ?? []),
     );
   }
 
@@ -127,6 +130,7 @@ class Product {
       'productStatus': productStatus,
       'ratingsAverage': ratingsAverage,
       'ratingsQuantity': ratingsQuantity,
+      'sizes': sizes,
     };
   }
 }

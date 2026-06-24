@@ -547,6 +547,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     final unitPrice = p['price'] ?? 0;
     final priceUnit = p['priceUnit'] ?? 'piece';
     final unitLabel = _unitLabel(priceUnit);
+    final size = p['size'] as String?;
+    final sizeLabel = size != null && size.isNotEmpty ? ' Size: $size' : '';
     final lineTotal = unitPrice * quantity;
     final stock = product['stockQuantity'] ?? 0;
 
@@ -564,10 +566,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   ? CachedNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(
-                        color: AppColors.divider,
-                        child: const Icon(Icons.image_outlined, size: 20, color: AppColors.muted),
-                      ),
+                      placeholder: (_, __) =>
+                        const ShimmerSkeleton(height: 52, width: 52, radius: 8),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.divider,
                         child: const Icon(Icons.broken_image_outlined, size: 20, color: AppColors.muted),
@@ -591,7 +591,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 Row(
                   children: [
                     Text(
-                      'Qty: $quantity${unitLabel.isNotEmpty ? ' $unitLabel' : ''}',
+                      'Qty: $quantity${unitLabel.isNotEmpty ? ' $unitLabel' : ''}$sizeLabel',
                       style: AppTextStyles.caption,
                     ),
                     const SizedBox(width: 8),
@@ -970,6 +970,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
       final quantity = (p['quantity'] ?? 1) as int;
       final clampedQty = quantity > stock ? stock : quantity;
+      final size = p['size'] as String?;
 
       reorderItems.add({
         'productId': productId,
@@ -991,6 +992,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             ?.toString() ??
             '',
         'quantity': clampedQty,
+        if (size != null && size.isNotEmpty) 'size': size,
       });
     }
 

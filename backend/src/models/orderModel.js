@@ -32,6 +32,10 @@ const orderSchema = new mongoose.Schema(
           type: String,
           default: 'piece',
         },
+        size: {
+          type: String,
+          default: null,
+        },
       },
     ],
     totalAmount: {

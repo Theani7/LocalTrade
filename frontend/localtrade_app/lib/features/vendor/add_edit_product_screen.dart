@@ -31,6 +31,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   String _selectedCategory = '';
   List<String> _categories = [];
   String _selectedPriceUnit = 'piece';
+  List<String> _selectedSizes = [];
+  static const _sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
   final List<dynamic> _selectedImages = [];
   final List<Uint8List?> _imageBytes = [];
@@ -68,6 +70,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (widget.product != null) {
       _selectedCategory = widget.product['category'] ?? '';
       _availableForPickup = widget.product['availableForPickup'] ?? true;
+      if (widget.product['sizes'] != null) {
+        _selectedSizes = List<String>.from(widget.product['sizes']);
+      }
     }
 
     _titleController.addListener(_markChanged);
@@ -188,6 +193,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             ? '0'
             : _stockController.text,
         'category': _selectedCategory,
+        'sizes': _selectedSizes,
         'availableForPickup': _availableForPickup,
       };
 
@@ -610,6 +616,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               onChanged: (v) => setState(() {
                     _selectedCategory = v!;
                     _hasChanges = true;
+                    final cat = v.toLowerCase();
+                    if ((cat.contains('cloth') || cat.contains('tailor')) && _selectedSizes.isEmpty) {
+                      _selectedSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                    } else if (!cat.contains('cloth') && !cat.contains('tailor')) {
+                      _selectedSizes = [];
+                    }
                   }),
             ),
           ),
@@ -617,7 +629,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           _buildFieldRow(
             label: 'Description',
             required: false,
-            isLast: true,
+            isLast: false,
             child: TextFormField(
               controller: _descController,
               maxLines: 3,
@@ -626,6 +638,49 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   _noBorderDecoration(hint: 'What makes this product special?'),
             ),
           ),
+          if (_selectedSizes.isNotEmpty) ...[
+            const _HairlineDivider(),
+            _buildFieldRow(
+              label: 'Sizes',
+              required: false,
+              isLast: true,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _sizeOptions.map((size) {
+                  final selected = _selectedSizes.contains(size);
+                  return GestureDetector(
+                    onTap: () => setState(() {
+                      if (selected) {
+                        _selectedSizes.remove(size);
+                      } else {
+                        _selectedSizes.add(size);
+                      }
+                      _hasChanges = true;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: selected ? AppColors.ink : AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: selected ? AppColors.ink : AppColors.divider,
+                        ),
+                      ),
+                      child: Text(
+                        size,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: selected ? Colors.white : AppColors.ink,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
         ],
       ),
     );

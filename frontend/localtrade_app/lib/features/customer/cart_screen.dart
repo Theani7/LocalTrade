@@ -11,6 +11,7 @@ import '../../core/utils/cloudinary_helper.dart';
 import '../../core/utils/auth_guard.dart';
 import '../../core/utils/app_animations.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/skeleton_loaders.dart';
 import 'checkout_screen.dart';
 
 final _priceFormat = NumberFormat('#,##0');
@@ -349,7 +350,7 @@ class _VendorGroupCard extends StatelessWidget {
               key: ValueKey(item.id),
               item: item,
               cart: cart,
-              onRemove: () => cart.removeItem(item.id),
+                      onRemove: () => cart.removeItem(item.id, size: item.size),
             ),
           ),
         ],
@@ -457,7 +458,7 @@ class _CartItemTileState extends State<_CartItemTile>
                       ),
                       fit: BoxFit.cover,
                       placeholder: (_, __) =>
-                          const ColoredBox(color: AppColors.divider),
+                          const ShimmerSkeleton(height: 64, width: 64, radius: 8),
                       errorWidget: (_, __, ___) => const ColoredBox(
                         color: AppColors.divider,
                         child: Icon(
@@ -515,11 +516,11 @@ class _CartItemTileState extends State<_CartItemTile>
                     _QuantityStepper(
                       quantity: widget.item.quantity,
                       onIncrement: () => widget.cart.updateQuantity(
-                          widget.item.id, widget.item.quantity + 1),
+                          widget.item.id, widget.item.quantity + 1, size: widget.item.size),
                       onDecrement: () {
                         if (widget.item.quantity > 1) {
                           widget.cart.updateQuantity(
-                              widget.item.id, widget.item.quantity - 1);
+                              widget.item.id, widget.item.quantity - 1, size: widget.item.size);
                         } else {
                           _handleRemove();
                         }

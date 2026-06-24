@@ -139,6 +139,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   'productId': i.id,
                   'quantity': i.quantity,
                   'price': i.price,
+                  if (i.size != null) 'size': i.size,
                 })
             .toList(),
         'totalAmount': total,

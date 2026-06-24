@@ -11,6 +11,7 @@ class CartItem {
   final String vendorId;
   final String vendorName;
   int quantity;
+  final String? size;
 
   CartItem({
     required this.id,
@@ -21,6 +22,7 @@ class CartItem {
     required this.vendorId,
     this.vendorName = '',
     this.quantity = 1,
+    this.size,
   });
 
   String get priceUnitLabel {
@@ -44,6 +46,7 @@ class CartItem {
     'vendorId': vendorId,
     'vendorName': vendorName,
     'quantity': quantity,
+    'size': size,
   };
 
   factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
@@ -55,6 +58,7 @@ class CartItem {
     vendorId: json['vendorId'],
     vendorName: json['vendorName'] ?? '',
     quantity: json['quantity'],
+    size: json['size'],
   );
 }
 
@@ -122,10 +126,11 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = '', String priceUnit = 'piece'}) {
-    if (_items.containsKey(productId)) {
+  void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = '', String priceUnit = 'piece', String? size}) {
+    final key = '${productId}_${size ?? ''}';
+    if (_items.containsKey(key)) {
       _items.update(
-        productId,
+        key,
         (existingItem) => CartItem(
           id: existingItem.id,
           title: existingItem.title,
@@ -135,11 +140,12 @@ class CartProvider with ChangeNotifier {
           vendorId: existingItem.vendorId,
           vendorName: existingItem.vendorName,
           quantity: existingItem.quantity + 1,
+          size: existingItem.size,
         ),
       );
     } else {
       _items.putIfAbsent(
-        productId,
+        key,
         () => CartItem(
           id: productId,
           title: title,
@@ -148,6 +154,7 @@ class CartProvider with ChangeNotifier {
           imageUrl: imageUrl,
           vendorId: vendorId,
           vendorName: vendorName,
+          size: size,
         ),
       );
     }
@@ -162,10 +169,12 @@ class CartProvider with ChangeNotifier {
       final productId = item['productId']?.toString() ?? '';
       if (productId.isEmpty) continue;
 
+      final size = item['size'] as String?;
+      final key = '${productId}_${size ?? ''}';
       final quantity = item['quantity'] ?? 1;
-      if (_items.containsKey(productId)) {
+      if (_items.containsKey(key)) {
         _items.update(
-          productId,
+          key,
           (existing) => CartItem(
             id: existing.id,
             title: existing.title,
@@ -175,10 +184,11 @@ class CartProvider with ChangeNotifier {
             vendorId: existing.vendorId,
             vendorName: existing.vendorName,
             quantity: quantity,
+            size: existing.size,
           ),
         );
       } else {
-        _items[productId] = CartItem(
+        _items[key] = CartItem(
           id: productId,
           title: item['title'] ?? '',
           price: (item['price'] ?? 0).toDouble(),
@@ -187,6 +197,7 @@ class CartProvider with ChangeNotifier {
           vendorId: item['vendorId'] ?? '',
           vendorName: item['vendorName'] ?? '',
           quantity: quantity,
+          size: size,
         );
       }
     }
@@ -194,19 +205,21 @@ class CartProvider with ChangeNotifier {
     _safeNotifyListeners();
   }
 
-  void updateQuantity(String productId, int quantity) {
-    if (!_items.containsKey(productId)) return;
+  void updateQuantity(String productId, int quantity, {String? size}) {
+    final key = '${productId}_${size ?? ''}';
+    if (!_items.containsKey(key)) return;
     if (quantity <= 0) {
-      removeItem(productId);
+      removeItem(productId, size: size);
     } else {
-      _items[productId]!.quantity = quantity;
+      _items[key]!.quantity = quantity;
       _saveCart();
       _safeNotifyListeners();
     }
   }
 
-  void removeItem(String productId) {
-    _items.remove(productId);
+  void removeItem(String productId, {String? size}) {
+    final key = '${productId}_${size ?? ''}';
+    _items.remove(key);
     _saveCart();
     _safeNotifyListeners();
   }

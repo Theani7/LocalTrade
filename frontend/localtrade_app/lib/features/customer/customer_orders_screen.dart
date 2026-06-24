@@ -233,7 +233,7 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
                     'Local vendor';
                 final totalAmount = order['totalAmount'] ?? 0;
 
-                // Extract product names with units
+                // Extract product names with units and sizes
                 final productNames = <String>[];
                 String? firstQtyUnit;
                 for (final p in products) {
@@ -242,9 +242,11 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
                   final qty = p['quantity'] ?? 1;
                   final pUnit = p['priceUnit'] ?? 'piece';
                   final uLabel = _unitLabel(pUnit);
+                  final size = p['size'] as String?;
+                  final sizeLabel = size != null && size.isNotEmpty ? ' ($size)' : '';
                   if (title.isNotEmpty) productNames.add(title);
                   if (firstQtyUnit == null && qty > 0) {
-                    firstQtyUnit = '${qty.toInt()}${uLabel.isNotEmpty ? ' $uLabel' : ''}';
+                    firstQtyUnit = '${qty.toInt()}${uLabel.isNotEmpty ? ' $uLabel' : ''}$sizeLabel';
                   }
                 }
 
@@ -339,7 +341,8 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
                                       ? CachedNetworkImage(
                                           imageUrl: CloudinaryHelper.getOptimizedUrl(heroImage, width: 112),
                                           fit: BoxFit.cover,
-                                          placeholder: (_, __) => const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.muted),
+                                          placeholder: (_, __) =>
+                                            const ShimmerSkeleton(height: 56, width: 56, radius: 8),
                                           errorWidget: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.muted),
                                         )
                                       : const Icon(Icons.shopping_bag_outlined, size: 22, color: AppColors.muted),
@@ -574,6 +577,7 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
 
       final quantity = (p['quantity'] ?? 1) as int;
       final clampedQty = quantity > stock ? stock : quantity;
+      final size = p['size'] as String?;
 
       reorderItems.add({
         'productId': productId,
@@ -595,6 +599,7 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
             ?.toString() ??
             '',
         'quantity': clampedQty,
+        if (size != null && size.isNotEmpty) 'size': size,
       });
     }
 

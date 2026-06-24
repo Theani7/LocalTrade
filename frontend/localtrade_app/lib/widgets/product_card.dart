@@ -5,6 +5,7 @@ import '../core/theme/app_colors.dart';
 import '../core/utils/cloudinary_helper.dart';
 import '../core/utils/app_animations.dart';
 import '../features/customer/product_details_screen.dart';
+import 'skeleton_loaders.dart';
 
 final _priceFormat = NumberFormat('#,##0');
 
@@ -96,12 +97,9 @@ class ProductCard extends StatelessWidget {
                                 ),
                                 fit: BoxFit.cover,
                                 memCacheWidth: 400,
-                                placeholder: (_, __) => Container(
-                                  color: AppColors.surface,
-                                  child: const Center(
-                                    child: Icon(Icons.inventory_2_outlined,
-                                        size: 32, color: AppColors.divider),
-                                  ),
+                                placeholder: (_, __) => const ShimmerSkeleton(
+                                  height: double.infinity,
+                                  width: double.infinity,
                                 ),
                                 errorWidget: (_, __, ___) => Container(
                                   color: AppColors.surface,

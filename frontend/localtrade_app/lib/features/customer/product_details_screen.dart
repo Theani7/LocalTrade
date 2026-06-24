@@ -19,8 +19,6 @@ String _sentenceCase(String text) {
   return text[0].toUpperCase() + text.substring(1).toLowerCase();
 }
 
-const _sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-
 class ProductDetailsScreen extends StatefulWidget {
   final dynamic product;
   const ProductDetailsScreen({super.key, required this.product});
@@ -104,8 +102,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final bool isOutOfStock = status == 'OutOfStock' || stock <= 0;
     final bool isLowStock = stock > 0 && stock < 5;
     final String category = (widget.product['category'] ?? '').toString();
-    final bool isClothing = category == 'Clothing';
-    final bool requireSize = isClothing;
+    final List<String> productSizes = (widget.product['sizes'] as List?)?.cast<String>() ?? [];
+    final bool requireSize = productSizes.isNotEmpty;
 
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     final isAdmin = user?['role'] == 'admin';
@@ -162,7 +160,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                     width: 800),
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) =>
-                                    Container(color: AppColors.background),
+                                    const ShimmerSkeleton(height: 380, width: double.infinity),
                                 errorWidget: (context, url, error) => Container(
                                   color: AppColors.background,
                                   child: const Icon(Icons.inventory_2_outlined,
@@ -346,13 +344,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     const Divider(color: AppColors.divider, height: 1),
                     const SizedBox(height: 16),
 
-                    // Size selector (clothing only)
-                    if (isClothing) ...[
-                      _buildSizeSelector(),
-                      const SizedBox(height: 16),
-                      const Divider(color: AppColors.divider, height: 1),
-                      const SizedBox(height: 16),
-                    ],
+                  // Size selector
+                  if (requireSize) ...[
+                    _buildSizeSelector(productSizes),
+                    const SizedBox(height: 16),
+                    const Divider(color: AppColors.divider, height: 1),
+                    const SizedBox(height: 16),
+                  ],
 
                     // Description
                     Text(
@@ -512,8 +510,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                           ? (widget.product['vendorId']['_id'] ??
                                               widget.product['vendorId'])
                                           : (widget.product['vendorId'] ?? ''),
-                                      priceUnit: widget.product['priceUnit'] ?? 'piece',
-                                    );
+                                       priceUnit: widget.product['priceUnit'] ?? 'piece',
+                                       size: _selectedSize,
+                                     );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       duration: const Duration(seconds: 2),
@@ -582,10 +581,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  Widget _buildSizeSelector() {
-    final String category = (widget.product['category'] ?? '').toString();
-    final bool requireSize = category == 'Clothing';
-
+  Widget _buildSizeSelector(List<String> availableSizes) {
     return StatefulBuilder(
       builder: (context, setLocalState) {
         return Column(
@@ -610,7 +606,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _sizeOptions.map((size) {
+              children: availableSizes.map((size) {
                 final isSelected = _selectedSize == size;
                 return GestureDetector(
                   onTap: () {
@@ -642,14 +638,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 );
               }).toList(),
             ),
-            if (requireSize && _selectedSize == null)
-              Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Text(
-                  'Please select a size',
-                  style: AppTextStyles.caption.copyWith(color: AppColors.danger),
-                ),
-              ),
           ],
         );
       },

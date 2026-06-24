@@ -96,6 +96,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
         quantity: item.quantity,
         price: updatedProduct.price,
         priceUnit: updatedProduct.priceUnit || 'piece',
+        size: item.size || null,
       });
     }
 
