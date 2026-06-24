@@ -130,6 +130,34 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> forgotPassword(String email) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final result = await _authService.forgotPassword(email);
+      _setLoading(false);
+      return result['message'] as String?;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _setLoading(false);
+      return null;
+    }
+  }
+
+  Future<String?> resetPassword(String token, String password) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final result = await _authService.resetPassword(token, password);
+      _setLoading(false);
+      return result['message'] as String?;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      _setLoading(false);
+      return null;
+    }
+  }
+
   Future<void> logout() async {
     _user = null;
     await _authService.logout();

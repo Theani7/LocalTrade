@@ -142,4 +142,40 @@ class AuthService {
       throw Exception(data['message'] ?? 'Failed to change password');
     }
   }
+
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    final response = await _apiService.post('/auth/forgot-password', body: {
+      'email': email,
+    });
+
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to send reset email');
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword(String token, String password) async {
+    final response = await _apiService.patch('/auth/reset-password/$token', body: {
+      'password': password,
+    });
+
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to reset password');
+    }
+  }
 }

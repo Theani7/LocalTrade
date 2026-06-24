@@ -1,7 +1,9 @@
 const User = require('../models/userModel');
-const { sendToken } = require('../utils/authUtils');
+const crypto = require('crypto');
+const { sendToken, createPasswordResetToken } = require('../utils/authUtils');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { sendEmail } = require('../config/email');
 const { notifyAdmins } = require('../utils/notificationUtils');
 
 exports.register = catchAsync(async (req, res, next) => {
@@ -286,5 +288,101 @@ exports.forceChangePassword = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     message: 'Password updated successfully. You can now use your new password.',
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Forgot Password
+// ─────────────────────────────────────────────────────────────────────────────
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return next(new AppError('Please provide your email address', 400));
+  }
+
+  const user = await User.findOne({ email });
+
+  // Always respond with the same message regardless of whether email exists
+  // to prevent email enumeration
+  if (!user) {
+    return res.status(200).json({
+      success: true,
+      status: 'success',
+      message: 'If an account with that email exists, reset instructions have been sent.',
+    });
+  }
+
+  const { rawToken, hashedToken, expires } = createPasswordResetToken();
+  user.passwordResetToken = hashedToken;
+  user.passwordResetExpires = expires;
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${rawToken}`;
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'LocalTrade — Password Reset Request',
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2>Password Reset</h2>
+          <p>You requested a password reset for your LocalTrade account.</p>
+          <p>Click the link below to reset your password. This link expires in 10 minutes.</p>
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background: #FF6F52; color: #fff; text-decoration: none; border-radius: 8px; margin: 16px 0;">
+            Reset password
+          </a>
+          <p style="color: #6E6557; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(new AppError('Failed to send reset email. Please try again later.', 500));
+  }
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    message: 'If an account with that email exists, reset instructions have been sent.',
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reset Password
+// ─────────────────────────────────────────────────────────────────────────────
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!token) {
+    return next(new AppError('Reset token is required', 400));
+  }
+  if (!password || password.length < 6) {
+    return next(new AppError('Password must be at least 6 characters', 400));
+  }
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    message: 'Password has been reset successfully.',
   });
 });

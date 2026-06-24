@@ -12,5 +12,7 @@ router.patch('/update-fcm-token', protect, authController.updateFcmToken);
 router.patch('/profile', protect, upload.single('profileImage'), authController.updateProfile);
 router.patch('/change-password', protect, authController.changePassword);
 router.patch('/force-change-password', protect, authController.forceChangePassword);
+router.post('/forgot-password', authController.forgotPassword);
+router.patch('/reset-password/:token', authController.resetPassword);
 
 module.exports = router;

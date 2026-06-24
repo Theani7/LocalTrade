@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -19,4 +20,11 @@ const sendToken = (user, statusCode, res) => {
   });
 };
 
-module.exports = { signToken, sendToken };
+const createPasswordResetToken = () => {
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  return { rawToken, hashedToken, expires };
+};
+
+module.exports = { signToken, sendToken, createPasswordResetToken };
