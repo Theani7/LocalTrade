@@ -7,9 +7,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/cloudinary_helper.dart';
+import '../../core/utils/auth_guard.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/review_provider.dart';
 import '../../widgets/skeleton_loaders.dart';
-import 'product_details_screen.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String orderId;
@@ -847,17 +848,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 width: double.infinity,
                 height: 40,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => _ReviewProductWrapper(
-                          product: product,
-                          productId: productId.toString(),
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: () => _showReviewModal(product, productId.toString()),
                   icon: const Icon(Icons.star_outline_rounded, size: 16),
                   label: Text(
                     'Review "$title"',
@@ -1143,6 +1134,228 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     }
   }
 
+  // ── Review Modal ────────────────────────────────────────────────────────
+  void _showReviewModal(dynamic product, String productId) {
+    int rating = 5;
+    final TextEditingController reviewController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 24,
+                right: 24,
+                top: 24,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.divider,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Write a review',
+                          style: AppTextStyles.sectionHeading,
+                        ),
+                        IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close,
+                                color: AppColors.muted)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Product name context
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.shopping_bag_outlined,
+                              size: 18, color: AppColors.coralDark),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              product['title'] ?? 'Product',
+                              style: AppTextStyles.label.copyWith(color: AppColors.ink),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Star rating
+                    Text('Your rating', style: AppTextStyles.label),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: List.generate(5, (index) {
+                        return GestureDetector(
+                          onTap: () =>
+                              setModalState(() => rating = index + 1),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              index < rating
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: AppColors.warning,
+                              size: 36,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _ratingLabel(rating),
+                      style: AppTextStyles.caption.copyWith(color: AppColors.coralDark),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Review text
+                    Text('Your review', style: AppTextStyles.label),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: reviewController,
+                      maxLines: 4,
+                      maxLength: 1000,
+                      style: AppTextStyles.body.copyWith(color: AppColors.ink),
+                      decoration: InputDecoration(
+                        hintText: 'What did you like or dislike?',
+                        hintStyle: AppTextStyles.bodyMuted,
+                        filled: true,
+                        fillColor: AppColors.background,
+                        counterText: '',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Submit button
+                    Consumer<ReviewProvider>(
+                      builder: (context, provider, _) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: provider.isLoading
+                                ? null
+                                : () async {
+                                    if (reviewController.text.trim().isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text('Please write a review')),
+                                      );
+                                      return;
+                                    }
+                                    AuthGuard.requireAuth(context, onAuthenticated: () async {
+                                      final success = await provider.submitReview(
+                                        productId,
+                                        rating,
+                                        reviewController.text.trim(),
+                                      );
+                                      if (success && context.mounted) {
+                                        Navigator.pop(context);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                              content: Text('Review submitted'),
+                                              backgroundColor: AppColors.success),
+                                        );
+                                      } else if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                              content: Text(provider.error ?? 'Failed'),
+                                              backgroundColor: AppColors.danger),
+                                        );
+                                      }
+                                    });
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.coral,
+                              foregroundColor: AppColors.ink,
+                              disabledBackgroundColor: AppColors.divider,
+                              disabledForegroundColor: AppColors.muted,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                              elevation: 0,
+                            ),
+                            child: provider.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.ink))
+                                : Text('Submit review',
+                                    style: AppTextStyles.cardTitle,
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _ratingLabel(int rating) {
+    switch (rating) {
+      case 1: return 'Poor';
+      case 2: return 'Fair';
+      case 3: return 'Good';
+      case 4: return 'Very good';
+      case 5: return 'Excellent';
+      default: return '';
+    }
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
   Widget _buildStatusBadge(String status) {
     Color bgColor;
@@ -1245,80 +1458,6 @@ class _Card extends StatelessWidget {
         ],
       ),
       child: child,
-    );
-  }
-}
-
-// Wrapper that loads fresh product data and opens ProductDetailsScreen
-class _ReviewProductWrapper extends StatelessWidget {
-  final dynamic product;
-  final String productId;
-  const _ReviewProductWrapper({required this.product, required this.productId});
-
-  @override
-  Widget build(BuildContext context) {
-    // Use the product data from the order (already populated by backend)
-    return _ReviewProductDetails(product: product);
-  }
-}
-
-class _ReviewProductDetails extends StatelessWidget {
-  final dynamic product;
-  const _ReviewProductDetails({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    // Import ProductDetailsScreen at top of file, then navigate
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(product['title'] ?? 'Product',
-            style: AppTextStyles.screenTitle),
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.ink,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.star_outline_rounded,
-                size: 48, color: AppColors.coral),
-            const SizedBox(height: 16),
-            Text(
-              'Tap the product to write a review',
-              style: AppTextStyles.bodyMuted,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                // Navigate to product details which has the review modal
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProductDetailsScreen(product: product),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.coral,
-                foregroundColor: AppColors.ink,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: Text('Open product',
-                  style: AppTextStyles.cardTitle.copyWith(fontSize: 13)),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
