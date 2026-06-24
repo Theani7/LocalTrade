@@ -29,7 +29,7 @@ class UpdateService {
 
   UpdateInfo? get cached => _cachedInfo;
 
-  static const String _fallbackVersion = '2.1.1';
+  static const String _fallbackVersion = '2.2.0';
 
   Future<UpdateInfo> checkForUpdate({bool force = false}) async {
     if (_cachedInfo != null && !force) return _cachedInfo!;
