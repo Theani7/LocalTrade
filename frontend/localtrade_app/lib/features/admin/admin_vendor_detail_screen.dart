@@ -21,6 +21,7 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
   Map<String, dynamic>? _vendor;
   Map<String, dynamic>? _stats;
   List<dynamic> _recentOrders = [];
+  List<dynamic> _products = [];
   bool _isLoading = true;
   String? _error;
 
@@ -38,6 +39,7 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
         _vendor = result['data']['vendor'];
         _stats = result['data']['stats'];
         _recentOrders = result['data']['recentOrders'] ?? [];
+        _products = result['data']['products'] ?? [];
         _isLoading = false;
       });
     } catch (e) {
@@ -87,8 +89,11 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
     final categories = (vendor['categories'] as List?) ?? [];
 
     return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Vendor header card
           _buildCard(
@@ -189,6 +194,67 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
               ],
             ),
             const SizedBox(height: 10),
+          ],
+
+          // Products section
+          if (_products.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+              child: Text('Products (${_products.length})', style: AppTextStyles.sectionHeading),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+                itemCount: _products.length,
+                itemBuilder: (context, index) {
+                  final product = _products[index];
+                  final imageUrl = (product['images'] as List?)?.isNotEmpty == true
+                      ? product['images'][0] as String
+                      : null;
+                  final price = product['price'] ?? 0;
+                  final stock = product['stockQuantity'] ?? 0;
+
+                  return Container(
+                    width: 100,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(
+                            width: 100,
+                            height: 80,
+                            child: imageUrl != null
+                                ? Image.network(imageUrl, fit: BoxFit.cover)
+                                : Container(color: AppColors.background, child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 24)),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: 100,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(product['title'] ?? 'Product', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text('Rs. $price', style: AppTextStyles.caption, maxLines: 1),
+                              Text('$stock in stock', style: AppTextStyles.caption.copyWith(fontSize: 10), maxLines: 1),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
 
           // Recent orders
