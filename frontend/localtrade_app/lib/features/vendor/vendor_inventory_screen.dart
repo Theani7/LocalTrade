@@ -521,7 +521,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
     );
   }
 
-  Widget _buildDeleteButton(dynamic product) {
+Widget _buildDeleteButton(dynamic product) {
     return GestureDetector(
       onTap: () => _showDeleteConfirmation(product),
       child: Container(
@@ -540,52 +540,74 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
     final title = product['title'] ?? 'this product';
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: Text(
-          'Delete product',
-          style: AppTextStyles.cardTitle.copyWith(fontSize: 16),
-        ),
-        content: Text(
-          'Are you sure you want to delete "$title"? This cannot be undone.',
-          style: AppTextStyles.bodyMuted,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.muted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(80, 36),
+      builder: (context) => FutureBuilder<Map<String, dynamic>>(
+        future: Provider.of<ProductProvider>(context, listen: false).checkProductDeletable(product['_id']),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const AlertDialog(
+              content: Row(
+                children: [CircularProgressIndicator(), SizedBox(width: 16), Text('Checking...')],
+              ),
+            );
+          }
+
+          final data = snapshot.data ?? {};
+          final canDelete = data['data']?['canDelete'] ?? false;
+          final reason = data['data']?['reason'] ?? '';
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+            title: Text(
+              canDelete ? 'Delete product' : 'Cannot delete product',
+              style: AppTextStyles.cardTitle.copyWith(fontSize: 16),
             ),
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              final provider = Provider.of<ProductProvider>(context, listen: false);
-              final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
-              Navigator.pop(context);
-              final success = await provider.deleteProduct(product['_id']);
-              if (!mounted) return;
-              if (success) {
-                vendorProvider.fetchAnalytics();
-              }
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(success
-                      ? '"$title" deleted'
-                      : 'Failed to delete product'),
-                  backgroundColor: success ? AppColors.success : AppColors.danger,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+            content: Text(
+              canDelete
+                  ? 'Are you sure you want to delete "$title"? This cannot be undone.'
+                  : reason.isEmpty
+                      ? 'This product cannot be deleted.'
+                      : reason,
+              style: AppTextStyles.bodyMuted,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel', style: TextStyle(color: AppColors.muted)),
+              ),
+              if (canDelete)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(80, 36),
+                  ),
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final provider = Provider.of<ProductProvider>(context, listen: false);
+                    final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
+                    Navigator.pop(context);
+                    final success = await provider.deleteProduct(product['_id']);
+                    if (!mounted) return;
+                    if (success) {
+                      vendorProvider.fetchAnalytics();
+                    }
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(success
+                            ? '"$title" deleted'
+                            : (provider.error ?? 'Failed to delete product')),
+                        backgroundColor: success ? AppColors.success : AppColors.danger,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+                      ),
+                    );
+                  },
+                  child: const Text('Delete'),
                 ),
-              );
-            },
-            child: const Text('Delete'),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

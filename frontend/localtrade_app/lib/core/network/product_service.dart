@@ -161,6 +161,26 @@ class ProductService {
     }
   }
 
+  Future<Map<String, dynamic>> checkProductDeletable(String id) async {
+    final token = await _authService.getToken();
+    if (token == null) throw Exception('Not authenticated');
+    final response = await _apiService.get('/products/$id/deletable', headers: {
+      'Authorization': 'Bearer $token',
+    });
+
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      throw Exception('Failed to check product status');
+    }
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to check product status');
+    }
+  }
+
   Future<Map<String, dynamic>> updateProductStock(String id, int quantity, String status) async {
     final token = await _authService.getToken();
     if (token == null) throw Exception('Not authenticated');

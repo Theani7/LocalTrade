@@ -249,7 +249,7 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> deleteProduct(String id) async {
+Future<bool> deleteProduct(String id) async {
     _setLoading(true);
     _error = null;
     try {
@@ -261,6 +261,15 @@ class ProductProvider with ChangeNotifier {
       return false;
     } finally {
       _setLoading(false);
+      notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>> checkProductDeletable(String id) async {
+    try {
+      return await _productService.checkProductDeletable(id);
+    } catch (e) {
+      return {'success': false, 'data': {'canDelete': false, 'reason': e.toString().replaceAll('Exception: ', '')}};
     }
   }
 

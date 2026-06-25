@@ -15,6 +15,7 @@ router.get('/vendors', adminController.getAllVendors);
 router.get('/vendors/:id', adminController.getVendorDetail);
 router.get('/products', adminController.getAllProducts);
 router.get('/products/:id', adminController.getProduct);
+router.get('/products/:id/deletable', productController.checkProductDeletable);
 router.get('/orders', adminController.getAllOrders);
 router.patch('/vendors/:id/status', adminController.updateVendorStatus);
 router.patch('/users/:id/toggle-status', adminController.toggleUserStatus);

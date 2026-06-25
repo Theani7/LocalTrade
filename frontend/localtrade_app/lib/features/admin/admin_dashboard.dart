@@ -1665,34 +1665,42 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, dynamic product, AdminProvider provider) {
+void _showDeleteDialog(BuildContext context, dynamic product, AdminProvider provider) {
+    final title = product['title'] ?? 'this product';
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: Text('Delete product', style: AppTextStyles.sectionHeading),
-        content: Text('Delete "${product['title']}"? This action cannot be undone.', style: AppTextStyles.bodyMuted),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() => _deletingProductId = product['_id']);
-              await provider.deleteProduct(product['_id']);
-              if (mounted) setState(() => _deletingProductId = null);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.danger,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(100, 40),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusSm)),
+      builder: (ctx) => FutureBuilder<Map<String, dynamic>>(
+        future: provider.checkProductDeletable(product['_id']),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const AlertDialog(
+              content: Row(
+                children: [CircularProgressIndicator(), SizedBox(width: 16), Text('Checking...')],
+              ),
+            );
+          }
+
+          final data = snapshot.data ?? {};
+          final canDelete = data['data']?['canDelete'] ?? false;
+          final reason = data['data']?['reason'] ?? '';
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+            title: Text(canDelete ? 'Delete product' : 'Cannot delete product', style: AppTextStyles.sectionHeading),
+            content: Text(
+              canDelete
+                  ? 'Delete "$title"? This action cannot be undone.'
+                  : reason,
+              style: AppTextStyles.bodyMuted,
             ),
-            child: const Text('Delete'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('OK', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

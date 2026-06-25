@@ -305,6 +305,37 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
   });
 });
 
+// @desc    Check if product can be deleted
+// @route   GET /api/v1/products/:id/deletable
+// @access  Private/Vendor
+exports.checkProductDeletable = catchAsync(async (req, res, next) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    return next(new AppError('No product found with that ID', 404));
+  }
+
+  // Check ownership
+  if (product.vendorId.toString() !== req.user.id && req.user.role !== 'admin') {
+    return next(new AppError('You are not authorized to delete this product', 403));
+  }
+
+  // Check for active orders
+  const activeOrder = await Order.findOne({
+    'products.product': req.params.id,
+    orderStatus: { $nin: ['Delivered', 'Cancelled'] }
+  });
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    data: {
+      canDelete: !activeOrder,
+      reason: activeOrder ? 'Product has active orders' : null,
+    },
+  });
+});
+
 // @desc    Get vendor products
 // @route   GET /api/v1/products/my-products
 // @access  Private/Vendor

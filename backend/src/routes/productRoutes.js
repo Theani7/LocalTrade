@@ -22,6 +22,7 @@ router.patch('/:id/stock', protect, restrictTo('vendor', 'admin'), isApprovedVen
 router.post('/', protect, restrictTo('vendor'), isApprovedVendor, upload.array('images', 5), productController.createProduct);
 router.patch('/:id', protect, restrictTo('vendor', 'admin'), isApprovedVendor, upload.array('images', 5), productController.updateProduct);
 router.delete('/:id', protect, restrictTo('vendor', 'admin'), isApprovedVendor, productController.deleteProduct);
+router.get('/:id/deletable', protect, restrictTo('vendor', 'admin'), isApprovedVendor, productController.checkProductDeletable);
 
 // --- PUBLIC ID ROUTE (Generic) ---
 router.get('/:id', productController.getProduct);

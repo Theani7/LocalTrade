@@ -137,6 +137,21 @@ class AdminService {
     }
   }
 
+  Future<Map<String, dynamic>> checkProductDeletable(String productId) async {
+    final token = await _authService.getToken();
+    final response = await _apiService.get(
+      '/admin/products/$productId/deletable',
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to check product status');
+    }
+  }
+
   Future<Map<String, dynamic>> getProduct(String productId) async {
     final token = await _authService.getToken();
     final response = await _apiService.get(

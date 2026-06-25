@@ -296,10 +296,10 @@ class AdminProvider with ChangeNotifier {
   }
 
   Future<bool> deleteProduct(String productId) async {
-    _products.removeWhere((p) => p['_id'] == productId);
-    notifyListeners();
+    _error = null;
     try {
       await _adminService.deleteProduct(productId);
+      _products.removeWhere((p) => p['_id'] == productId);
       await fetchAnalytics();
       return true;
     } catch (e) {
@@ -309,6 +309,14 @@ class AdminProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>> checkProductDeletable(String productId) async {
+    try {
+      return await _adminService.checkProductDeletable(productId);
+    } catch (e) {
+      return {'success': false, 'data': {'canDelete': true, 'reason': e.toString()}};
     }
   }
 
