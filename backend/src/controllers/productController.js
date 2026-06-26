@@ -118,6 +118,11 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 exports.createProduct = catchAsync(async (req, res, next) => {
   const { title, description, category, price, originalPrice, stock, stockQuantity, priceUnit, minOrder, sizes } = req.body;
   
+  const existingProduct = await Product.findOne({ vendorId: req.user.id, title: title.trim() });
+  if (existingProduct) {
+    return next(new AppError('You already have a product with this title', 400));
+  }
+  
   const priceNum = Number(price);
   if (isNaN(priceNum) || priceNum <= 0) {
     return next(new AppError('Price must be a positive number', 400));
