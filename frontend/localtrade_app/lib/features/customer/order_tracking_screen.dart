@@ -1454,6 +1454,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                                         reviewController.text.trim(),
                                       );
                                       if (success && context.mounted) {
+                                        setState(() => _reviewedProductIds.add(productId));
                                         Navigator.pop(context);
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(
