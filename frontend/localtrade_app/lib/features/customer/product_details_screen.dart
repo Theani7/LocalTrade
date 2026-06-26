@@ -669,89 +669,113 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildVendorCard() {
-  final vendorData = widget.product['vendorId'];
-  final vendorId = vendorData is Map ? vendorData['_id'] ?? '' : '';
-  final vendorName = (vendorData is Map ? vendorData['shopName'] : null) ??
-      (vendorData is Map ? vendorData['fullName'] : null) ??
-      'Local vendor';
-  final vendorPhone = vendorData is Map ? (vendorData['phone'] ?? '') : '';
-  final vendorPhoto = vendorData is Map ? vendorData['photoUrl'] : null;
-  final vendorInitial =
-      vendorName.isNotEmpty ? vendorName[0].toUpperCase() : 'V';
+    final vendorData = widget.product['vendorId'];
+    final vendorId = vendorData is Map ? vendorData['_id'] ?? '' : '';
+    final vendorName = (vendorData is Map ? vendorData['shopName'] : null) ??
+        (vendorData is Map ? vendorData['fullName'] : null) ??
+        'Local vendor';
+    final vendorPhone = vendorData is Map ? (vendorData['phone'] ?? '') : '';
+    final vendorPhoto = vendorData is Map ? vendorData['photoUrl'] : null;
+    final vendorInitial =
+        vendorName.isNotEmpty ? vendorName[0].toUpperCase() : 'V';
 
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => VendorShopScreen(
-            vendor: {
-              '_id': vendorId,
-              'shopName': vendorName,
-              'fullName': vendorName,
-              'photoUrl': vendorPhoto,
-              'address': vendorData is Map ? vendorData['address'] : null,
-            },
-          ),
-        ),
-      );
-    },
-    child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          // Vendor avatar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: 44,
-              height: 44,
-              child: vendorPhoto != null && vendorPhoto.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: CloudinaryHelper.getOptimizedUrl(
-                          vendorPhoto,
-                          width: 100),
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => _buildInitialsAvatar(vendorInitial),
-                      errorWidget: (_, __, ___) =>
-                          _buildInitialsAvatar(vendorInitial),
-                    )
-                  : _buildInitialsAvatar(vendorInitial),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  vendorName,
-                  style: AppTextStyles.cardTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    return GestureDetector(
+      onTap: () {
+        if (!authProvider.isAuthenticated) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Login Required'),
+              content: const Text('Please log in to view vendor profiles.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
                 ),
-                if (vendorPhone.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    vendorPhone,
-                    style: AppTextStyles.caption,
-                  ),
-                ],
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  child: const Text('Login'),
+                ),
               ],
             ),
+          );
+          return;
+        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VendorShopScreen(
+              vendor: {
+                '_id': vendorId,
+                'shopName': vendorName,
+                'fullName': vendorName,
+                'photoUrl': vendorPhoto,
+                'address': vendorData is Map ? vendorData['address'] : null,
+              },
+            ),
           ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right_rounded,
-              color: AppColors.muted.withValues(alpha: 0.5)),
-        ],
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: vendorPhoto != null && vendorPhoto.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: CloudinaryHelper.getOptimizedUrl(
+                            vendorPhoto,
+                            width: 100),
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => _buildInitialsAvatar(vendorInitial),
+                        errorWidget: (_, __, ___) =>
+                            _buildInitialsAvatar(vendorInitial),
+                      )
+                    : _buildInitialsAvatar(vendorInitial),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    vendorName,
+                    style: AppTextStyles.cardTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (vendorPhone.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      vendorPhone,
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded,
+                color: AppColors.muted.withValues(alpha: 0.5)),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
 Widget _buildInitialsAvatar(String initial) {
     return Container(
