@@ -8,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/review_provider.dart';
+import 'vendor_shop_screen.dart';
 import '../../providers/order_provider.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
@@ -668,16 +669,34 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   Widget _buildVendorCard() {
-        final vendorData = widget.product['vendorId'];
-    final vendorName = (vendorData is Map ? vendorData['shopName'] : null) ??
-        (vendorData is Map ? vendorData['fullName'] : null) ??
-        'Local vendor';
-    final vendorPhone = vendorData is Map ? (vendorData['phone'] ?? '') : '';
-    final vendorPhoto = vendorData is Map ? vendorData['photoUrl'] : null;
-    final vendorInitial =
-        vendorName.isNotEmpty ? vendorName[0].toUpperCase() : 'V';
+  final vendorData = widget.product['vendorId'];
+  final vendorId = vendorData is Map ? vendorData['_id'] ?? '' : '';
+  final vendorName = (vendorData is Map ? vendorData['shopName'] : null) ??
+      (vendorData is Map ? vendorData['fullName'] : null) ??
+      'Local vendor';
+  final vendorPhone = vendorData is Map ? (vendorData['phone'] ?? '') : '';
+  final vendorPhoto = vendorData is Map ? vendorData['photoUrl'] : null;
+  final vendorInitial =
+      vendorName.isNotEmpty ? vendorName[0].toUpperCase() : 'V';
 
-    return Container(
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => VendorShopScreen(
+            vendor: {
+              '_id': vendorId,
+              'shopName': vendorName,
+              'fullName': vendorName,
+              'photoUrl': vendorPhoto,
+              'address': vendorData is Map ? vendorData['address'] : null,
+            },
+          ),
+        ),
+      );
+    },
+    child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.background,
@@ -725,14 +744,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Icon(Icons.chevron_right_rounded,
               color: AppColors.muted.withValues(alpha: 0.5)),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildInitialsAvatar(String initial) {
+Widget _buildInitialsAvatar(String initial) {
     return Container(
       width: 44,
       height: 44,

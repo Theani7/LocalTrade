@@ -65,4 +65,19 @@ class VendorService {
       throw Exception(data['message'] ?? 'Failed to update profile');
     }
   }
+
+  Future<Map<String, dynamic>> getPublicVendorProfile(String vendorId) async {
+    final response = await _apiService.get('/vendors/$vendorId/profile');
+    final Map<String, dynamic> data;
+    try {
+      data = json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Invalid server response'};
+    }
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? 'Failed to fetch vendor profile');
+    }
+  }
 }

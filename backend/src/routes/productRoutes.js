@@ -11,6 +11,7 @@ router.use('/:productId/reviews', reviewRouter);
 
 // --- PUBLIC ROUTES ---
 router.get('/', productController.getAllProducts);
+router.get('/vendors/:id/profile', productController.getVendorProfile);
 // Move :id after specific routes but before protect if it should be public
 // But wait, my-products is protected. 
 

@@ -5,6 +5,7 @@ const { sendNotification } = require('../utils/notificationUtils');
 const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
 const User = require('../models/userModel');
 const Order = require('../models/orderModel');
+const Review = require('../models/reviewModel');
 
 // @desc    Get all products (with search, filter, pagination)
 // @route   GET /api/v1/products
@@ -375,5 +376,56 @@ exports.getMyProducts = catchAsync(async (req, res, next) => {
     status: 'success',
     results: products.length,
     data: { products },
+  });
+});
+
+// @desc    Get public vendor profile
+// @route   GET /api/v1/vendors/:id/profile
+// @access  Public
+exports.getVendorProfile = catchAsync(async (req, res, next) => {
+  const vendor = await User.findById(req.params.id).select('fullName shopName shopDescription categories address phone email fcmToken');
+
+  if (!vendor || vendor.role !== 'vendor') {
+    return next(new AppError('No vendor found with that ID', 404));
+  }
+
+  const vendorId = vendor._id;
+
+  const products = await Product.find({ vendorId, productStatus: 'Available' }).select('title price images stockQuantity ratingsAverage');
+  const reviewStats = await Review.aggregate([
+    { $match: { 'productId.vendorId': vendorId } },
+    {
+      $group: {
+        _id: null,
+        averageRating: { $avg: '$rating' },
+        totalReviews: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const reviews = await Review.find({ 'productId.vendorId': vendorId }).populate('userId', 'fullName profileImage').sort('-createdAt').limit(5);
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    data: {
+      vendor: {
+        id: vendor._id,
+        fullName: vendor.fullName,
+        shopName: vendor.shopName,
+        shopDescription: vendor.shopDescription,
+        categories: vendor.categories,
+        address: vendor.address,
+        phone: vendor.phone,
+        fcmToken: vendor.fcmToken,
+      },
+      products: products,
+      stats: {
+        totalProducts: products.length,
+        averageRating: reviewStats[0]?.averageRating || 0,
+        totalReviews: reviewStats[0]?.totalReviews || 0,
+      },
+      recentReviews: reviews,
+    },
   });
 });
