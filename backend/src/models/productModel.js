@@ -112,6 +112,7 @@ productSchema.pre('save', function() {
 productSchema.index({ title: 'text', description: 'text', vendorName: 'text' });
 productSchema.index({ category: 1 });
 productSchema.index({ vendorId: 1 });
+productSchema.index({ vendorId: 1, title: 1 }, { unique: true });
 productSchema.index({ price: 1 });
 productSchema.index({ productStatus: 1 });
 productSchema.index({ stockQuantity: 1 });
