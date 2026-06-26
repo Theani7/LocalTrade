@@ -9,6 +9,7 @@ import '../../providers/cart_provider.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../core/network/vendor_service.dart';
 
 class VendorShopScreen extends StatefulWidget {
   final dynamic vendor;
@@ -19,6 +20,8 @@ class VendorShopScreen extends StatefulWidget {
 }
 
 class _VendorShopScreenState extends State<VendorShopScreen> {
+  Map<String, dynamic>? _vendorProfile;
+
   @override
   void initState() {
     super.initState();
@@ -28,7 +31,22 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
         showAll: true,
         refresh: true,
       );
+      _fetchVendorProfile();
     });
+  }
+
+  Future<void> _fetchVendorProfile() async {
+    try {
+      final vendorService = VendorService();
+      final data = await vendorService.getPublicVendorProfile(widget.vendor['_id']);
+      if (mounted) {
+        setState(() {
+          _vendorProfile = data['data'] as Map<String, dynamic>?;
+        });
+      }
+    } catch (e) {
+      // silently fail
+    }
   }
 
   @override
@@ -209,6 +227,16 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
             ),
           ),
 
+          // ── Vendor Stats ──────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: _buildVendorStats(_vendorProfile),
+          ),
+
+          // ── Recent Reviews ────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: _buildRecentReviews(_vendorProfile?['recentReviews'] as List?),
+          ),
+
           // ── Product grid ──────────────────────────────────────
           Consumer<ProductProvider>(
             builder: (context, provider, _) {
@@ -358,6 +386,96 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
         size: 32,
         color: AppColors.coralDark,
       ),
+    );
+  }
+
+  Widget _buildVendorStats(Map<String, dynamic>? profile) {
+    if (profile == null) return const SizedBox.shrink();
+    final stats = profile['stats'] as Map<String, dynamic>? ?? {};
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem((stats['totalProducts'] ?? 0).toString(), 'Products'),
+          _buildStatItem(
+              '${(stats['averageRating'] ?? 0).toStringAsFixed(1)}', 'Rating'),
+          _buildStatItem((stats['totalReviews'] ?? 0).toString(), 'Reviews'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String value, String label) {
+    return Column(
+      children: [
+        Text(value,
+            style: const TextStyle(
+                fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.ink)),
+        const SizedBox(height: 4),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 11, color: AppColors.muted)),
+      ],
+    );
+  }
+
+  Widget _buildRecentReviews(List<dynamic>? reviews) {
+    if (reviews == null || reviews.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text('Recent Reviews',
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.ink)),
+        ),
+        ...List<Widget>.generate(reviews.take(3).length, (index) {
+          final r = reviews.elementAt(index);
+          final user = r['userId'] as Map?;
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundImage: user != null && user['profileImage'] != null
+                  ? NetworkImage(user['profileImage'])
+                  : null,
+              child: user == null || user['profileImage'] == null
+                  ? Text(user != null && user['fullName'] != null
+                      ? user['fullName'][0].toUpperCase()
+                      : 'U')
+                  : null,
+            ),
+            title: Text(
+                user != null ? (user['fullName'] ?? 'User') : 'User',
+                style: const TextStyle(fontSize: 13)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: List.generate(
+                      5,
+                      (i) => Icon(
+                          i < (r['rating'] ?? 0)
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          size: 14,
+                          color: AppColors.warning)),
+                ),
+                const SizedBox(height: 2),
+                Text(r['reviewText'] ?? '',
+                    style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 }
