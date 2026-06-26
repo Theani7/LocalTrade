@@ -536,7 +536,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Widget _buildItemRow(dynamic p) {
-    final product = p['product'];
+    final product = p['product'] as Map?;
+    if (product == null) return const SizedBox.shrink();
     final images = product['images'] as List?;
     final imageUrl = images != null && images.isNotEmpty
         ? CloudinaryHelper.getOptimizedUrl(
