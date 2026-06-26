@@ -392,8 +392,10 @@ exports.getVendorProfile = catchAsync(async (req, res, next) => {
   const vendorId = vendor._id;
 
   const products = await Product.find({ vendorId, productStatus: 'Available' }).select('title price images stockQuantity ratingsAverage');
+  const productIds = products.map(p => p._id);
+
   const reviewStats = await Review.aggregate([
-    { $match: { 'productId.vendorId': vendorId } },
+    { $match: { productId: { $in: productIds } } },
     {
       $group: {
         _id: null,
@@ -403,7 +405,10 @@ exports.getVendorProfile = catchAsync(async (req, res, next) => {
     },
   ]);
 
-  const reviews = await Review.find({ 'productId.vendorId': vendorId }).populate('userId', 'fullName profileImage').sort('-createdAt').limit(5);
+  const reviews = await Review.find({ productId: { $in: productIds } })
+    .populate('userId', 'fullName profileImage')
+    .sort('-createdAt')
+    .limit(5);
 
   res.status(200).json({
     success: true,
