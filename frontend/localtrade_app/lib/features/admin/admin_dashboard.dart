@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -497,11 +501,19 @@ class AdminAnalyticsTab extends StatelessWidget {
       onTap: () async {
         final provider = Provider.of<AdminProvider>(context, listen: false);
         final csv = await provider.exportAnalytics(type: type);
-        if (csv != null && context.mounted) {
+        if (csv == null) return;
+        try {
+          final bytes = utf8.encode(csv);
+          final directory = await getApplicationDocumentsDirectory();
+          final file = File('${directory.path}/$type-${DateTime.now().toIso8601String()}.csv');
+          await file.writeAsBytes(bytes);
+          await Share.shareXFiles([XFile(file.path)], sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100));
+        } catch (e) {
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$label data exported (${csv.split('\n').length} rows)'),
-              backgroundColor: AppColors.success,
+              content: Text('Failed to save/share: $e'),
+              backgroundColor: AppColors.danger,
             ),
           );
         }
