@@ -200,11 +200,20 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
           if (_products.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
-              child: Text('Products (${_products.length})', style: AppTextStyles.sectionHeading),
+              child: Row(
+                children: [
+                  Text('Products (${_products.length})', style: AppTextStyles.sectionHeading),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => _showProductsDialog(context),
+                    child: Text('View all', style: TextStyle(color: AppColors.coralDark, fontWeight: FontWeight.w500)),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 120,
+              height: 140,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
@@ -217,38 +226,55 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
                       : null;
                   final price = product['price'] ?? 0;
                   final stock = product['stockQuantity'] ?? 0;
+                  final status = product['productStatus'] ?? 'OutOfStock';
 
-                  return Container(
-                    width: 100,
-                    margin: const EdgeInsets.only(right: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: SizedBox(
-                            width: 100,
-                            height: 80,
-                            child: imageUrl != null
-                                ? Image.network(imageUrl, fit: BoxFit.cover)
-                                : Container(color: AppColors.background, child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 24)),
+                  return GestureDetector(
+                    onTap: () => _showProductDetailDialog(context, product),
+                    child: Container(
+                      width: 110,
+                      margin: const EdgeInsets.only(right: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              width: 110,
+                              height: 80,
+                              child: imageUrl != null
+                                  ? Image.network(imageUrl, fit: BoxFit.cover)
+                                  : Container(color: AppColors.background, child: const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 24)),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          width: 100,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(product['title'] ?? 'Product', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                              Text('Rs. $price', style: AppTextStyles.caption, maxLines: 1),
-                              Text('$stock in stock', style: AppTextStyles.caption.copyWith(fontSize: 10), maxLines: 1),
-                            ],
+                          const SizedBox(height: 4),
+                          SizedBox(
+                            width: 110,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(product['title'] ?? 'Product', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text('Rs. $price', style: AppTextStyles.caption, maxLines: 1),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: status == 'Available' ? AppColors.successDark : AppColors.danger,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text('$stock in stock', style: AppTextStyles.caption.copyWith(fontSize: 10), maxLines: 1),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -435,5 +461,159 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
     } catch (_) {
       return dateStr;
     }
+  }
+
+  void _showProductsDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Column(
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: AppColors.muted.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
+              margin: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+              child: Text('All Products (${_products.length})', style: AppTextStyles.sectionHeading),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+                itemCount: _products.length,
+                itemBuilder: (context, index) {
+                  final product = _products[index];
+                  final imageUrl = (product['images'] as List?)?.isNotEmpty == true
+                      ? product['images'][0] as String
+                      : null;
+                  final price = product['price'] ?? 0;
+                  final stock = product['stockQuantity'] ?? 0;
+                  final status = product['productStatus'] ?? 'OutOfStock';
+
+                  return GestureDetector(
+                    onTap: () => _showProductDetailDialog(context, product),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              width: 60,
+                              height: 60,
+                              child: imageUrl != null
+                                  ? Image.network(imageUrl, fit: BoxFit.cover)
+                                  : Container(color: AppColors.coralLight, child: const Icon(Icons.inventory_2_outlined, color: AppColors.coralDark, size: 20)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(product['title'] ?? 'Product', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                const SizedBox(height: 4),
+                                Text('Rs. $price', style: AppTextStyles.caption),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: status == 'Available' ? AppColors.successDark : AppColors.danger,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text('$stock in stock', style: AppTextStyles.caption.copyWith(fontSize: 10)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showProductDetailDialog(BuildContext context, Map<String, dynamic> product) {
+    final imageUrl = (product['images'] as List?)?.isNotEmpty == true
+        ? product['images'][0] as String
+        : null;
+    final price = product['price'] ?? 0;
+    final stock = product['stockQuantity'] ?? 0;
+    final status = product['productStatus'] ?? 'OutOfStock';
+    final description = product['description'] ?? 'No description available';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 150,
+                  child: Image.network(imageUrl, fit: BoxFit.cover),
+                ),
+              ),
+            const SizedBox(height: 12),
+            Text(product['title'] ?? 'Product', style: AppTextStyles.cardTitle),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text('Rs. $price', style: AppTextStyles.label.copyWith(color: AppColors.coralDark)),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: status == 'Available' ? AppColors.successLight : AppColors.danger.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(status, style: TextStyle(color: status == 'Available' ? AppColors.successDark : AppColors.danger, fontSize: 11, fontWeight: FontWeight.w500)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('Stock: $stock', style: AppTextStyles.caption),
+            const SizedBox(height: 12),
+            Text(description, style: AppTextStyles.bodyMuted, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Close', style: TextStyle(color: AppColors.coralDark))),
+        ],
+      ),
+    );
   }
 }

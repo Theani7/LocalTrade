@@ -408,6 +408,10 @@ exports.getVendorDetail = catchAsync(async (req, res, next) => {
     .limit(5)
     .select('orderStatus totalAmount createdAt customerId');
 
+  const products = await Product.find({ vendorId })
+    .select('title price images stockQuantity productStatus')
+    .sort('-createdAt');
+
   res.status(200).json({
     success: true,
     status: 'success',
@@ -420,6 +424,7 @@ exports.getVendorDetail = catchAsync(async (req, res, next) => {
         ...stats,
       },
       recentOrders,
+      products,
     }
   });
 });
