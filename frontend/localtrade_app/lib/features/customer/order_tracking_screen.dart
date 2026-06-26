@@ -537,9 +537,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   Widget _buildItemRow(dynamic p) {
     final product = p['product'];
-    final imageUrl = (product['images'] as List).isNotEmpty
+    final images = product['images'] as List?;
+    final imageUrl = images != null && images.isNotEmpty
         ? CloudinaryHelper.getOptimizedUrl(
-            product['images'][0],
+            images[0],
             width: 96,
             height: 96,
           )
