@@ -104,7 +104,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final bool isLowStock = stock > 0 && stock < 5;
     final String category = (widget.product['category'] ?? '').toString();
     final List<String> productSizes = (widget.product['sizes'] as List?)?.cast<String>() ?? [];
-    final bool requireSize = productSizes.isNotEmpty;
+    final bool isClothingCategory = category.toLowerCase().contains('clothing') || category.toLowerCase().contains('tailor');
+    final bool requireSize = isClothingCategory && productSizes.isNotEmpty;
 
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     final isAdmin = user?['role'] == 'admin';
