@@ -71,7 +71,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (widget.product != null) {
       _selectedCategory = widget.product['category'] ?? '';
       _availableForPickup = widget.product['availableForPickup'] ?? true;
-      if (widget.product['sizes'] != null) {
+      final cat = (_selectedCategory).toLowerCase();
+      if (widget.product['sizes'] != null && (cat.contains('cloth') || cat.contains('tailor'))) {
         _selectedSizes = List<String>.from(widget.product['sizes']);
       }
     }
@@ -618,9 +619,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     _selectedCategory = v!;
                     _hasChanges = true;
                     final cat = v.toLowerCase();
-                    if ((cat.contains('cloth') || cat.contains('tailor')) && _selectedSizes.isEmpty) {
-                      _selectedSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-                    } else if (!cat.contains('cloth') && !cat.contains('tailor')) {
+                    if (cat.contains('cloth') || cat.contains('tailor')) {
+                      if (_selectedSizes.isEmpty) {
+                        _selectedSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+                      }
+                    } else {
                       _selectedSizes = [];
                     }
                   }),
