@@ -15,6 +15,7 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/skeleton_loaders.dart';
 import '../../core/utils/app_animations.dart';
 import 'order_tracking_screen.dart';
+import '../../features/customer/cart_screen.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // CustomerOrdersScreen — full-screen push route
@@ -628,9 +629,9 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
           action: SnackBarAction(
             label: 'View Cart',
             textColor: AppColors.coral,
-            onPressed: () {
-              Navigator.pushNamed(context, '/cart');
-            },
+onPressed: () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen()));
+             },
           ),
         ),
       );

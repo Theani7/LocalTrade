@@ -694,13 +694,27 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   onPressed: () => Navigator.pop(ctx),
                   child: const Text('Cancel'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    Navigator.pushNamed(context, '/login');
-                  },
-                  child: const Text('Login'),
-                ),
+TextButton(
+                   onPressed: () {
+                     Navigator.pop(ctx);
+                     AuthGuard.requireAuth(context, onAuthenticated: () {
+                       if (context.mounted) {
+                         Navigator.push(context, MaterialPageRoute(
+                           builder: (_) => VendorShopScreen(
+                             vendor: {
+                               '_id': vendorId,
+                               'shopName': vendorName,
+                               'fullName': vendorName,
+                               'photoUrl': vendorPhoto,
+                               'address': vendorData is Map ? vendorData['address'] : null,
+                             },
+                           ),
+                         ));
+                       }
+                     });
+                   },
+                   child: const Text('Login'),
+                 ),
               ],
             ),
           );

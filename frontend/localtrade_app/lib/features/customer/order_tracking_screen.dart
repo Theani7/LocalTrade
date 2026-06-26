@@ -15,6 +15,7 @@ import '../../providers/review_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
+import '../../features/customer/cart_screen.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String orderId;
@@ -1023,9 +1024,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           action: SnackBarAction(
             label: 'View Cart',
             textColor: AppColors.coral,
-            onPressed: () {
-              Navigator.pushNamed(context, '/cart');
-            },
+onPressed: () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen()));
+             },
           ),
         ),
       );
