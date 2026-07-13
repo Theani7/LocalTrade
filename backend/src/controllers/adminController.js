@@ -83,6 +83,28 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
     { $sort: { _id: 1 } }
   ]);
 
+  const userDailyStats = await User.aggregate([
+    { $match: { createdAt: { $gte: sevenDaysAgo } } },
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+
+  const productDailyStats = await Product.aggregate([
+    { $match: { createdAt: { $gte: sevenDaysAgo } } },
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+
   const recentOrders = await Order.find()
     .populate('customerId', 'fullName')
     .populate('vendorId', 'fullName')
@@ -107,6 +129,8 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
       },
       revenueByCategory,
       dailyStats,
+      userDailyStats,
+      productDailyStats,
       recentOrders
     }
   });

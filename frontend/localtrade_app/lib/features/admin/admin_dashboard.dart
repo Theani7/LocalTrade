@@ -13,7 +13,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/empty_state.dart';
-import '../../widgets/stat_card.dart';
+
 import '../../widgets/skeleton_loaders.dart';
 import '../../core/utils/app_animations.dart';
 import '../../widgets/status_badge.dart';
@@ -249,6 +249,30 @@ class AdminAnalyticsTab extends StatelessWidget {
         final revenueByCategory = admin.analytics!['revenueByCategory'] as List? ?? [];
         final recent = admin.analytics!['recentOrders'] as List? ?? [];
         final dailyStats = admin.analytics!['dailyStats'] as List? ?? [];
+        final userDailyStats = admin.analytics!['userDailyStats'] as List? ?? [];
+        final productDailyStats = admin.analytics!['productDailyStats'] as List? ?? [];
+
+        Map<String, dynamic> _getTrendData(List<dynamic> data, String valueKey) {
+          if (data.isEmpty) return {'trend': 'No recent data', 'chart': <double>[]};
+          final chartData = data.map((e) => (e[valueKey] ?? 0).toDouble()).toList().cast<double>();
+          if (chartData.length < 2) return {'trend': '↑ +100%', 'chart': chartData};
+          
+          final current = chartData.last;
+          final previous = chartData[chartData.length - 2];
+          if (previous == 0) return {'trend': '↑ +100%', 'chart': chartData};
+          
+          final diff = current - previous;
+          final pct = (diff / previous) * 100;
+          return {
+            'trend': '${pct >= 0 ? '↑ +' : '↓ '}${pct.toStringAsFixed(1)}% from yesterday',
+            'chart': chartData
+          };
+        }
+
+        final revInfo = _getTrendData(dailyStats, 'revenue');
+        final ordersInfo = _getTrendData(dailyStats, 'count');
+        final usersInfo = _getTrendData(userDailyStats, 'count');
+        final productsInfo = _getTrendData(productDailyStats, 'count');
 
         double totalRevenue = 0.0;
         if (stats['totalRevenue'] != null) {
@@ -383,15 +407,68 @@ class AdminAnalyticsTab extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  childAspectRatio: 1.15,
+                  childAspectRatio: 1.25,
                   children: [
-                    FadeScaleIn(child: StatCard(icon: Icons.people_rounded, value: '${stats['totalUsers'] ?? 0}', label: 'Users', tintColor: AppColors.blueLight, iconColor: AppColors.blueDark)),
-                    FadeScaleIn(child: StatCard(icon: Icons.storefront_rounded, value: '${stats['totalVendors'] ?? 0}', label: 'Vendors', tintColor: AppColors.coralLight, iconColor: AppColors.coralDark)),
-                    FadeScaleIn(child: StatCard(icon: Icons.inventory_2_rounded, value: '${stats['totalProducts'] ?? 0}', label: 'Products', tintColor: AppColors.successLight, iconColor: AppColors.successDark)),
-                    FadeScaleIn(child: StatCard(icon: Icons.receipt_long_rounded, value: '${stats['totalOrders'] ?? 0}', label: 'Orders', tintColor: AppColors.warningLight, iconColor: AppColors.warningDark)),
+                    FadeScaleIn(
+                      child: _AdvancedStatCard(
+                        title: 'Total Revenue',
+                        value: 'Rs. ${totalRevenue.toStringAsFixed(0)}',
+                        growthText: revInfo['trend'] as String,
+                        contentColor: AppColors.blue,
+                        chartData: revInfo['chart'] as List<double>,
+                        isBarChart: false,
+                      ),
+                    ),
+                    FadeScaleIn(
+                      child: _AdvancedStatCard(
+                        title: 'Active Users',
+                        value: '${stats['totalUsers'] ?? 0}',
+                        growthText: usersInfo['trend'] as String,
+                        contentColor: AppColors.success,
+                        chartData: usersInfo['chart'] as List<double>,
+                        isBarChart: false,
+                      ),
+                    ),
+                    FadeScaleIn(
+                      child: _AdvancedStatCard(
+                        title: 'Orders',
+                        value: '${stats['totalOrders'] ?? 0}',
+                        growthText: ordersInfo['trend'] as String,
+                        contentColor: AppColors.warning,
+                        chartData: ordersInfo['chart'] as List<double>,
+                        isBarChart: true,
+                      ),
+                    ),
+                    FadeScaleIn(
+                      child: _AdvancedStatCard(
+                        title: 'Total Products',
+                        value: '${stats['totalProducts'] ?? 0}',
+                        growthText: productsInfo['trend'] as String,
+                        contentColor: AppColors.coral,
+                        chartData: productsInfo['chart'] as List<double>,
+                        isBarChart: false,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
+
+                // NEW: Revenue Line Chart
+                if (dailyStats.isNotEmpty) ...[
+                  Text('Revenue Over Time (Last 7 Days)', style: AppTextStyles.sectionHeading),
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 240,
+                    padding: const EdgeInsets.only(right: 16, left: 4, top: 24, bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                    ),
+                    child: _RevenueLineChart(dailyStats: dailyStats),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 // Revenue by category chart
                 if (revenueByCategory.isNotEmpty) ...[
@@ -409,6 +486,53 @@ class AdminAnalyticsTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                 ],
+
+                // Daily Orders Bar Chart
+                if (dailyStats.isNotEmpty) ...[
+                  Text('Daily Orders (Last 7 Days)', style: AppTextStyles.sectionHeading),
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 240,
+                    padding: const EdgeInsets.only(right: 16, left: 4, top: 24, bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                    ),
+                    child: _DailyOrdersBarChart(dailyStats: dailyStats),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // User Roles Pie Chart
+                Text('User Demographics', style: AppTextStyles.sectionHeading),
+                const SizedBox(height: 10),
+                Container(
+                  height: 160,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                  ),
+                  child: _UserRolesPieChart(stats: stats),
+                ),
+                const SizedBox(height: 20),
+
+                // Order Fulfillment Pie Chart
+                Text('Order Fulfillment', style: AppTextStyles.sectionHeading),
+                const SizedBox(height: 10),
+                Container(
+                  height: 160,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    boxShadow: const [BoxShadow(color: Color(0x0D2B2620), blurRadius: 10, offset: Offset(0, 2))],
+                  ),
+                  child: _OrderFulfillmentPieChart(stats: stats),
+                ),
+                const SizedBox(height: 20),
 
                 // Recent orders
                 Text('Recent orders', style: AppTextStyles.sectionHeading),
@@ -538,21 +662,55 @@ class AdminAnalyticsTab extends StatelessWidget {
 
   static Widget _buildPieChart(List<dynamic> revenueByCategory) {
     final colors = [AppColors.coral, AppColors.blue, AppColors.success, AppColors.warning, AppColors.muted];
-    return PieChart(
-      PieChartData(
-        sections: revenueByCategory.map((cat) {
-          final index = revenueByCategory.indexOf(cat);
-          return PieChartSectionData(
-            value: (cat['total'] ?? 0).toDouble(),
-            title: cat['_id'] ?? '',
-            color: colors[index % colors.length],
-            radius: 60,
-            titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white),
-          );
-        }).toList(),
-        sectionsSpace: 2,
-        centerSpaceRadius: 0,
-      ),
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: PieChart(
+            PieChartData(
+              sections: revenueByCategory.map((cat) {
+                final index = revenueByCategory.indexOf(cat);
+                final value = (cat['total'] ?? 0).toDouble();
+                return PieChartSectionData(
+                  value: value,
+                  title: '', // Hide title for cleaner look
+                  color: colors[index % colors.length],
+                  radius: 30, // Donut style
+                );
+              }).toList(),
+              sectionsSpace: 2,
+              centerSpaceRadius: 40,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: revenueByCategory.map((cat) {
+              final index = revenueByCategory.indexOf(cat);
+              final color = colors[index % colors.length];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cat['_id'] ?? 'Unknown',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.ink),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -582,13 +740,13 @@ class _MiniBarChart extends StatelessWidget {
     // Build 7 bars from dailyStats (last 7 days)
     final List<double> barHeights = [];
     if (dailyStats.isNotEmpty) {
-      final maxCount = dailyStats.fold<int>(0, (max, d) {
-        final count = (d['count'] ?? 0) as int;
-        return count > max ? count : max;
+      final maxRevenue = dailyStats.fold<double>(0, (max, d) {
+        final rev = (d['revenue'] ?? 0).toDouble();
+        return rev > max ? rev : max;
       });
       for (final day in dailyStats) {
-        final count = (day['count'] ?? 0) as int;
-        barHeights.add(maxCount > 0 ? count / maxCount : 0.3);
+        final rev = (day['revenue'] ?? 0).toDouble();
+        barHeights.add(maxRevenue > 0 ? rev / maxRevenue : 0.3);
       }
     }
     // Pad to 7 bars if fewer
@@ -615,6 +773,415 @@ class _MiniBarChart extends StatelessWidget {
             ),
           );
         }),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Revenue Line Chart
+// ═════════════════════════════════════════════════════════════════════════════
+class _RevenueLineChart extends StatelessWidget {
+  final List<dynamic> dailyStats;
+
+  const _RevenueLineChart({required this.dailyStats});
+
+  @override
+  Widget build(BuildContext context) {
+    if (dailyStats.isEmpty) return const Center(child: Text('No data'));
+
+    final spots = <FlSpot>[];
+    double maxRevenue = 0;
+    
+    for (int i = 0; i < dailyStats.length; i++) {
+      final stat = dailyStats[i];
+      final revenue = (stat['revenue'] ?? 0).toDouble();
+      if (revenue > maxRevenue) maxRevenue = revenue;
+      spots.add(FlSpot(i.toDouble(), revenue));
+    }
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: maxRevenue > 0 ? (maxRevenue / 4 == 0 ? 1 : maxRevenue / 4) : 1,
+          getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.divider, strokeWidth: 1),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= dailyStats.length) return const SizedBox.shrink();
+                final dateStr = dailyStats[index]['_id'] as String? ?? '';
+                final parts = dateStr.split('-');
+                final label = parts.length == 3 ? '${parts[1]}/${parts[2]}' : dateStr;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) {
+                if (value == 0) return const SizedBox.shrink();
+                return Text(
+                  value >= 1000 ? '${(value / 1000).toStringAsFixed(1)}k' : value.toStringAsFixed(0),
+                  style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: AppColors.coral,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: true),
+            belowBarData: BarAreaData(
+              show: true,
+              color: AppColors.coralLight.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Daily Orders Bar Chart
+// ═════════════════════════════════════════════════════════════════════════════
+class _DailyOrdersBarChart extends StatelessWidget {
+  final List<dynamic> dailyStats;
+
+  const _DailyOrdersBarChart({required this.dailyStats});
+
+  @override
+  Widget build(BuildContext context) {
+    if (dailyStats.isEmpty) return const Center(child: Text('No data'));
+
+    final barGroups = <BarChartGroupData>[];
+    double maxCount = 0;
+    
+    for (int i = 0; i < dailyStats.length; i++) {
+      final stat = dailyStats[i];
+      final count = (stat['count'] ?? 0).toDouble();
+      if (count > maxCount) maxCount = count;
+      barGroups.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: count,
+              color: AppColors.blue,
+              width: 14,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: maxCount > 0 ? maxCount + (maxCount * 0.2) : 10,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: maxCount > 0 ? (maxCount / 4 == 0 ? 1 : maxCount / 4) : 1,
+          getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.divider, strokeWidth: 1),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= dailyStats.length) return const SizedBox.shrink();
+                final dateStr = dailyStats[index]['_id'] as String? ?? '';
+                final parts = dateStr.split('-');
+                final label = parts.length == 3 ? '${parts[1]}/${parts[2]}' : dateStr;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6.0),
+                  child: Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              getTitlesWidget: (value, meta) {
+                if (value == 0) return const SizedBox.shrink();
+                return Text(
+                  value.toStringAsFixed(0),
+                  style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Generic Doughnut Chart Builder
+// ═════════════════════════════════════════════════════════════════════════════
+class _DoughnutChartBuilder extends StatelessWidget {
+  final List<Map<String, dynamic>> data;
+
+  const _DoughnutChartBuilder({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: PieChart(
+            PieChartData(
+              sections: data.map((item) {
+                return PieChartSectionData(
+                  value: item['value'] as double,
+                  title: '',
+                  color: item['color'] as Color,
+                  radius: 30,
+                );
+              }).toList(),
+              sectionsSpace: 2,
+              centerSpaceRadius: 35,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: data.map((item) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Container(width: 10, height: 10, decoration: BoxDecoration(color: item['color'] as Color, shape: BoxShape.circle)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${item['label']} (${(item['value'] as double).toInt()})',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// User Roles Pie Chart
+// ═════════════════════════════════════════════════════════════════════════════
+class _UserRolesPieChart extends StatelessWidget {
+  final Map<String, dynamic> stats;
+
+  const _UserRolesPieChart({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final customers = double.tryParse('${stats['totalCustomers']}') ?? 0.0;
+    final approvedVendors = double.tryParse('${stats['approvedVendors']}') ?? 0.0;
+    final pendingVendors = double.tryParse('${stats['pendingVendors']}') ?? 0.0;
+
+    final data = [
+      {'label': 'Customers', 'value': customers, 'color': AppColors.blue},
+      {'label': 'Approved Vendors', 'value': approvedVendors, 'color': AppColors.success},
+      {'label': 'Pending Vendors', 'value': pendingVendors, 'color': AppColors.warning},
+    ].where((e) => (e['value'] as double) > 0).toList();
+
+    if (data.isEmpty) return const Center(child: Text('No data'));
+
+    return _DoughnutChartBuilder(data: data);
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Order Fulfillment Pie Chart
+// ═════════════════════════════════════════════════════════════════════════════
+class _OrderFulfillmentPieChart extends StatelessWidget {
+  final Map<String, dynamic> stats;
+
+  const _OrderFulfillmentPieChart({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final completed = double.tryParse('${stats['completedOrders']}') ?? 0.0;
+    final total = double.tryParse('${stats['totalOrders']}') ?? 0.0;
+    final other = total > completed ? total - completed : 0.0;
+
+    final data = [
+      {'label': 'Delivered', 'value': completed, 'color': AppColors.success},
+      {'label': 'In Progress/Cancelled', 'value': other, 'color': AppColors.coral},
+    ].where((e) => (e['value'] as double) > 0).toList();
+
+    if (data.isEmpty) return const Center(child: Text('No data'));
+
+    return _DoughnutChartBuilder(data: data);
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Advanced Stat Card (Image Match)
+// ═════════════════════════════════════════════════════════════════════════════
+class _AdvancedStatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String growthText;
+  final Color contentColor;
+  final List<double> chartData;
+  final bool isBarChart;
+
+  const _AdvancedStatCard({
+    required this.title,
+    required this.value,
+    required this.growthText,
+    required this.contentColor,
+    required this.chartData,
+    this.isBarChart = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isNegative = growthText.contains('↓');
+    final activeContentColor = isNegative ? AppColors.danger : contentColor;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(color: AppColors.muted, fontSize: 12, fontWeight: FontWeight.w400)),
+              const SizedBox(height: 8),
+              Text(value, style: const TextStyle(color: AppColors.ink, fontSize: 22, fontWeight: FontWeight.w500)),
+              const Spacer(),
+              Text(
+                growthText,
+                style: TextStyle(
+                  color: isNegative ? AppColors.danger : AppColors.success,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          if (chartData.isNotEmpty)
+            Positioned(
+              right: 0,
+              bottom: 10,
+              width: 70,
+              height: 35,
+              child: isBarChart ? _buildBarChart(activeContentColor) : _buildLineChart(activeContentColor),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLineChart(Color chartColor) {
+    final maxVal = chartData.reduce((a, b) => a > b ? a : b);
+    final spots = chartData.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
+
+    return LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        minX: 0,
+        maxX: (chartData.length - 1).toDouble(),
+        minY: 0,
+        maxY: maxVal > 0 ? maxVal * 1.2 : 10,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: chartColor,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: chartColor.withValues(alpha: 0.15),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarChart(Color chartColor) {
+    final maxVal = chartData.reduce((a, b) => a > b ? a : b);
+    
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceBetween,
+        maxY: maxVal > 0 ? maxVal * 1.2 : 10,
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        barGroups: chartData.asMap().entries.map((e) {
+          return BarChartGroupData(
+            x: e.key,
+            barRods: [
+              BarChartRodData(
+                toY: e.value,
+                color: chartColor,
+                width: 6,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
