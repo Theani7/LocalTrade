@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "site": "localtrade-admin-web-123ab",
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

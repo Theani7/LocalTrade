@@ -31,14 +31,16 @@ The app features a warm, accessible design language built for non-technical user
 - Vendor profile and business information
 - Pending approval status screen with progress tracker
 
-### Admin
-- Platform overview dashboard with analytics charts and stat tiles
+### Admin (Flutter Mobile + React Web Dashboard)
+- **Web Admin Dashboard** hosted at [https://localtrade-admin-web-123ab.web.app](https://localtrade-admin-web-123ab.web.app)
+- Gorgeous custom glassmorphism UI with Recharts analytics (Area, Bar, and Pie charts)
+- Platform overview dashboard with real-time analytics and stat tiles
 - Vendor management: approve, suspend, reject vendors
 - Product moderation: view, approve, deactivate products
-- Order oversight with status tracking
+- Order oversight with status tracking and sticky-header data tables
 - Dynamic category management (CRUD with sorting)
 - User management and feedback results
-- Export analytics (CSV)
+- Export analytics (CSV via secure auth headers)
 - Profile with admin identity card
 
 ### Shared
@@ -65,6 +67,12 @@ PROJ_CT/
 │   │   └── utils/              # Error handling, notifications, auth
 │   ├── tests/                  # Jest + Supertest (in-memory MongoDB)
 │   └── .env.example            # Required env vars
+├── admin_web/                   # React + Vite Web Admin Dashboard
+│   ├── src/
+│   │   ├── App.jsx              # Main SPA layout, tabs, state management
+│   │   └── index.css            # Premium UI, glassmorphism, custom animations
+│   ├── firebase.json            # Firebase Hosting configuration
+│   └── package.json             # Vite/React dependencies
 ├── frontend/localtrade_app/     # Flutter mobile app
 │   ├── lib/
 │   │   ├── core/               # Constants, theme, network, models, utils
@@ -92,7 +100,8 @@ PROJ_CT/
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Flutter 3.x, Dart, Provider state management |
+| Frontend (Mobile) | Flutter 3.x, Dart, Provider state management |
+| Frontend (Web) | React, Vite, Recharts, Lucide Icons (Firebase Hosting) |
 | Backend | Node.js, Express 5, Mongoose 8 |
 | Database | MongoDB Atlas (SRV connection) |
 | Auth | JWT with bcrypt password hashing |
