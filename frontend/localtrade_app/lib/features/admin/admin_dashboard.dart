@@ -468,12 +468,11 @@ class AdminAnalyticsTab extends StatelessWidget {
                         isBarChart: false,
                       ),
                     ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 20),
 
                 // NEW: Revenue Line Chart
                 if (dailyStats.isNotEmpty) ...[
