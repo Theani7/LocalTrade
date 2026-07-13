@@ -127,23 +127,28 @@ class AdminDashboardState extends State<AdminDashboard> with SingleTickerProvide
   Widget build(BuildContext context) {
     return AppScaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: const [
-                  AdminAnalyticsTab(),
-                  AdminUsersTab(),
-                  AdminVendorsTab(),
-                  AdminProductsTab(),
-                  AdminOrdersTab(),
-                ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: const [
+                    AdminAnalyticsTab(),
+                    AdminUsersTab(),
+                    AdminVendorsTab(),
+                    AdminProductsTab(),
+                    AdminOrdersTab(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
     );
   }
 
@@ -401,14 +406,28 @@ class AdminAnalyticsTab extends StatelessWidget {
                 // Stat cards
                 Text('Platform statistics', style: AppTextStyles.sectionHeading),
                 const SizedBox(height: 10),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.25,
-                  children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    int crossAxisCount = 2;
+                    double childAspectRatio = 1.25;
+                    
+                    if (width >= 800) {
+                      crossAxisCount = 4;
+                      childAspectRatio = 1.2;
+                    } else if (width >= 500) {
+                      crossAxisCount = 2;
+                      childAspectRatio = 1.6;
+                    }
+
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: childAspectRatio,
+                      children: [
                     FadeScaleIn(
                       child: _AdvancedStatCard(
                         title: 'Total Revenue',
