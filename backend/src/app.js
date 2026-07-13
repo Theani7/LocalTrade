@@ -63,6 +63,7 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://localhost:8080',
   'http://localhost:19000',
+  'https://localtrade-admin-web-123ab.web.app',
 ];
 app.use(cors({
   origin: function (origin, callback) {
