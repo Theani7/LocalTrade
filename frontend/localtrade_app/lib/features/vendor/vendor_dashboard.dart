@@ -297,42 +297,55 @@ class VendorOverviewTab extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.35,
+                  child: Column(
                     children: [
-                      FadeScaleIn(child: _VendorStatCard(
-                        icon: Icons.schedule_outlined,
-                        value: pending,
-                        label: 'Pending',
-                        bgColor: AppColors.warningLight,
-                        iconColor: AppColors.warningDark,
-                      )),
-                      FadeScaleIn(child: _VendorStatCard(
-                        icon: Icons.check_circle_outline_rounded,
-                        value: confirmed,
-                        label: 'Confirmed',
-                        bgColor: AppColors.blueLight,
-                        iconColor: AppColors.blueDark,
-                      )),
-                      FadeScaleIn(child: _VendorStatCard(
-                        icon: Icons.local_shipping_outlined,
-                        value: delivered,
-                        label: 'Delivered',
-                        bgColor: AppColors.successLight,
-                        iconColor: AppColors.successDark,
-                      )),
-                      FadeScaleIn(child: _VendorStatCard(
-                        icon: Icons.inventory_2_outlined,
-                        value: products,
-                        label: 'Products',
-                        bgColor: AppColors.coralLight,
-                        iconColor: AppColors.coralDark,
-                      )),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FadeScaleIn(child: _VendorStatCard(
+                              icon: Icons.schedule_outlined,
+                              value: pending,
+                              label: 'Pending',
+                              bgColor: AppColors.warningLight,
+                              iconColor: AppColors.warningDark,
+                            )),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: FadeScaleIn(child: _VendorStatCard(
+                              icon: Icons.check_circle_outline_rounded,
+                              value: confirmed,
+                              label: 'Confirmed',
+                              bgColor: AppColors.blueLight,
+                              iconColor: AppColors.blueDark,
+                            )),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FadeScaleIn(child: _VendorStatCard(
+                              icon: Icons.local_shipping_outlined,
+                              value: delivered,
+                              label: 'Delivered',
+                              bgColor: AppColors.successLight,
+                              iconColor: AppColors.successDark,
+                            )),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: FadeScaleIn(child: _VendorStatCard(
+                              icon: Icons.inventory_2_outlined,
+                              value: products,
+                              label: 'Products',
+                              bgColor: AppColors.coralLight,
+                              iconColor: AppColors.coralDark,
+                            )),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
