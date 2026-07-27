@@ -303,7 +303,7 @@ class VendorOverviewTab extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    childAspectRatio: 1.3,
+                    childAspectRatio: 1.35,
                     children: [
                       FadeScaleIn(child: _VendorStatCard(
                         icon: Icons.schedule_outlined,
