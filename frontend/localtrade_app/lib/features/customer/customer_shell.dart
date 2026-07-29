@@ -44,6 +44,7 @@ class _CustomerShellState extends State<CustomerShell> {
 
     return AppScaffold(
       backgroundColor: AppColors.background,
+      extendBody: true,
       body: Column(
         children: [
           const ConnectionStatusBanner(),
@@ -153,18 +154,28 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
-      ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(6, 10, 6, MediaQuery.of(context).padding.bottom + 4),
-        child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(_items.length, (index) {
-              final item = _items[index];
-              final isActive = index == widget.currentIndex;
+    return SafeArea(
+      bottom: true,
+      child: Container(
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(36),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(_items.length, (index) {
+                final item = _items[index];
+                final isActive = index == widget.currentIndex;
 
               return GestureDetector(
                 onTap: () => widget.onTap(index),
@@ -254,6 +265,7 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
             }),
           ),
         ),
+      ),
     );
   }
 }

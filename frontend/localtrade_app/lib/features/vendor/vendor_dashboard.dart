@@ -49,43 +49,64 @@ class _VendorDashboardState extends State<VendorDashboard> {
   Widget build(BuildContext context) {
     return AppScaffold(
       backgroundColor: AppColors.background,
+      extendBody: true,
       body: Column(
         children: [
           const ConnectionStatusBanner(),
           Expanded(child: _screens[_currentIndex]),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
-          );
-        },
-        backgroundColor: AppColors.coral,
-        foregroundColor: AppColors.ink,
-        elevation: 2,
-        child: const Icon(Icons.add_rounded, size: 26),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
   Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
-      ),
-      child: SafeArea(
+    return SafeArea(
+      bottom: true,
+      child: Container(
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(36),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildNavItem(index: 0, icon: Icons.dashboard_outlined, label: 'Dashboard'),
               _buildNavItem(index: 1, icon: Icons.receipt_long_outlined, label: 'Orders'),
-              const SizedBox(width: 56), // space for FAB
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
+                  );
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.coral,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.coral.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.add_rounded, size: 28, color: AppColors.ink),
+                ),
+              ),
               _buildNavItem(index: 2, icon: Icons.inventory_2_outlined, label: 'Inventory'),
               _buildNavItem(index: 3, icon: Icons.person_outline_rounded, label: 'Profile'),
             ],
@@ -101,39 +122,37 @@ class _VendorDashboardState extends State<VendorDashboard> {
     required String label,
   }) {
     final isActive = _currentIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _currentIndex = index),
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 22,
+            color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              color: isActive ? AppColors.coralDark : AppColors.muted,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                color: isActive ? AppColors.coralDark : AppColors.muted,
-              ),
+          ),
+          const SizedBox(height: 2),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.coralDark : Colors.transparent,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 2),
-            Container(
-              width: 4,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isActive ? AppColors.coralDark : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

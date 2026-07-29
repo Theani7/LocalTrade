@@ -31,6 +31,7 @@ class AdminShellState extends State<AdminShell> {
   Widget build(BuildContext context) {
     return AppScaffold(
       backgroundColor: AppColors.background,
+      extendBody: true,
       body: Column(
         children: [
           const ConnectionStatusBanner(),
@@ -58,72 +59,65 @@ class AdminShellState extends State<AdminShell> {
   }
 
   Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(6, 10, 6, 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildNavItem(
-                    index: 0,
-                    icon: Icons.analytics_outlined,
-                    label: 'Analytics',
-                    dashboardTab: 0,
-                  ),
-                  _buildNavItem(
-                    index: 1,
-                    icon: Icons.people_outlined,
-                    label: 'Users',
-                    dashboardTab: 1,
-                  ),
-                  _buildNavItem(
-                    index: 2,
-                    icon: Icons.storefront_outlined,
-                    label: 'Vendors',
-                    dashboardTab: 2,
-                    showBadge: true,
-                  ),
-                  _buildNavItem(
-                    index: 3,
-                    icon: Icons.inventory_2_outlined,
-                    label: 'Products',
-                    dashboardTab: 3,
-                  ),
-                  _buildNavItem(
-                    index: 4,
-                    icon: Icons.receipt_outlined,
-                    label: 'Orders',
-                    dashboardTab: 4,
-                  ),
-                  _buildNavItem(
-                    index: 5,
-                    icon: Icons.person_outline_rounded,
-                    label: 'Profile',
-                    dashboardTab: -1,
-                  ),
-                ],
-              ),
-            ),
-            Center(
-              child: Container(
-                width: 100,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD9D0BE),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+    return SafeArea(
+      bottom: true,
+      child: Container(
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(36),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildNavItem(
+                index: 0,
+                icon: Icons.analytics_outlined,
+                label: 'Analytics',
+                dashboardTab: 0,
+              ),
+              _buildNavItem(
+                index: 1,
+                icon: Icons.people_outlined,
+                label: 'Users',
+                dashboardTab: 1,
+              ),
+              _buildNavItem(
+                index: 2,
+                icon: Icons.storefront_outlined,
+                label: 'Vendors',
+                dashboardTab: 2,
+                showBadge: true,
+              ),
+              _buildNavItem(
+                index: 3,
+                icon: Icons.inventory_2_outlined,
+                label: 'Products',
+                dashboardTab: 3,
+              ),
+              _buildNavItem(
+                index: 4,
+                icon: Icons.receipt_outlined,
+                label: 'Orders',
+                dashboardTab: 4,
+              ),
+              _buildNavItem(
+                index: 5,
+                icon: Icons.person_outline_rounded,
+                label: 'Profile',
+                dashboardTab: -1,
+              ),
+            ],
+          ),
         ),
       ),
     );
