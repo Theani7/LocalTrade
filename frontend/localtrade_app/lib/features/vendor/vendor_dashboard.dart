@@ -129,10 +129,20 @@ class _VendorDashboardState extends State<VendorDashboard> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 22,
-            color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            width: 48,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.coralLight : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -141,15 +151,6 @@ class _VendorDashboardState extends State<VendorDashboard> {
               fontSize: 10,
               fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
               color: isActive ? AppColors.coralDark : AppColors.muted,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Container(
-            width: 4,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isActive ? AppColors.coralDark : Colors.transparent,
-              shape: BoxShape.circle,
             ),
           ),
         ],

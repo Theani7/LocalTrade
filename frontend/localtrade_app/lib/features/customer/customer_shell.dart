@@ -184,9 +184,15 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      width: 44,
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                      width: 56,
                       height: 32,
+                      decoration: BoxDecoration(
+                        color: isActive ? AppColors.coralLight : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       child: Stack(
                         clipBehavior: Clip.none,
                         alignment: Alignment.center,
@@ -214,8 +220,8 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
                           // Cart badge
                           if (index == 1 && widget.cartItemCount > 0)
                             Positioned(
-                              right: 0,
-                              top: 0,
+                              right: 6,
+                              top: -2,
                               child: Container(
                                 key: widget.cartIconKey,
                                 width: 18,
@@ -247,16 +253,6 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
                         fontSize: 10,
                         fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
                         color: isActive ? AppColors.coralDark : AppColors.muted,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    // Dot indicator
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: isActive ? AppColors.coralDark : Colors.transparent,
-                        shape: BoxShape.circle,
                       ),
                     ),
                   ],

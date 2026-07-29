@@ -148,43 +148,54 @@ class AdminShellState extends State<AdminShell> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
-              ),
-              if (showBadge)
-                Consumer<AdminProvider>(
-                  builder: (_, admin, __) {
-                    final pendingCount = admin.vendors
-                        .where((v) => v['vendorApprovalStatus'] == 'pending')
-                        .length;
-                    if (pendingCount == 0) return const SizedBox.shrink();
-                    return Positioned(
-                      right: -6,
-                      top: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppColors.coral,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '$pendingCount',
-                          style: const TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.ink,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            width: 48,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.coralLight : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+                ),
+                if (showBadge)
+                  Consumer<AdminProvider>(
+                    builder: (_, admin, __) {
+                      final pendingCount = admin.vendors
+                          .where((v) => v['vendorApprovalStatus'] == 'pending')
+                          .length;
+                      if (pendingCount == 0) return const SizedBox.shrink();
+                      return Positioned(
+                        right: 2,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: AppColors.coral,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '$pendingCount',
+                            style: const TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.ink,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-            ],
+                      );
+                    },
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -193,15 +204,6 @@ class AdminShellState extends State<AdminShell> {
               fontSize: 10,
               fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
               color: isActive ? AppColors.coralDark : AppColors.muted,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Container(
-            width: 4,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isActive ? AppColors.coralDark : Colors.transparent,
-              shape: BoxShape.circle,
             ),
           ),
         ],
