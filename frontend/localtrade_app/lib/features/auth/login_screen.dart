@@ -85,126 +85,124 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       backgroundColor: AppColors.background,
-      body: Align(
+      body: SafeArea(
+        child: Align(
           alignment: Alignment.topCenter,
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
-                  Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: const BoxDecoration(
-                        color: AppColors.coralLight,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.storefront_rounded,
-                        size: 36,
-                        color: AppColors.coral,
-                      ),
+                  const SizedBox(height: 24),
+                  // Premium Typography Header
+                  Text(
+                    'Welcome\nBack',
+                    style: TextStyle(
+                      fontSize: 40,
+                      height: 1.1,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink,
+                      letterSpacing: -1,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   Text(
-                    'Welcome back',
-                    style: AppTextStyles.screenTitle,
-                    textAlign: TextAlign.center,
+                    'Sign in to continue to LocalTrade.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.muted,
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Sign in to your account',
-                    style: AppTextStyles.bodyMuted,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 48),
 
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.ink.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  // Floating Inputs without Card
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(fontSize: 16, color: AppColors.ink),
+                    decoration: InputDecoration(
+                      hintText: 'Email address',
+                      hintStyle: const TextStyle(color: AppColors.muted),
+                      prefixIcon: const Icon(Icons.email_outlined, color: AppColors.muted),
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: AppTextStyles.body,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: Icon(Icons.email_outlined, color: AppColors.muted),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return 'Enter your email';
-                            if (!value.contains('@')) return 'Enter a valid email';
-                            return null;
-                          },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Enter your email';
+                      if (!value.contains('@')) return 'Enter a valid email';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: !_isPasswordVisible,
+                    style: const TextStyle(fontSize: 16, color: AppColors.ink),
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      hintStyle: const TextStyle(color: AppColors.muted),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.muted),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: AppColors.muted,
                         ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: !_isPasswordVisible,
-                          style: AppTextStyles.body,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outlined, color: AppColors.muted),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                                color: AppColors.muted,
-                              ),
-                              onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return 'Enter your password';
-                            if (value.length < 6) return 'Min 6 characters';
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
-                            },
-                            child: Text(
-                              'Forgot password?',
-                              style: AppTextStyles.caption,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Consumer<AuthProvider>(
-                          builder: (context, auth, _) {
-                            return AppButton(
-                              label: 'Login',
-                              isLoading: auth.isLoading,
-                              onPressed: _handleLogin,
-                            );
-                          },
-                        ),
-                      ],
+                        onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Enter your password';
+                      if (value.length < 6) return 'Min 6 characters';
+                      return null;
+                    },
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.coral,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      ),
+                      child: const Text(
+                        'Forgot password?',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
+                  
+                  // Login Button
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      return AppButton(
+                        label: 'Sign in',
+                        isLoading: auth.isLoading,
+                        onPressed: _handleLogin,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 48),
 
                   _QuickFillSection(onFill: (email, password) {
                     setState(() {
@@ -212,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _passwordController.text = password;
                     });
                   }),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -228,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           'Create one',
                           style: AppTextStyles.body.copyWith(
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.coral,
                           ),
                         ),
@@ -241,6 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
     );
   }
 }

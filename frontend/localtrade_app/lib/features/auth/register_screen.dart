@@ -5,7 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_scaffold.dart';
-import 'login_screen.dart';
+import '../../core/utils/auth_guard.dart';
 
 class RegisterScreen extends StatefulWidget {
   final String? initialRole;
@@ -386,7 +386,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                        AuthGuard.requireAuth(context, onAuthenticated: () {});
                       },
                       child: const Text(
                         'Sign in',

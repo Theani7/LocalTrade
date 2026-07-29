@@ -179,56 +179,67 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       key: _emailFormKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 40),
-          Container(
-            width: 72, height: 72,
-            decoration: const BoxDecoration(color: AppColors.coralLight, shape: BoxShape.circle),
-            child: const Icon(Icons.lock_outline_rounded, size: 36, color: AppColors.coral),
-          ),
-          const SizedBox(height: 20),
-          Text('Reset your password', style: AppTextStyles.screenTitle),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          const Icon(Icons.lock_outline_rounded, size: 48, color: AppColors.coral),
+          const SizedBox(height: 24),
           Text(
-            'Enter your email and we will send you\na 6-digit OTP to reset your password.',
-            style: AppTextStyles.bodyMuted,
+            'Reset\nPassword',
+            style: TextStyle(
+              fontSize: 36,
+              height: 1.1,
+              fontWeight: FontWeight.w600,
+              color: AppColors.ink,
+              letterSpacing: -1,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
-          _buildCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: AppColors.ink, fontSize: 15),
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.muted),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Enter your email';
-                    if (!v.contains('@')) return 'Enter a valid email';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                Consumer<AuthProvider>(
-                  builder: (context, provider, _) => AppButton(
-                    label: 'Send OTP',
-                    isLoading: provider.isLoading,
-                    onPressed: provider.isLoading ? null : _submitEmail,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 12),
+          Text(
+            'Enter your email and we will send you\na 6-digit OTP to reset your password.',
+            style: const TextStyle(fontSize: 16, color: AppColors.muted),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 48),
+          
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(color: AppColors.ink, fontSize: 16),
+            decoration: InputDecoration(
+              hintText: 'Email address',
+              hintStyle: const TextStyle(color: AppColors.muted),
+              prefixIcon: const Icon(Icons.email_outlined, color: AppColors.muted),
+              filled: true,
+              fillColor: AppColors.surface,
+              contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
             ),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Enter your email';
+              if (!v.contains('@')) return 'Enter a valid email';
+              return null;
+            },
           ),
           const SizedBox(height: 24),
+          Consumer<AuthProvider>(
+            builder: (context, provider, _) => AppButton(
+              label: 'Send OTP',
+              isLoading: provider.isLoading,
+              onPressed: provider.isLoading ? null : _submitEmail,
+            ),
+          ),
+          const SizedBox(height: 32),
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: const Text('Back to login',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.coral)),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.coral),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -241,58 +252,65 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       key: _otpFormKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 40),
-          Container(
-            width: 72, height: 72,
-            decoration: const BoxDecoration(color: AppColors.blueLight, shape: BoxShape.circle),
-            child: const Icon(Icons.pin_outlined, size: 36, color: AppColors.blueDark),
-          ),
-          const SizedBox(height: 20),
-          Text('Enter OTP', style: AppTextStyles.screenTitle),
-          const SizedBox(height: 8),
-          Text(
-            'A 6-digit OTP was sent to\n${_emailController.text.trim()}',
-            style: AppTextStyles.bodyMuted,
+          const SizedBox(height: 16),
+          const Icon(Icons.pin_outlined, size: 48, color: AppColors.blueDark),
+          const SizedBox(height: 24),
+          const Text(
+            'Enter\nOTP',
+            style: TextStyle(
+              fontSize: 36,
+              height: 1.1,
+              fontWeight: FontWeight.w600,
+              color: AppColors.ink,
+              letterSpacing: -1,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
-          _buildCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.ink, fontSize: 28, letterSpacing: 8, fontWeight: FontWeight.w500),
-                  decoration: const InputDecoration(
-                    labelText: '6-digit OTP',
-                    hintText: '- - - - - -',
-                    hintStyle: TextStyle(fontSize: 28, letterSpacing: 8, color: AppColors.divider),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().length != 6) return 'Enter the 6-digit OTP';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                Consumer<AuthProvider>(
-                  builder: (context, provider, _) => AppButton(
-                    label: 'Verify OTP',
-                    isLoading: provider.isLoading,
-                    onPressed: provider.isLoading ? null : _submitOtp,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 12),
+          Text(
+            'A 6-digit OTP was sent to\n${_emailController.text.trim()}',
+            style: const TextStyle(fontSize: 16, color: AppColors.muted),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 48),
+          
+          TextFormField(
+            controller: _otpController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.ink, fontSize: 32, letterSpacing: 8, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              hintText: '------',
+              hintStyle: const TextStyle(fontSize: 32, letterSpacing: 8, color: AppColors.divider),
+              filled: true,
+              fillColor: AppColors.surface,
+              contentPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            validator: (v) {
+              if (v == null || v.trim().length != 6) return 'Enter the 6-digit OTP';
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+          Consumer<AuthProvider>(
+            builder: (context, provider, _) => AppButton(
+              label: 'Verify OTP',
+              isLoading: provider.isLoading,
+              onPressed: provider.isLoading ? null : _submitOtp,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           TextButton(
             onPressed: _submitEmail,
-            child: Text('Resend OTP',
-              style: TextStyle(fontSize: 13, color: AppColors.coral, fontWeight: FontWeight.w500)),
+            child: const Text('Resend OTP',
+              style: TextStyle(fontSize: 15, color: AppColors.coral, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -305,63 +323,80 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       key: _passwordFormKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 40),
-          Container(
-            width: 72, height: 72,
-            decoration: const BoxDecoration(color: AppColors.successLight, shape: BoxShape.circle),
-            child: const Icon(Icons.lock_open_rounded, size: 36, color: AppColors.successDark),
-          ),
-          const SizedBox(height: 20),
-          Text('Set new password', style: AppTextStyles.screenTitle),
-          const SizedBox(height: 8),
-          Text(
-            'Choose a new password for your account.',
-            style: AppTextStyles.bodyMuted,
+          const SizedBox(height: 16),
+          const Icon(Icons.lock_open_rounded, size: 48, color: AppColors.successDark),
+          const SizedBox(height: 24),
+          const Text(
+            'New\nPassword',
+            style: TextStyle(
+              fontSize: 36,
+              height: 1.1,
+              fontWeight: FontWeight.w600,
+              color: AppColors.ink,
+              letterSpacing: -1,
+            ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 12),
+          const Text(
+            'Choose a new password for your account.',
+            style: TextStyle(fontSize: 16, color: AppColors.muted),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 48),
+
+          TextFormField(
+            controller: _passwordController,
+            obscureText: true,
+            style: const TextStyle(color: AppColors.ink, fontSize: 16),
+            decoration: InputDecoration(
+              hintText: 'New password',
+              hintStyle: const TextStyle(color: AppColors.muted),
+              prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.muted),
+              filled: true,
+              fillColor: AppColors.surface,
+              contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            validator: (v) {
+              if (v == null || v.length < 6) return 'At least 6 characters';
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _confirmPasswordController,
+            obscureText: true,
+            style: const TextStyle(color: AppColors.ink, fontSize: 16),
+            decoration: InputDecoration(
+              hintText: 'Confirm password',
+              hintStyle: const TextStyle(color: AppColors.muted),
+              prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.muted),
+              filled: true,
+              fillColor: AppColors.surface,
+              contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'Confirm your password';
+              if (v != _passwordController.text) return 'Passwords do not match';
+              return null;
+            },
+          ),
           const SizedBox(height: 32),
-          _buildCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: const TextStyle(color: AppColors.ink, fontSize: 15),
-                  decoration: const InputDecoration(
-                    labelText: 'New password',
-                    prefixIcon: Icon(Icons.lock_outline_rounded, color: AppColors.muted),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.length < 6) return 'At least 6 characters';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  style: const TextStyle(color: AppColors.ink, fontSize: 15),
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm password',
-                    prefixIcon: Icon(Icons.lock_outline_rounded, color: AppColors.muted),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Confirm your password';
-                    if (v != _passwordController.text) return 'Passwords do not match';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                Consumer<AuthProvider>(
-                  builder: (context, provider, _) => AppButton(
-                    label: 'Reset password',
-                    isLoading: provider.isLoading,
-                    onPressed: provider.isLoading ? null : _submitPassword,
-                  ),
-                ),
-              ],
+          Consumer<AuthProvider>(
+            builder: (context, provider, _) => AppButton(
+              label: 'Reset password',
+              isLoading: provider.isLoading,
+              onPressed: provider.isLoading ? null : _submitPassword,
             ),
           ),
         ],
@@ -369,18 +404,5 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildCard({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        boxShadow: [
-          BoxShadow(color: AppColors.ink.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: child,
-    );
-  }
+  // Removed _buildCard entirely
 }
