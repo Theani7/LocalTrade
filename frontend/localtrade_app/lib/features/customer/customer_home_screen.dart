@@ -63,18 +63,8 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
   final ScrollController _scrollController = ScrollController();
 
   String _selectedCategory = 'All';
-  String? _selectedLocation;
-  String? _selectedSort;
-  bool _showAll = false;
 
   List<String> _categories = ['All'];
-
-  final Map<String, String> _sortOptions = {
-    'newest': 'Newest first',
-    'price_low': 'Price: low to high',
-    'price_high': 'Price: high to low',
-    'availability': 'Availability',
-  };
 
   /// Public method to set category from outside (e.g. cart empty state chips)
   void setCategory(String category) {
@@ -124,9 +114,6 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
     Provider.of<ProductProvider>(context, listen: false).fetchProducts(
       search: _searchController.text,
       category: _selectedCategory,
-      location: _selectedLocation,
-      sort: _selectedSort,
-      showAll: _showAll,
       refresh: refresh,
     );
   }
@@ -134,9 +121,6 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
   void _clearAllFilters() {
     setState(() {
       _selectedCategory = 'All';
-      _selectedLocation = null;
-      _selectedSort = null;
-      _showAll = false;
       _searchController.clear();
     });
     Provider.of<ProductProvider>(context, listen: false).clearFilters();
@@ -249,97 +233,6 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
             ),
 
         const SizedBox(height: 12),
-
-        // ── Filter bar ──
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                if (_selectedLocation != null ||
-                    _selectedSort != null ||
-                    _showAll ||
-                    _searchController.text.isNotEmpty ||
-                    _selectedCategory != 'All')
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: _clearAllFilters,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.coralLight,
-                          borderRadius:
-                              BorderRadius.circular(100),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.close_rounded,
-                                size: 14,
-                                color: AppColors.coralDark),
-                            SizedBox(width: 4),
-                            Text('Clear',
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color:
-                                        AppColors.coralDark)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                _buildFilterChip(
-                  label: _selectedLocation ?? 'Location',
-                  isSelected: _selectedLocation != null,
-                  onTap: _showLocationFilter,
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  label: _selectedSort != null
-                      ? _sortOptions[_selectedSort!]!
-                      : 'Sort',
-                  isSelected: _selectedSort != null,
-                  onTap: _showSortFilter,
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    setState(() => _showAll = !_showAll);
-                    _fetchProducts();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _showAll
-                          ? AppColors.coralLight
-                          : AppColors.surface,
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(
-                          color: _showAll
-                              ? AppColors.coralLight
-                              : AppColors.divider),
-                    ),
-                    child: Text(
-                      'Include unavailable',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _showAll
-                            ? AppColors.coralDark
-                            : AppColors.muted,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
 
         const SizedBox(height: 12),
 
@@ -465,7 +358,7 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
             EmptyState(
               icon: Icons.search_off_rounded,
               title: 'No products found',
-              message: 'Try searching for something else or browse another category.',
+              message: 'Try adjusting your search or categories.',
               onAction: _clearAllFilters,
               actionLabel: 'View all products',
             ),
@@ -577,160 +470,6 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? AppColors.coralLight : AppColors.surface,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-              color:
-                  isSelected ? AppColors.coralLight : AppColors.divider),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.check_rounded
-                  : Icons.tune_rounded,
-              size: 14,
-              color:
-                  isSelected ? AppColors.coralDark : AppColors.muted,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color:
-                    isSelected ? AppColors.coralDark : AppColors.muted,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showLocationFilter() {
-    final controller =
-        TextEditingController(text: _selectedLocation);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Filter by location',
-                    style: AppTextStyles.sectionHeading),
-                IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close,
-                        color: AppColors.muted)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: const InputDecoration(
-                  hintText: 'Enter city or area',
-                  prefixIcon: Icon(Icons.location_on_outlined,
-                      color: AppColors.muted)),
-              onSubmitted: (val) {
-                setState(() => _selectedLocation =
-                    val.trim().isEmpty ? null : val.trim());
-                _fetchProducts();
-                Navigator.pop(context);
-              },
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() => _selectedLocation =
-                      controller.text.trim().isEmpty
-                          ? null
-                          : controller.text.trim());
-                  _fetchProducts();
-                  Navigator.pop(context);
-                },
-                child: const Text('Apply'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSortFilter() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Sort by', style: AppTextStyles.sectionHeading),
-            const SizedBox(height: 16),
-            ..._sortOptions.entries.map((entry) => ListTile(
-                  title: Text(
-                    entry.value,
-                    style: TextStyle(
-                      fontWeight: _selectedSort == entry.key
-                          ? FontWeight.w500
-                          : FontWeight.w400,
-                      color: _selectedSort == entry.key
-                          ? AppColors.coral
-                          : AppColors.ink,
-                    ),
-                  ),
-                  trailing: _selectedSort == entry.key
-                      ? const Icon(Icons.check_rounded,
-                          color: AppColors.coral)
-                      : null,
-                  onTap: () {
-                    setState(
-                        () => _selectedSort = entry.key);
-                    _fetchProducts();
-                    Navigator.pop(context);
-                  },
-                )),
-          ],
-        ),
-      ),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/vendor_provider.dart';
@@ -74,52 +75,67 @@ class _VendorDashboardState extends State<VendorDashboard> {
     return SafeArea(
       bottom: true,
       child: Container(
-        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(36),
+          borderRadius: BorderRadius.circular(100),
           boxShadow: [
             BoxShadow(
-              color: AppColors.ink.withOpacity(0.08),
+              color: AppColors.ink.withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildNavItem(index: 0, icon: Icons.dashboard_outlined, label: 'Dashboard'),
-              _buildNavItem(index: 1, icon: Icons.receipt_long_outlined, label: 'Orders'),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
-                  );
-                },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.coral,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.coral.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.add_rounded, size: 28, color: AppColors.ink),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(100),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  width: 1.5,
                 ),
               ),
-              _buildNavItem(index: 2, icon: Icons.inventory_2_outlined, label: 'Inventory'),
-              _buildNavItem(index: 3, icon: Icons.person_outline_rounded, label: 'Profile'),
-            ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(index: 0, icon: Icons.dashboard_outlined, label: 'Dashboard'),
+                    _buildNavItem(index: 1, icon: Icons.receipt_long_outlined, label: 'Orders'),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
+                        );
+                      },
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppColors.coral,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.coral.withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.add_rounded, size: 28, color: AppColors.ink),
+                      ),
+                    ),
+                    _buildNavItem(index: 2, icon: Icons.inventory_2_outlined, label: 'Inventory'),
+                    _buildNavItem(index: 3, icon: Icons.person_outline_rounded, label: 'Profile'),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -141,12 +157,12 @@ class _VendorDashboardState extends State<VendorDashboard> {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-            width: 48,
-            height: 32,
+            curve: Curves.easeOutBack,
+            width: 56,
+            height: 34,
             decoration: BoxDecoration(
               color: isActive ? AppColors.coralLight : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Icon(
               icon,
@@ -154,12 +170,12 @@ class _VendorDashboardState extends State<VendorDashboard> {
               color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             label,
             style: TextStyle(
               fontSize: 10,
-              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
               color: isActive ? AppColors.coralDark : AppColors.muted,
             ),
           ),

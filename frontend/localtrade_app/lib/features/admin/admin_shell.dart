@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -63,61 +64,76 @@ class AdminShellState extends State<AdminShell> {
     return SafeArea(
       bottom: true,
       child: Container(
-        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(36),
+          borderRadius: BorderRadius.circular(100),
           boxShadow: [
             BoxShadow(
-              color: AppColors.ink.withOpacity(0.08),
+              color: AppColors.ink.withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildNavItem(
-                index: 0,
-                icon: Icons.analytics_outlined,
-                label: 'Analytics',
-                dashboardTab: 0,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(100),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
               ),
-              _buildNavItem(
-                index: 1,
-                icon: Icons.people_outlined,
-                label: 'Users',
-                dashboardTab: 1,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(
+                      index: 0,
+                      icon: Icons.analytics_outlined,
+                      label: 'Analytics',
+                      dashboardTab: 0,
+                    ),
+                    _buildNavItem(
+                      index: 1,
+                      icon: Icons.people_outlined,
+                      label: 'Users',
+                      dashboardTab: 1,
+                    ),
+                    _buildNavItem(
+                      index: 2,
+                      icon: Icons.storefront_outlined,
+                      label: 'Vendors',
+                      dashboardTab: 2,
+                      showBadge: true,
+                    ),
+                    _buildNavItem(
+                      index: 3,
+                      icon: Icons.inventory_2_outlined,
+                      label: 'Products',
+                      dashboardTab: 3,
+                    ),
+                    _buildNavItem(
+                      index: 4,
+                      icon: Icons.receipt_outlined,
+                      label: 'Orders',
+                      dashboardTab: 4,
+                    ),
+                    _buildNavItem(
+                      index: 5,
+                      icon: Icons.person_outline_rounded,
+                      label: 'Profile',
+                      dashboardTab: -1,
+                    ),
+                  ],
+                ),
               ),
-              _buildNavItem(
-                index: 2,
-                icon: Icons.storefront_outlined,
-                label: 'Vendors',
-                dashboardTab: 2,
-                showBadge: true,
-              ),
-              _buildNavItem(
-                index: 3,
-                icon: Icons.inventory_2_outlined,
-                label: 'Products',
-                dashboardTab: 3,
-              ),
-              _buildNavItem(
-                index: 4,
-                icon: Icons.receipt_outlined,
-                label: 'Orders',
-                dashboardTab: 4,
-              ),
-              _buildNavItem(
-                index: 5,
-                icon: Icons.person_outline_rounded,
-                label: 'Profile',
-                dashboardTab: -1,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -151,12 +167,12 @@ class AdminShellState extends State<AdminShell> {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
+            curve: Curves.easeOutBack,
             width: 48,
-            height: 32,
+            height: 34,
             decoration: BoxDecoration(
               color: isActive ? AppColors.coralLight : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Stack(
               clipBehavior: Clip.none,
@@ -164,7 +180,7 @@ class AdminShellState extends State<AdminShell> {
               children: [
                 Icon(
                   icon,
-                  size: 22,
+                  size: 20,
                   color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
                 ),
                 if (showBadge)
@@ -176,18 +192,25 @@ class AdminShellState extends State<AdminShell> {
                       if (pendingCount == 0) return const SizedBox.shrink();
                       return Positioned(
                         right: 2,
-                        top: 0,
+                        top: -2,
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: const BoxDecoration(
                             color: AppColors.coral,
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Text(
                             '$pendingCount',
                             style: const TextStyle(
                               fontSize: 8,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.ink,
                             ),
                           ),
@@ -198,12 +221,12 @@ class AdminShellState extends State<AdminShell> {
               ],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             label,
             style: TextStyle(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+              fontSize: 9,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
               color: isActive ? AppColors.coralDark : AppColors.muted,
             ),
           ),

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -163,108 +164,130 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
     return SafeArea(
       bottom: true,
       child: Container(
-        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+        margin: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(36),
+          borderRadius: BorderRadius.circular(100),
           boxShadow: [
             BoxShadow(
-              color: AppColors.ink.withOpacity(0.08),
+              color: AppColors.ink.withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(_items.length, (index) {
-                final item = _items[index];
-                final isActive = index == widget.currentIndex;
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(100),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(_items.length, (index) {
+                      final item = _items[index];
+                      final isActive = index == widget.currentIndex;
 
-              return GestureDetector(
-                onTap: () => widget.onTap(index),
-                behavior: HitTestBehavior.opaque,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOut,
-                      width: 56,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: isActive ? AppColors.coralLight : Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.center,
+                    return GestureDetector(
+                      onTap: () => widget.onTap(index),
+                      behavior: HitTestBehavior.opaque,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (index == 1 && widget.cartItemCount > 0)
-                            TickBuilder(
-                              listenable: _bounceCtrl,
-                              builder: (context, _) {
-                                return Transform.scale(
-                                  scale: _bounceScale.value,
-                                  child: Icon(
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOutBack,
+                            width: 60,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: isActive ? AppColors.coralLight : Colors.transparent,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.center,
+                              children: [
+                                if (index == 1 && widget.cartItemCount > 0)
+                                  TickBuilder(
+                                    listenable: _bounceCtrl,
+                                    builder: (context, _) {
+                                      return Transform.scale(
+                                        scale: _bounceScale.value,
+                                        child: Icon(
+                                          isActive ? item.activeIcon : item.icon,
+                                          size: 22,
+                                          color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                else
+                                  Icon(
                                     isActive ? item.activeIcon : item.icon,
                                     size: 22,
                                     color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
                                   ),
-                                );
-                              },
-                            )
-                          else
-                            Icon(
-                              isActive ? item.activeIcon : item.icon,
-                              size: 22,
-                              color: isActive ? AppColors.coralDark : const Color(0xFFB9AF9A),
-                            ),
-                          // Cart badge
-                          if (index == 1 && widget.cartItemCount > 0)
-                            Positioned(
-                              right: 6,
-                              top: -2,
-                              child: Container(
-                                key: widget.cartIconKey,
-                                width: 18,
-                                height: 18,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.coral,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '${widget.cartItemCount}',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.ink,
-                                      height: 1,
+                                // Cart badge
+                                if (index == 1 && widget.cartItemCount > 0)
+                                  Positioned(
+                                    right: 8,
+                                    top: -4,
+                                    child: Container(
+                                      key: widget.cartIconKey,
+                                      width: 18,
+                                      height: 18,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.coral,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: 4,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${widget.cartItemCount}',
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.ink,
+                                            height: 1,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ),
+                              ],
                             ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                              color: isActive ? AppColors.coralDark : AppColors.muted,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                        color: isActive ? AppColors.coralDark : AppColors.muted,
-                      ),
-                    ),
-                  ],
+                    );
+                  }),
                 ),
-              );
-            }),
+              ),
+            ),
           ),
         ),
       ),

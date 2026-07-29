@@ -124,15 +124,8 @@ class ProductCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
+                          color: AppColors.ink,
                           borderRadius: BorderRadius.circular(6),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0x00000000),
-                              Color(0x59000000),
-                            ],
-                          ),
                         ),
                         child: Text(
                           category,
