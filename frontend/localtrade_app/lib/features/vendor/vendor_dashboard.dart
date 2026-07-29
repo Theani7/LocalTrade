@@ -53,7 +53,17 @@ class _VendorDashboardState extends State<VendorDashboard> {
       body: Column(
         children: [
           const ConnectionStatusBanner(),
-          Expanded(child: _screens[_currentIndex]),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: SizedBox(
+                key: ValueKey<int>(_currentIndex),
+                child: _screens[_currentIndex],
+              ),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),

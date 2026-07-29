@@ -49,23 +49,29 @@ class _CustomerShellState extends State<CustomerShell> {
         children: [
           const ConnectionStatusBanner(),
           Expanded(
-            child: _currentIndex == 0
-                ? CustomerHomeBody(
-                    key: _homeKey,
-                    onNotificationTap: () => AuthGuard.requireAuthRoute(
-                      context,
-                      const NotificationScreen(),
-                    ),
-                    cartIconKey: _cartIconKey,
-                  )
-                : _currentIndex == 1
-                    ? CartBody(
-                        onBrowseProducts: () => _switchTab(0),
-                        onCategoryTap: _onCategoryTap,
-                      )
-                    : _currentIndex == 2
-                        ? const CustomerOrdersBody()
-                        : const CustomerProfileBody(),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: _currentIndex == 0
+                  ? CustomerHomeBody(
+                      key: _homeKey, // Kept for state preservation
+                      onNotificationTap: () => AuthGuard.requireAuthRoute(
+                        context,
+                        const NotificationScreen(),
+                      ),
+                      cartIconKey: _cartIconKey,
+                    )
+                  : _currentIndex == 1
+                      ? CartBody(
+                          key: const ValueKey('cart_tab'),
+                          onBrowseProducts: () => _switchTab(0),
+                          onCategoryTap: _onCategoryTap,
+                        )
+                      : _currentIndex == 2
+                          ? const CustomerOrdersBody(key: ValueKey('orders_tab'))
+                          : const CustomerProfileBody(key: ValueKey('profile_tab')),
+            ),
           ),
         ],
       ),
