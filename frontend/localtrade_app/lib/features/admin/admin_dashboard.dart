@@ -257,7 +257,7 @@ class AdminAnalyticsTab extends StatelessWidget {
         final userDailyStats = admin.analytics!['userDailyStats'] as List? ?? [];
         final productDailyStats = admin.analytics!['productDailyStats'] as List? ?? [];
 
-        Map<String, dynamic> _getTrendData(List<dynamic> data, String valueKey) {
+        Map<String, dynamic> getTrendData(List<dynamic> data, String valueKey) {
           if (data.isEmpty) return {'trend': 'No recent data', 'chart': <double>[]};
           final chartData = data.map((e) => (e[valueKey] ?? 0).toDouble()).toList().cast<double>();
           if (chartData.length < 2) return {'trend': '↑ +100%', 'chart': chartData};
@@ -274,10 +274,10 @@ class AdminAnalyticsTab extends StatelessWidget {
           };
         }
 
-        final revInfo = _getTrendData(dailyStats, 'revenue');
-        final ordersInfo = _getTrendData(dailyStats, 'count');
-        final usersInfo = _getTrendData(userDailyStats, 'count');
-        final productsInfo = _getTrendData(productDailyStats, 'count');
+        final revInfo = getTrendData(dailyStats, 'revenue');
+        final ordersInfo = getTrendData(dailyStats, 'count');
+        final usersInfo = getTrendData(userDailyStats, 'count');
+        final productsInfo = getTrendData(productDailyStats, 'count');
 
         double totalRevenue = 0.0;
         if (stats['totalRevenue'] != null) {
