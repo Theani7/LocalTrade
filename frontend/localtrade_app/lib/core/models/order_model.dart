@@ -4,8 +4,9 @@ class OrderItem {
   final String productId;
   final String? productTitle;
   final String? productImage;
-  final int quantity;
+  final double quantity;
   final double price;
+  final String priceUnit;
 
   OrderItem({
     required this.productId,
@@ -13,6 +14,7 @@ class OrderItem {
     this.productImage,
     required this.quantity,
     required this.price,
+    this.priceUnit = 'piece',
   });
 
   double get totalPrice => price * quantity;
@@ -38,8 +40,9 @@ class OrderItem {
       productId: productId,
       productTitle: title,
       productImage: image,
-      quantity: json['quantity'] ?? 1,
+      quantity: (json['quantity'] ?? 1).toDouble(),
       price: (json['price'] ?? 0).toDouble(),
+      priceUnit: json['priceUnit'] ?? 'piece',
     );
   }
 
@@ -47,6 +50,7 @@ class OrderItem {
     'product': productId,
     'quantity': quantity,
     'price': price,
+    'priceUnit': priceUnit,
   };
 }
 
@@ -94,7 +98,7 @@ class Order {
     this.createdAt,
   });
 
-  int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
+  double get itemCount => items.fold(0.0, (sum, item) => sum + item.quantity);
   String get displayTotal => 'Rs. ${totalAmount.toStringAsFixed(totalAmount % 1 == 0 ? 0 : 2)}';
 
   bool get canBeCancelled => status == OrderStatus.pending || status == OrderStatus.confirmed;

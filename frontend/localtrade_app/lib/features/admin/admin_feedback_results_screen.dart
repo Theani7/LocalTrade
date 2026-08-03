@@ -145,7 +145,7 @@ class _AdminFeedbackResultsScreenState extends State<AdminFeedbackResultsScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                (item['value'] as double).toStringAsFixed(1),
+                ((item['value'] as num?)?.toDouble() ?? 0).toStringAsFixed(1),
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: item['color'] as Color),
               ),
               const SizedBox(height: 4),

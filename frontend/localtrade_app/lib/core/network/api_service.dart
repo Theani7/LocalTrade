@@ -170,4 +170,15 @@ class ApiService {
 
     throw Exception(message);
   }
+
+  /// Safely decode a JSON response body. Throws a readable exception on invalid JSON.
+  static Map<String, dynamic> decodeBody(String body) {
+    try {
+      final decoded = json.decode(body);
+      if (decoded is Map<String, dynamic>) return decoded;
+      return <String, dynamic>{};
+    } catch (_) {
+      throw Exception('Invalid server response');
+    }
+  }
 }

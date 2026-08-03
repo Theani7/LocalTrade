@@ -55,7 +55,7 @@ const feedbackSchema = new mongoose.Schema(
 );
 
 // Index for performance
-feedbackSchema.index({ userId: 1 });
+feedbackSchema.index({ userId: 1 }, { unique: true });
 feedbackSchema.index({ role: 1 });
 feedbackSchema.index({ createdAt: -1 });
 

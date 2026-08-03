@@ -11,6 +11,6 @@ router.use(isApprovedVendor);
 
 router.get('/analytics', vendorController.getVendorAnalytics);
 router.get('/profile', vendorController.getVendorProfile);
-router.patch('/profile', upload.single('profileImage'), vendorController.updateVendorProfile);
+router.patch('/profile', upload.single('profileImage'), upload.validateImageContent, vendorController.updateVendorProfile);
 
 module.exports = router;

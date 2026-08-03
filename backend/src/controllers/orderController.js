@@ -1,5 +1,6 @@
 const Order = require('../models/orderModel');
 const Product = require('../models/productModel');
+const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const { sendNotification } = require('../utils/notificationUtils');
@@ -19,15 +20,21 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('No order items provided. Expected "items" or "products" array.', 400));
   }
 
-  // Validate all quantities are positive integers
+  const WEIGHT_UNITS = ['kg', '100g', 'liter'];
+
+  // Validate all quantities are positive and unit-appropriate
   for (const item of items) {
-    if (!item.quantity || item.quantity < 1 || !Number.isInteger(item.quantity)) {
-      return next(new AppError('Each item quantity must be a positive integer', 400));
+    if (!item.quantity || item.quantity <= 0) {
+      return next(new AppError('Each item quantity must be greater than zero', 400));
+    }
+    if (!Number.isFinite(Number(item.quantity))) {
+      return next(new AppError('Each item quantity must be a number', 400));
     }
   }
 
   // Validate all products are from the same vendor
   const vendorIds = new Set();
+  const productsById = new Map();
   for (const item of items) {
     const productId = item.productId || item.product;
     if (!productId) {
@@ -37,10 +44,37 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     if (!product) {
       return next(new AppError(`Product ${productId} not found`, 404));
     }
+    productsById.set(productId, product);
     vendorIds.add(product.vendorId.toString());
   }
   if (vendorIds.size > 1) {
     return next(new AppError('All products in an order must be from the same vendor', 400));
+  }
+
+  // Ensure the selling vendor is approved and active
+  const sellingVendor = await User.findById([...vendorIds][0]).select('vendorApprovalStatus isActive');
+  if (!sellingVendor || sellingVendor.vendorApprovalStatus !== 'approved' || sellingVendor.isActive === false) {
+    return next(new AppError('The vendor for these products is currently unavailable.', 400));
+  }
+
+  // Validate quantity steps and minOrder against the DB product
+  for (const item of items) {
+    const productId = item.productId || item.product;
+    const product = productsById.get(productId);
+    const quantity = item.quantity;
+    const stepOk = WEIGHT_UNITS.includes(product.priceUnit)
+      ? Math.abs(quantity * 10 - Math.round(quantity * 10)) < 1e-9
+      : Number.isInteger(quantity);
+    if (!stepOk) {
+      return next(new AppError(
+        `Quantity for "${product.title}" must be a ${WEIGHT_UNITS.includes(product.priceUnit) ? 'multiple of 0.1 (weight unit)' : 'whole number'}`,
+        400
+      ));
+    }
+    const minOrder = product.minOrder || 1;
+    if (quantity < minOrder) {
+      return next(new AppError(`Minimum order for "${product.title}" is ${minOrder} ${product.priceUnit}`, 400));
+    }
   }
 
   // 1) Process each item
@@ -107,7 +141,6 @@ exports.createOrder = catchAsync(async (req, res, next) => {
       products: orderProducts,
       totalAmount: totalAmount, // ALWAYS use server-calculated total
       shippingAddress: req.body.shippingAddress,
-      phone: req.body.phone || req.user.phone,
       notes: req.body.notes
     });
 
@@ -129,7 +162,14 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     // ROLLBACK STOCK FOR PROCESSED ITEMS
     for (const processed of processedProducts) {
       try {
-        await Product.findByIdAndUpdate(processed.id, { $inc: { stockQuantity: processed.quantity } });
+        await Product.findOneAndUpdate(
+          { _id: processed.id },
+          {
+            $inc: { stockQuantity: processed.quantity },
+            ...(processed.quantity > 0 ? { productStatus: 'Available' } : {}),
+          },
+          { new: true }
+        );
       } catch (rollbackErr) {
         console.error('Failed to rollback stock for product:', processed.id, rollbackErr);
       }
@@ -281,14 +321,18 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
     return next(new AppError('Cannot revert status back to Pending', 400));
   }
 
-  const statusValues = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+  if (status === 'Cancelled') {
+    return next(new AppError('Cancellation must be done through the cancel endpoint so stock is restored', 400));
+  }
+
+  const statusValues = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
   if (!statusValues.includes(status)) {
     return next(new AppError(`Invalid status: ${status}`, 400));
   }
   const currentIndex = statusValues.indexOf(order.orderStatus);
   const targetIndex = statusValues.indexOf(status);
 
-  if (status !== 'Cancelled' && targetIndex <= currentIndex) {
+  if (targetIndex <= currentIndex) {
     return next(new AppError(`Cannot revert order status from "${order.orderStatus}" to "${status}"`, 400));
   }
 
@@ -334,9 +378,6 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('Order cannot be cancelled after confirmation', 400));
   }
 
-  order.orderStatus = 'Cancelled';
-  order.cancellationReason = req.body.reason || undefined;
-  order.cancellationFeedback = req.body.feedback || undefined;
   const updatedOrder = await Order.findByIdAndUpdate(
     req.params.id,
     {
@@ -353,7 +394,14 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   // Rollback stock for all products in this order
   for (const item of order.products) {
     try {
-      await Product.findByIdAndUpdate(item.product, { $inc: { stockQuantity: item.quantity } });
+      await Product.findOneAndUpdate(
+        { _id: item.product },
+        {
+          $inc: { stockQuantity: item.quantity },
+          productStatus: 'Available',
+        },
+        { new: true }
+      );
     } catch (err) {
       console.error('Failed to restore stock on cancel:', item.product, err);
     }

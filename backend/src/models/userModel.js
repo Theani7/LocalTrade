@@ -86,6 +86,10 @@ const userSchema = new mongoose.Schema(
       default: false,
       select: false,
     },
+    passwordChangedAt: {
+      type: Date,
+      select: false,
+    },
     passwordResetOtp: {
       type: String,
       select: false,
@@ -112,6 +116,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);
+  this.passwordChangedAt = new Date();
 });
 
 // Method to compare password

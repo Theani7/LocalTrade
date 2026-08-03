@@ -33,7 +33,7 @@ class ProductService {
     final response = await _apiService.get('/products$query', headers: headers);
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -53,7 +53,7 @@ class ProductService {
     final response = await _apiService.get('/products/$id', headers: headers);
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -73,7 +73,7 @@ class ProductService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -87,12 +87,17 @@ class ProductService {
   Future<Map<String, dynamic>> createProduct(Map<String, dynamic> productData, List<dynamic> images) async {
     final token = await _authService.getToken();
     if (token == null) throw Exception('Not authenticated');
-    final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
+    final Map<String, String> fields = productData.map((key, value) {
+      if (value is List) {
+        return MapEntry(key, json.encode(value));
+      }
+      return MapEntry(key, value.toString());
+    });
     final response = await _apiService.multipartPost('/products', fields: fields, files: images);
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -107,11 +112,16 @@ class ProductService {
     if (images != null && images.isNotEmpty) {
        final token = await _authService.getToken();
        if (token == null) throw Exception('Not authenticated');
-       final Map<String, String> fields = productData.map((key, value) => MapEntry(key, value.toString()));
+       final Map<String, String> fields = productData.map((key, value) {
+         if (value is List) {
+           return MapEntry(key, json.encode(value));
+         }
+         return MapEntry(key, value.toString());
+       });
        final response = await _apiService.multipartPatch('/products/$id', fields: fields, files: images);
        final Map<String, dynamic> data;
        try {
-         data = json.decode(response.body);
+         data = ApiService.decodeBody(response.body);
        } catch (e) {
          return {'success': false, 'message': 'Invalid server response'};
        }
@@ -131,7 +141,7 @@ class ProductService {
 
       final Map<String, dynamic> data;
       try {
-        data = json.decode(response.body);
+        data = ApiService.decodeBody(response.body);
       } catch (e) {
         return {'success': false, 'message': 'Invalid server response'};
       }
@@ -153,7 +163,7 @@ class ProductService {
     if (response.statusCode != 204) {
       final Map<String, dynamic> data;
       try {
-        data = json.decode(response.body);
+        data = ApiService.decodeBody(response.body);
       } catch (e) {
         throw Exception('Failed to delete product');
       }
@@ -170,7 +180,7 @@ class ProductService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       throw Exception('Failed to check product status');
     }
@@ -192,7 +202,7 @@ class ProductService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }

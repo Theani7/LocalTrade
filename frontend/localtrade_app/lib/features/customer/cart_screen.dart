@@ -81,6 +81,16 @@ class _CartBodyState extends State<CartBody> {
   final TextEditingController _noteController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cart = Provider.of<CartProvider>(context, listen: false);
+      _noteController.text = cart.cartNote;
+    });
+  }
+
+  @override
   void dispose() {
     _noteController.dispose();
     super.dispose();
@@ -131,7 +141,7 @@ class _CartBodyState extends State<CartBody> {
 
     final cart = Provider.of<CartProvider>(context);
     final cartItems = cart.items.values.toList();
-    final totalQty = cartItems.fold<int>(0, (s, i) => s + (i.quantity > 0 ? i.quantity : 0));
+    final totalQty = cartItems.fold<double>(0, (s, i) => s + (i.quantity > 0 ? i.quantity : 0));
 
     if (cartItems.isEmpty) {
       return _EmptyCartBody(
@@ -154,7 +164,7 @@ class _CartBodyState extends State<CartBody> {
                     Text('Cart', style: AppTextStyles.screenTitle),
                     const SizedBox(height: 2),
                     Text(
-                      '$totalQty item${totalQty == 1 ? '' : 's'} in your cart',
+                      '${totalQty % 1 == 0 ? totalQty.toInt() : totalQty.toStringAsFixed(1)} item${totalQty == 1 ? '' : 's'} in your cart',
                       style: AppTextStyles.caption,
                     ),
                   ],
@@ -183,7 +193,10 @@ class _CartBodyState extends State<CartBody> {
                 return const SizedBox(height: 12);
               }
               if (index == cart.itemsByVendor.entries.length + 1) {
-                return _VendorNoteCard(noteController: _noteController);
+                return _VendorNoteCard(
+                  noteController: _noteController,
+                  onChanged: (value) => cart.setCartNote(value),
+                );
               }
               return const SizedBox(height: 100);
             },
@@ -196,7 +209,7 @@ class _CartBodyState extends State<CartBody> {
 
   Widget _buildBottomBar(BuildContext context, CartProvider cart) {
     final cartItems = cart.items.values.toList();
-    final totalQty = cartItems.fold<int>(0, (s, i) => s + i.quantity);
+    final totalQty = cartItems.fold<double>(0, (s, i) => s + i.quantity);
     final subtotal = cart.totalAmount;
     const deliveryFee = 0.0;
     final total = subtotal + deliveryFee;
@@ -221,7 +234,7 @@ class _CartBodyState extends State<CartBody> {
                 children: [
                   Flexible(
                     child: Text(
-                      'Subtotal ($totalQty item${totalQty == 1 ? '' : 's'})',
+                      'Subtotal (${totalQty % 1 == 0 ? totalQty.toInt() : totalQty.toStringAsFixed(1)} item${totalQty == 1 ? '' : 's'})',
                       style: AppTextStyles.bodyMuted,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -328,7 +341,7 @@ class _VendorGroupCard extends StatelessWidget {
                     _vendorInitials(vendorName),
                     style: const TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.coralDark,
                     ),
                   ),
@@ -521,12 +534,13 @@ class _CartItemTileState extends State<_CartItemTile>
                   children: [
                     _QuantityStepper(
                       quantity: widget.item.quantity,
+                      step: widget.item.step,
                       onIncrement: () => widget.cart.updateQuantity(
-                          widget.item.id, widget.item.quantity + 1, size: widget.item.size),
+                          widget.item.id, widget.item.quantity + widget.item.step, size: widget.item.size),
                       onDecrement: () {
-                        if (widget.item.quantity > 1) {
+                        if (widget.item.quantity > widget.item.minOrder) {
                           widget.cart.updateQuantity(
-                              widget.item.id, widget.item.quantity - 1, size: widget.item.size);
+                              widget.item.id, widget.item.quantity - widget.item.step, size: widget.item.size);
                         } else {
                           _handleRemove();
                         }
@@ -538,7 +552,7 @@ class _CartItemTileState extends State<_CartItemTile>
                     ),
                     if (widget.item.priceUnitLabel.isNotEmpty)
                       Text(
-                        ' (${widget.item.quantity.toInt()} ${widget.item.priceUnitLabel})',
+                        ' (${widget.item.quantity % 1 == 0 ? widget.item.quantity.toInt() : widget.item.quantity.toStringAsFixed(1)} ${widget.item.priceUnitLabel})',
                         style: AppTextStyles.caption.copyWith(color: AppColors.muted),
                       ),
                   ],
@@ -556,12 +570,14 @@ class _CartItemTileState extends State<_CartItemTile>
 // Animated quantity stepper — number slides up/down with AnimatedSwitcher
 // ---------------------------------------------------------------------------
 class _QuantityStepper extends StatelessWidget {
-  final int quantity;
+  final double quantity;
+  final double step;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
 
   const _QuantityStepper({
     required this.quantity,
+    required this.step,
     required this.onIncrement,
     required this.onDecrement,
   });
@@ -597,7 +613,7 @@ class _QuantityStepper extends StatelessWidget {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               transitionBuilder: (child, anim) {
-                final prevQty = (child.key as ValueKey<int>?)?.value ?? 0;
+                final prevQty = (child.key as ValueKey<double>?)?.value ?? 0;
                 final isNewGreater = quantity > prevQty;
                 return FadeTransition(
                   opacity: anim,
@@ -613,12 +629,12 @@ class _QuantityStepper extends StatelessWidget {
                 );
               },
               child: Text(
-                '$quantity',
+                quantity % 1 == 0 ? '${quantity.toInt()}' : quantity.toStringAsFixed(1),
                 key: ValueKey(quantity),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.ink,
                 ),
               ),
@@ -648,8 +664,9 @@ class _QuantityStepper extends StatelessWidget {
 // ---------------------------------------------------------------------------
 class _VendorNoteCard extends StatelessWidget {
   final TextEditingController noteController;
+  final ValueChanged<String> onChanged;
 
-  const _VendorNoteCard({required this.noteController});
+  const _VendorNoteCard({required this.noteController, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -674,6 +691,7 @@ class _VendorNoteCard extends StatelessWidget {
           TextField(
             controller: noteController,
             maxLines: 2,
+            onChanged: onChanged,
             style: AppTextStyles.body,
             decoration: InputDecoration(
               hintText:

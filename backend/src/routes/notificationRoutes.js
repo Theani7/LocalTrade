@@ -18,4 +18,8 @@ router.patch('/mark-all-read', notificationController.markAllAsRead);
 // @route   PATCH /api/v1/notifications/:id/read
 router.patch('/:id/read', notificationController.markAsRead);
 
+// @desc    Delete notification
+// @route   DELETE /api/v1/notifications/:id
+router.delete('/:id', notificationController.deleteNotification);
+
 module.exports = router;

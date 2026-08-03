@@ -175,7 +175,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
             label,
             style: TextStyle(
               fontSize: 10,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w500,
               color: isActive ? AppColors.coralDark : AppColors.muted,
             ),
           ),

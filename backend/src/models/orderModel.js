@@ -74,6 +74,7 @@ orderSchema.index({ vendorId: 1 });
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ vendorId: 1, orderStatus: 1 });
 orderSchema.index({ customerId: 1, orderStatus: 1 });
+orderSchema.index({ 'products.product': 1 });
 
 const Order = mongoose.model('Order', orderSchema);
 

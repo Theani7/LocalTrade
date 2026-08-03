@@ -6,6 +6,10 @@ const Product = require('./src/models/productModel');
 
 const seedData = async () => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Refusing to run seed-data.js in production environment');
+    }
+
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
@@ -22,8 +26,11 @@ const seedData = async () => {
     await Product.deleteMany({});
 
     console.log('Ensuring default admin exists...');
-    const adminEmail = 'admin@gmail.com';
-    const adminPassword = 'admin123';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error('ADMIN_PASSWORD must be set in .env to seed the admin');
+    }
     await User.deleteOne({ email: adminEmail });
     await User.create({
       fullName: 'System Admin',
@@ -39,9 +46,10 @@ const seedData = async () => {
       },
       role: 'admin',
       isActive: true,
-      vendorApprovalStatus: 'approved'
+      vendorApprovalStatus: 'approved',
+      mustChangePassword: true
     });
-    console.log(`✅ Default Admin ready: ${adminEmail}`);
+    console.log(`✅ Default Admin ready: ${adminEmail} (must change password on first login)`);
 
     console.log('Creating 10 Local Vendors...');
     const password = await bcrypt.hash('password123', 12);

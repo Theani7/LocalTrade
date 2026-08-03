@@ -20,22 +20,29 @@ exports.submitFeedback = catchAsync(async (req, res, next) => {
     return next(new AppError('You have already submitted feedback', 400));
   }
 
-  const feedback = await Feedback.create({
-    userId: req.user.id,
-    role: req.user.role,
-    rating,
-    usabilityRating,
-    designRating,
-    performanceRating,
-    featureCompletenessRating,
-    comment
-  });
+  try {
+    const feedback = await Feedback.create({
+      userId: req.user.id,
+      role: req.user.role,
+      rating,
+      usabilityRating,
+      designRating,
+      performanceRating,
+      featureCompletenessRating,
+      comment
+    });
 
-  res.status(201).json({
-    success: true,
-    status: 'success',
-    data: { feedback }
-  });
+    res.status(201).json({
+      success: true,
+      status: 'success',
+      data: { feedback }
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      return next(new AppError('You have already submitted feedback', 400));
+    }
+    throw err;
+  }
 });
 
 // @desc    Get all feedback (Admin only)

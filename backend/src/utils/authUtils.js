@@ -21,7 +21,7 @@ const sendToken = (user, statusCode, res) => {
 };
 
 const generateOtp = () => {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = crypto.randomInt(100000, 1000000).toString();
   const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
   const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
   return { otp, hashedOtp, expires };

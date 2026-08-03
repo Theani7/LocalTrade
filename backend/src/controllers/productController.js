@@ -1,7 +1,7 @@
 const Product = require('../models/productModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
-const { sendNotification } = require('../utils/notificationUtils');
+const notificationUtils = require('../utils/notificationUtils');
 const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
 const User = require('../models/userModel');
 const Order = require('../models/orderModel');
@@ -71,8 +71,8 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
   }
 
   // 7) Pagination
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
   const skip = (page - 1) * limit;
 
   // Execute query and count in parallel
@@ -118,8 +118,15 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 // @access  Private/Vendor
 exports.createProduct = catchAsync(async (req, res, next) => {
   const { title, description, category, price, originalPrice, stock, stockQuantity, priceUnit, minOrder, sizes } = req.body;
-  
-  const existingProduct = await Product.findOne({ vendorId: req.user.id, title: title.trim() });
+
+  if (!title || !title.trim()) {
+    return next(new AppError('Product title is required', 400));
+  }
+
+  const existingProduct = await Product.findOne({
+    vendorId: req.user.id,
+    title: { $regex: `^${title.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+  });
   if (existingProduct) {
     return next(new AppError('You already have a product with this title', 400));
   }
@@ -136,20 +143,26 @@ exports.createProduct = catchAsync(async (req, res, next) => {
   }
 
   const resolvedStock = stockQuantity !== undefined ? Number(stockQuantity) : (stock !== undefined ? Number(stock) : 0);
-  if (resolvedStock < 0) {
-    return next(new AppError('Stock quantity cannot be negative', 400));
+  if (isNaN(resolvedStock) || resolvedStock < 0) {
+    return next(new AppError('Stock quantity must be a non-negative number', 400));
+  }
+
+  const parsedSizes = Array.isArray(sizes) ? sizes : (typeof sizes === 'string' ? JSON.parse(sizes) : []);
+  const resolvedMinOrder = minOrder !== undefined && minOrder !== '' ? Number(minOrder) : 1;
+  if (isNaN(resolvedMinOrder) || resolvedMinOrder <= 0) {
+    return next(new AppError('Minimum order must be a positive number', 400));
   }
 
   const productData = {
-    title,
+    title: title.trim(),
     description,
     category,
-    price: Number(price),
+    price: priceNum,
     priceUnit: priceUnit || 'piece',
-    minOrder: minOrder ? Number(minOrder) : 1,
+    minOrder: resolvedMinOrder,
     originalPrice: originalPrice ? Number(originalPrice) : null,
     stockQuantity: resolvedStock,
-    sizes: sizes || [],
+    sizes: parsedSizes,
     vendorId: req.user.id,
     vendorName: req.user.shopName || req.user.fullName,
     location: req.user.address
@@ -167,25 +180,14 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 
   const product = await Product.create(productData);
 
-  // Send promotional notification to all customers
-  try {
-    const customers = await User.find({ role: 'customer' }).select('_id');
-    if (customers.length > 0) {
-      const shopName = req.user.shopName || req.user.fullName;
-      const notificationPromises = customers.map(customer =>
-        sendNotification(
-          customer._id,
-          'New product listed',
-          `${shopName} added "${title}" in ${category || 'Local Goods'}.`,
-          { productId: product._id.toString(), type: 'new_product' },
-          'Promotional'
-        )
-      );
-      await Promise.all(notificationPromises);
-    }
-  } catch (err) {
-    console.error('Promotional notification error:', err.message);
-  }
+  // Send promotional notification to all customers (fire-and-forget, never blocks response)
+  notificationUtils
+    .allCustomers(
+      'New product listed',
+      `${req.user.shopName || req.user.fullName} added "${title}" in ${category || 'Local Goods'}.`,
+      { productId: product._id.toString(), type: 'new_product' }
+    )
+    .catch((err) => console.error('Promotional notification error:', err.message));
 
   res.status(201).json({
     success: true,
@@ -212,20 +214,51 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
   const { title, description, category, price, originalPrice, stock, stockQuantity, productStatus, priceUnit, minOrder, sizes } = req.body;
   const updateData = {};
   
-  if (title !== undefined) updateData.title = title;
+  if (title !== undefined) {
+    if (!title.trim()) return next(new AppError('Product title is required', 400));
+    updateData.title = title.trim();
+  }
   if (description !== undefined) updateData.description = description;
   if (category !== undefined) updateData.category = category;
-  if (price !== undefined) updateData.price = Number(price);
+  if (price !== undefined) {
+    const priceNum = Number(price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      return next(new AppError('Price must be a positive number', 400));
+    }
+    updateData.price = priceNum;
+  }
   if (priceUnit !== undefined) updateData.priceUnit = priceUnit;
-  if (minOrder !== undefined) updateData.minOrder = Number(minOrder);
-  if (sizes !== undefined) updateData.sizes = sizes;
-  if (originalPrice !== undefined) updateData.originalPrice = originalPrice ? Number(originalPrice) : null;
+  if (minOrder !== undefined && minOrder !== '') {
+    const minNum = Number(minOrder);
+    if (isNaN(minNum) || minNum <= 0) {
+      return next(new AppError('Minimum order must be a positive number', 400));
+    }
+    updateData.minOrder = minNum;
+  }
+  if (sizes !== undefined) {
+    updateData.sizes = Array.isArray(sizes) ? sizes : (typeof sizes === 'string' ? JSON.parse(sizes) : []);
+  }
+  if (originalPrice !== undefined) {
+    const origNum = originalPrice ? Number(originalPrice) : null;
+    if (origNum !== null && (isNaN(origNum) || origNum <= 0)) {
+      return next(new AppError('Original price must be a positive number', 400));
+    }
+    updateData.originalPrice = origNum;
+  }
   if (productStatus !== undefined) updateData.productStatus = productStatus;
   
   if (stockQuantity !== undefined) {
-    updateData.stockQuantity = Number(stockQuantity);
+    const stockNum = Number(stockQuantity);
+    if (isNaN(stockNum) || stockNum < 0) {
+      return next(new AppError('Stock quantity must be a non-negative number', 400));
+    }
+    updateData.stockQuantity = stockNum;
   } else if (stock !== undefined) {
-    updateData.stockQuantity = Number(stock);
+    const stockNum = Number(stock);
+    if (isNaN(stockNum) || stockNum < 0) {
+      return next(new AppError('Stock quantity must be a non-negative number', 400));
+    }
+    updateData.stockQuantity = stockNum;
   }
 
   if (req.files && req.files.length > 0) {
@@ -383,7 +416,7 @@ exports.getMyProducts = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/vendors/:id/profile
 // @access  Public
 exports.getVendorProfile = catchAsync(async (req, res, next) => {
-  const vendor = await User.findById(req.params.id).select('fullName shopName shopDescription categories address phone email fcmToken');
+  const vendor = await User.findById(req.params.id).select('fullName shopName businessDescription categories address phone profileImage');
 
   if (!vendor || vendor.role !== 'vendor') {
     return next(new AppError('No vendor found with that ID', 404));
@@ -418,11 +451,11 @@ exports.getVendorProfile = catchAsync(async (req, res, next) => {
         id: vendor._id,
         fullName: vendor.fullName,
         shopName: vendor.shopName,
-        shopDescription: vendor.shopDescription,
+        shopDescription: vendor.businessDescription,
         categories: vendor.categories,
         address: vendor.address,
         phone: vendor.phone,
-        fcmToken: vendor.fcmToken,
+        profileImage: vendor.profileImage,
       },
       products: products,
       stats: {

@@ -9,6 +9,12 @@ const app = require('./app');
 const connectDB = require('./config/db');
 const mongoose = require('mongoose');
 
+const PLACEHOLDER_SECRETS = ['your_super_secret_jwt_key_at_least_32_chars', 'your-jwt-secret', 'secret'];
+if (process.env.NODE_ENV === 'production' && PLACEHOLDER_SECRETS.includes(process.env.JWT_SECRET)) {
+  console.error('FATAL: JWT_SECRET is still set to a known placeholder value. Refusing to start.');
+  process.exit(1);
+}
+
 const PORT = process.env.PORT || 5000;
 
 let server;

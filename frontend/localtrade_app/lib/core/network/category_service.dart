@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../network/api_service.dart';
 import '../network/auth_service.dart';
 
@@ -8,7 +7,7 @@ class CategoryService {
 
   Future<List<Map<String, dynamic>>> getActiveCategories() async {
     final response = await _apiService.get('/categories');
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(data['data']['categories']);
     }
@@ -20,7 +19,7 @@ class CategoryService {
     final response = await _apiService.get('/categories/admin', headers: {
       'Authorization': 'Bearer $token',
     });
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(data['data']['categories']);
     }
@@ -36,7 +35,7 @@ class CategoryService {
     }, headers: {
       'Authorization': 'Bearer $token',
     });
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 201) {
       return data['data']['category'];
     }
@@ -53,7 +52,7 @@ class CategoryService {
     final response = await _apiService.patch('/categories/$id', body: body, headers: {
       'Authorization': 'Bearer $token',
     });
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data['data']['category'];
     }
@@ -66,7 +65,7 @@ class CategoryService {
       'Authorization': 'Bearer $token',
     });
     if (response.statusCode != 204) {
-      final data = json.decode(response.body);
+      final data = ApiService.decodeBody(response.body);
       throw Exception(data['message'] ?? 'Failed to delete category');
     }
   }

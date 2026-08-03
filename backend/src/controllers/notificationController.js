@@ -8,6 +8,8 @@ const AppError = require('../utils/appError');
 exports.getNotifications = catchAsync(async (req, res, next) => {
   const filter = { recipient: req.user.id };
 
+  const unreadCount = await Notification.countDocuments({ recipient: req.user.id, isRead: false });
+
   if (req.query.page || req.query.limit) {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 20;
@@ -25,6 +27,7 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
       totalPages: Math.ceil(totalResults / limit),
       currentPage: page,
       totalResults,
+      unreadCount,
       data: { notifications },
     });
   }
@@ -35,6 +38,7 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     results: notifications.length,
+    unreadCount,
     data: { notifications },
   });
 });
@@ -82,5 +86,25 @@ exports.markAllAsRead = catchAsync(async (req, res, next) => {
       modifiedCount: result.modifiedCount,
       unreadCount: unreadCountAfter
     }
+  });
+});
+
+// @desc    Delete a notification
+// @route   DELETE /api/v1/notifications/:id
+// @access  Private
+exports.deleteNotification = catchAsync(async (req, res, next) => {
+  const notification = await Notification.findOneAndDelete({
+    _id: req.params.id,
+    recipient: req.user.id,
+  });
+
+  if (!notification) {
+    return next(new AppError('Notification not found or unauthorized', 404));
+  }
+
+  res.status(204).json({
+    success: true,
+    status: 'success',
+    data: null,
   });
 });

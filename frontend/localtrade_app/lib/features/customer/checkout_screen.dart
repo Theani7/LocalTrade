@@ -69,6 +69,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cartNote =
+          Provider.of<CartProvider>(context, listen: false).cartNote.trim();
+      if (cartNote.isNotEmpty) {
+        _notesController.text = cartNote;
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _notesController.dispose();
     _nameController.dispose();
@@ -115,6 +128,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
     final itemsByVendor = cart.itemsByVendor;
 
+    // Prefer the note entered on the cart screen; fall back to the checkout field
+    final cartNote = cart.cartNote.trim();
+    final checkoutNote = _notesController.text.trim();
+    final combinedNote = [cartNote, checkoutNote].where((n) => n.isNotEmpty).join('. ');
+
     final shippingAddress = {
       'fullName': _nameController.text.trim(),
       'phone': _phoneController.text.trim(),
@@ -146,7 +164,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         'totalAmount': total,
         'shippingAddress': shippingAddress,
         'phone': _phoneController.text.trim(),
-        'notes': _notesController.text.trim(),
+        'notes': combinedNote,
       });
 
       if (!success) allSuccess = false;
@@ -362,7 +380,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          '${item.quantity.toInt()}${item.priceUnitLabel.isNotEmpty ? ' ${item.priceUnitLabel}' : ''} x Rs. ${item.price.toStringAsFixed(0)}',
+                                          '${item.quantity % 1 == 0 ? item.quantity.toInt() : item.quantity.toStringAsFixed(1)}${item.priceUnitLabel.isNotEmpty ? ' ${item.priceUnitLabel}' : ''} x Rs. ${item.price.toStringAsFixed(0)}',
                                           style: AppTextStyles.caption,
                                         ),
                                       ],

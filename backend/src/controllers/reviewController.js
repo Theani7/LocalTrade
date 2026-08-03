@@ -20,7 +20,7 @@ exports.createReview = catchAsync(async (req, res, next) => {
     orderStatus: 'Delivered'
   });
 
-  if (!hasPurchased && req.user.role !== 'admin') {
+  if (!hasPurchased) {
     return next(new AppError('You can only review products you have purchased and received.', 403));
   }
 
@@ -52,14 +52,30 @@ exports.createReview = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/products/:productId/reviews
 // @access  Public
 exports.getProductReviews = catchAsync(async (req, res, next) => {
-  const reviews = await Review.find({ productId: req.params.productId })
-    .populate('userId', 'fullName profileImage')
-    .sort('-createdAt');
+  if (!req.params.productId) {
+    return next(new AppError('Product ID is required', 400));
+  }
+
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
+  const skip = (page - 1) * limit;
+
+  const [reviews, totalCount] = await Promise.all([
+    Review.find({ productId: req.params.productId })
+      .populate('userId', 'fullName profileImage')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limit),
+    Review.countDocuments({ productId: req.params.productId }),
+  ]);
 
   res.status(200).json({
     success: true,
     status: 'success',
     results: reviews.length,
+    totalCount,
+    page,
+    totalPages: Math.ceil(totalCount / limit),
     data: { reviews }
   });
 });

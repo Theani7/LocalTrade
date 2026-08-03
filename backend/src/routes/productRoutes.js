@@ -3,6 +3,7 @@ const productController = require('../controllers/productController');
 const reviewRouter = require('./reviewRoutes');
 const { protect, restrictTo, isApprovedVendor } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
+const { validateImageContent } = upload;
 
 const router = express.Router();
 
@@ -20,8 +21,8 @@ router.get('/my-products', protect, restrictTo('vendor'), productController.getM
 router.patch('/:id/stock', protect, restrictTo('vendor', 'admin'), isApprovedVendor, productController.updateProductStock);
 
 // Specific routes before generic :id
-router.post('/', protect, restrictTo('vendor'), isApprovedVendor, upload.array('images', 5), productController.createProduct);
-router.patch('/:id', protect, restrictTo('vendor', 'admin'), isApprovedVendor, upload.array('images', 5), productController.updateProduct);
+router.post('/', protect, restrictTo('vendor'), isApprovedVendor, upload.array('images', 5), validateImageContent, productController.createProduct);
+router.patch('/:id', protect, restrictTo('vendor', 'admin'), isApprovedVendor, upload.array('images', 5), validateImageContent, productController.updateProduct);
 router.delete('/:id', protect, restrictTo('vendor', 'admin'), isApprovedVendor, productController.deleteProduct);
 router.get('/:id/deletable', protect, restrictTo('vendor', 'admin'), isApprovedVendor, productController.checkProductDeletable);
 

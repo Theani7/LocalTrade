@@ -21,10 +21,12 @@ const productSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: [true, 'A product must have a price'],
+      min: [0.01, 'Price must be a positive number'],
     },
     originalPrice: {
       type: Number,
       default: null,
+      min: [0.01, 'Original price must be a positive number'],
     },
     priceUnit: {
       type: String,

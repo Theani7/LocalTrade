@@ -210,7 +210,7 @@ class AdminShellState extends State<AdminShell> {
                             '$pendingCount',
                             style: const TextStyle(
                               fontSize: 8,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w500,
                               color: AppColors.ink,
                             ),
                           ),
@@ -226,7 +226,7 @@ class AdminShellState extends State<AdminShell> {
             label,
             style: TextStyle(
               fontSize: 9,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w500,
               color: isActive ? AppColors.coralDark : AppColors.muted,
             ),
           ),

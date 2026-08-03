@@ -11,8 +11,8 @@ router.get('/', categoryController.getActiveCategories);
 router.use(protect, restrictTo('admin'));
 router.get('/admin', categoryController.getAllCategories);
 router.post('/', categoryController.createCategory);
+router.patch('/reorder', categoryController.reorderCategories);
 router.patch('/:id', categoryController.updateCategory);
 router.delete('/:id', categoryController.deleteCategory);
-router.patch('/reorder', categoryController.reorderCategories);
 
 module.exports = router;

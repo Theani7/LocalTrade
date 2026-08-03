@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../network/api_service.dart';
 import '../network/auth_service.dart';
 
@@ -12,7 +11,7 @@ class AdminService {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -30,7 +29,7 @@ class AdminService {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -48,7 +47,7 @@ class AdminService {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -66,7 +65,7 @@ class AdminService {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -84,7 +83,7 @@ class AdminService {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -100,7 +99,7 @@ class AdminService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -116,7 +115,7 @@ class AdminService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -132,7 +131,7 @@ class AdminService {
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      final data = json.decode(response.body);
+      final data = ApiService.decodeBody(response.body);
       throw Exception(data['message'] ?? 'Failed to delete product');
     }
   }
@@ -144,7 +143,7 @@ class AdminService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -159,7 +158,7 @@ class AdminService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -174,7 +173,7 @@ class AdminService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -192,7 +191,7 @@ class AdminService {
     if (response.statusCode == 200) {
       return response.body;
     } else {
-      final data = json.decode(response.body);
+      final data = ApiService.decodeBody(response.body);
       throw Exception(data['message'] ?? 'Failed to export data');
     }
   }

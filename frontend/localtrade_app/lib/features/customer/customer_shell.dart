@@ -261,7 +261,7 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
                                           '${widget.cartItemCount}',
                                           style: const TextStyle(
                                             fontSize: 10,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w500,
                                             color: AppColors.ink,
                                             height: 1,
                                           ),
@@ -277,7 +277,7 @@ class _CustomerBottomNavState extends State<_CustomerBottomNav>
                             item.label,
                             style: TextStyle(
                               fontSize: 10,
-                              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                              fontWeight: isActive ? FontWeight.w500 : FontWeight.w500,
                               color: isActive ? AppColors.coralDark : AppColors.muted,
                             ),
                           ),

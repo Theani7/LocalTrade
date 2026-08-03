@@ -45,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Accent line expands from center
     _lineCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
     );
     _lineWidth = Tween(begin: 0.0, end: 48.0).animate(
       CurvedAnimation(parent: _lineCtrl, curve: AppCurves.standard),
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
     // App name fades + slides up
     _nameCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
     );
     _nameOpacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _nameCtrl, curve: AppCurves.standard),
@@ -66,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Tagline fades + slides up
     _taglineCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
     );
     _taglineOpacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _taglineCtrl, curve: AppCurves.standard),

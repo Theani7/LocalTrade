@@ -10,7 +10,7 @@ const AppError = require('./utils/appError');
 // Custom NoSQL query injection sanitizer middleware for Express 5 compatibility
 const sanitizeObject = (obj) => {
   if (obj && typeof obj === 'object') {
-    const dangerousKeys = ['$__proto__', 'constructor', 'prototype'];
+    const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
     for (const key in obj) {
       if (key.startsWith('$') || dangerousKeys.includes(key)) {
         delete obj[key];
@@ -68,9 +68,11 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    // Allow any localhost port in development (Flutter web uses random ports)
     const isLocalhost = /^http:\/\/localhost:\d+$/.test(origin);
-    if (allowedOrigins.indexOf(origin) === -1 && !isLocalhost) {
+    if (isLocalhost && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }
@@ -120,8 +122,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Serve static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files (dev only — production uses Cloudinary)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+}
 
 // API Routes
 const API_PREFIX = '/api/v1';

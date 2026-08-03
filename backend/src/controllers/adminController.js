@@ -48,11 +48,11 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
   // Revenue by category (Aggregation)
   const revenueByCategory = await Order.aggregate([
     { $match: { orderStatus: 'Delivered' } },
-    { $unwind: '$items' },
+    { $unwind: '$products' },
     {
       $lookup: {
         from: 'products',
-        localField: 'items.productId',
+        localField: 'products.product',
         foreignField: '_id',
         as: 'productInfo'
       }
@@ -61,7 +61,7 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
     {
       $group: {
         _id: '$productInfo.category',
-        revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }
+        revenue: { $sum: { $multiply: ['$products.price', '$products.quantity'] } }
       }
     },
     { $sort: { revenue: -1 } }
@@ -77,7 +77,11 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
         count: { $sum: 1 },
-        revenue: { $sum: '$totalAmount' }
+        revenue: {
+          $sum: {
+            $cond: [{ $eq: ['$orderStatus', 'Delivered'] }, '$totalAmount', 0]
+          }
+        }
       }
     },
     { $sort: { _id: 1 } }
@@ -141,7 +145,12 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const { search, role, page = 1, limit = 10 } = req.query;
-  const filter = { role: 'customer' };
+  const filter = {};
+  if (role && role !== 'All' && role !== 'all') {
+    filter.role = role;
+  } else if (!role) {
+    filter.role = 'customer';
+  }
 
   const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
@@ -158,12 +167,14 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   const activeCustomers = await User.countDocuments({ role: 'customer', isActive: true });
   const inactiveCustomers = await User.countDocuments({ role: 'customer', isActive: false });
 
-  const skip = (page - 1) * limit;
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+  const skip = (pageNum - 1) * limitNum;
   const users = await User.find(filter)
     .select('-password')
     .sort('-createdAt')
     .skip(skip)
-    .limit(parseInt(limit, 10));
+    .limit(limitNum);
 
   const totalCount = await User.countDocuments(filter);
 
@@ -171,8 +182,8 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     totalCount,
-    page: parseInt(page, 10),
-    totalPages: Math.ceil(totalCount / limit),
+    page: pageNum,
+    totalPages: Math.ceil(totalCount / limitNum),
     results: users.length,
     data: {
       users,
@@ -538,6 +549,13 @@ exports.toggleUserStatus = catchAsync(async (req, res, next) => {
 exports.exportAnalytics = catchAsync(async (req, res, next) => {
   const { format = 'csv', type = 'overview' } = req.query;
 
+  // Escape CSV cells: neutralize formula injection and double-quote escaping
+  const csvCell = (value) => {
+    const str = value == null ? 'N/A' : String(value);
+    const sanitized = str.replace(/^[=+\-@\t\r]/g, "'");
+    return `"${sanitized.replace(/"/g, '""')}"`;
+  };
+
   let csvContent = '';
   let filename = '';
 
@@ -555,7 +573,7 @@ exports.exportAnalytics = catchAsync(async (req, res, next) => {
       const amount = order.totalAmount || 0;
       const status = order.orderStatus || 'Unknown';
       const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '';
-      csvContent += `"#${id}","${customer}","${vendor}",${amount},"${status}","${date}"\n`;
+      csvContent += `"#${id}",${csvCell(customer)},${csvCell(vendor)},${amount},${csvCell(status)},${csvCell(date)}\n`;
     }
     filename = 'localtrade-orders';
   } else if (type === 'products') {
@@ -566,8 +584,8 @@ exports.exportAnalytics = catchAsync(async (req, res, next) => {
     csvContent = 'Product,Vendor,Category,Price,Stock,Status\n';
     for (const product of products) {
       const vendor = product.vendorId?.shopName || product.vendorId?.fullName || 'N/A';
-      const status = (product.stockQuantity > 0 && product.productStatus !== 'unavailable') ? 'Available' : 'Unavailable';
-      csvContent += `"${product.title}","${vendor}","${product.category || 'N/A'}",${product.price},${product.stockQuantity},"${status}"\n`;
+      const status = (product.stockQuantity > 0 && product.productStatus !== 'Unavailable') ? 'Available' : 'Unavailable';
+      csvContent += `${csvCell(product.title)},${csvCell(vendor)},${csvCell(product.category || 'N/A')},${product.price},${product.stockQuantity},${csvCell(status)}\n`;
     }
     filename = 'localtrade-products';
   } else if (type === 'vendors') {
@@ -576,7 +594,7 @@ exports.exportAnalytics = catchAsync(async (req, res, next) => {
     csvContent = 'Name,Shop,Email,Status,Joined\n';
     for (const vendor of vendors) {
       const joined = vendor.createdAt ? new Date(vendor.createdAt).toLocaleDateString() : '';
-      csvContent += `"${vendor.fullName}","${vendor.shopName || 'N/A'}","${vendor.email}","${vendor.vendorApprovalStatus}","${joined}"\n`;
+      csvContent += `${csvCell(vendor.fullName)},${csvCell(vendor.shopName || 'N/A')},${csvCell(vendor.email)},${csvCell(vendor.vendorApprovalStatus)},${csvCell(joined)}\n`;
     }
     filename = 'localtrade-vendors';
   } else {

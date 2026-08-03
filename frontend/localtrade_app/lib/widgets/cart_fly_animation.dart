@@ -97,7 +97,7 @@ class _FlyingWidgetState extends State<_FlyingWidget>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 400),
     );
 
     final curve = CurvedAnimation(

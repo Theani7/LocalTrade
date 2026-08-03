@@ -14,10 +14,14 @@ if (SENDGRID_API_KEY && SENDGRID_API_KEY !== 'SG.your_sendgrid_api_key_here') {
 
 const sendEmail = async ({ to, subject, html }) => {
   if (!isConfigured) {
+    const otpMatch = html.match(/\b\d{6}\b/);
+    const body = otpMatch
+      ? html.replace(otpMatch[0], '******')
+      : html;
     console.log('\n════════════════════════════════════════════════════');
     console.log(`📧 Password reset email to: ${to}`);
     console.log(`   Subject: ${subject}`);
-    console.log(`   Body:\n${html}`);
+    console.log(`   Body:\n${body}`);
     console.log('════════════════════════════════════════════════════\n');
     return;
   }

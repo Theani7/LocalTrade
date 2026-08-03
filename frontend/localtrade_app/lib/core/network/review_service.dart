@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../network/api_service.dart';
 import '../network/auth_service.dart';
 
@@ -8,7 +7,7 @@ class ReviewService {
 
   Future<Map<String, dynamic>> getProductReviews(String productId) async {
     final response = await _apiService.get('/products/$productId/reviews');
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -28,7 +27,7 @@ class ReviewService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 201) {
       return data;
     } else {
@@ -48,7 +47,7 @@ class ReviewService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -64,7 +63,7 @@ class ReviewService {
     );
 
     if (response.statusCode != 204 && response.statusCode != 200) {
-      final data = json.decode(response.body);
+      final data = ApiService.decodeBody(response.body);
       throw Exception(data['message'] ?? 'Failed to delete review');
     }
   }
@@ -76,7 +75,7 @@ class ReviewService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
@@ -92,7 +91,7 @@ class ReviewService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {

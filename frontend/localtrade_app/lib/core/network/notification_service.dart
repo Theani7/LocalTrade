@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:ui';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../theme/app_colors.dart';
 import '../network/api_service.dart';
 import '../network/auth_service.dart';
 
@@ -94,7 +93,7 @@ class NotificationService {
         importance: Importance.high,
         enableVibration: true,
         enableLights: true,
-        ledColor: const Color(0xFFFF6F52),
+        ledColor: AppColors.coral,
       );
 
       await androidPlugin.createNotificationChannel(channel);
@@ -141,10 +140,10 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       icon: 'ic_notification',
-      color: const Color(0xFFFF6F52),
+      color: AppColors.coral,
       enableVibration: true,
       enableLights: true,
-      ledColor: const Color(0xFFFF6F52),
+      ledColor: AppColors.coral,
       styleInformation: const DefaultStyleInformation(true, true),
     );
 
@@ -181,7 +180,7 @@ class NotificationService {
     );
 
     try {
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = ApiService.decodeBody(response.body);
       if (response.statusCode == 200) return data;
       return {'success': false, 'message': data['message'] ?? 'Failed'};
     } catch (e) {

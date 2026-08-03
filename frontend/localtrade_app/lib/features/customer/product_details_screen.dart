@@ -36,10 +36,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   bool _hasReviewed = false;
   String? _selectedSize;
   double _quantity = 1;
+  double get _minOrder => (widget.product['minOrder'] != null)
+      ? double.parse(widget.product['minOrder'].toString())
+      : 1.0;
 
   @override
   void initState() {
     super.initState();
+    _quantity = _minOrder;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ReviewProvider>(context, listen: false)
           .fetchProductReviews(widget.product['_id']);
@@ -438,7 +442,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                 onTap: () {
                                   final step = _isWeightUnit(priceUnit) ? 0.5 : 1;
                                   final newQty = _quantity - step;
-                                  if (newQty >= step) {
+                                  if (newQty >= _minOrder) {
                                     setState(() => _quantity = newQty);
                                   }
                                 },
@@ -448,7 +452,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   height: 36,
                                   child: Icon(Icons.remove_rounded,
                                       size: 16,
-                                      color: _quantity > 1
+                                      color: _quantity > _minOrder
                                           ? AppColors.coralDark
                                           : AppColors.muted),
                                 ),
@@ -515,6 +519,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                           : (widget.product['vendorId'] ?? ''),
                                        priceUnit: widget.product['priceUnit'] ?? 'piece',
                                        size: _selectedSize,
+                                       quantity: _quantity,
+                                       minOrder: _minOrder,
                                      );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(

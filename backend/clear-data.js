@@ -9,6 +9,10 @@ const Notification = require('./src/models/notificationModel');
 
 const clearData = async () => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Refusing to run clear-data.js in production environment');
+    }
+
     if (!process.env.MONGODB_URI) {
       throw new Error('MONGODB_URI is not defined in the environment variables');
     }
@@ -40,8 +44,11 @@ const clearData = async () => {
     console.log(`✅ Deleted ${notificationResult.deletedCount} notifications.`);
 
     console.log('\nEnsuring default admin exists...');
-    const adminEmail = 'admin@gmail.com';
-    const adminPassword = 'admin123';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error('ADMIN_PASSWORD must be set in .env to recreate the admin');
+    }
 
     // Remove any existing user with this email to ensure fresh state
     await User.deleteOne({ email: adminEmail });
@@ -60,12 +67,12 @@ const clearData = async () => {
       },
       role: 'admin',
       isActive: true,
-      vendorApprovalStatus: 'approved'
+      vendorApprovalStatus: 'approved',
+      mustChangePassword: true
     });
 
-    console.log(`✅ Default Admin created/reset:`);
+    console.log(`✅ Default Admin created/reset (must change password on first login):`);
     console.log(`   Email: ${adminEmail}`);
-    console.log(`   Password: ${adminPassword}`);
 
     console.log('\n--- Data Cleanup & Admin Reset Completed ---');
     

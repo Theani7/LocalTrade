@@ -2296,8 +2296,24 @@ void _showDeleteDialog(BuildContext context, dynamic product, AdminProvider prov
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('OK', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+                child: Text('Cancel', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
               ),
+              if (canDelete)
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await provider.deleteProduct(product['_id']);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(provider.error ?? 'Product deleted'),
+                          backgroundColor: provider.error != null ? AppColors.danger : AppColors.success,
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('Delete', style: AppTextStyles.label.copyWith(color: AppColors.danger)),
+                ),
             ],
           );
         },

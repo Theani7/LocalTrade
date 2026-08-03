@@ -158,7 +158,7 @@ class ProductCard extends StatelessWidget {
                               'OUT OF STOCK',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 fontSize: 11,
                                 letterSpacing: 0.5,
                               ),

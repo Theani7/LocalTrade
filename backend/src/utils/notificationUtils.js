@@ -51,6 +51,22 @@ exports.sendNotification = async (userId, title, message, data = {}, type = 'Sys
 };
 
 /**
+ * Send a promotional notification to all customers (fire-and-forget).
+ * Resolves even if some sends fail; returns a promise for callers to .catch().
+ * @param {string} title - Notification title
+ * @param {string} message - Notification body
+ * @param {Object} data - Additional data
+ */
+exports.allCustomers = async (title, message, data = {}) => {
+  const customers = await User.find({ role: 'customer' }).select('_id').limit(2000);
+  await Promise.all(
+    customers.map((customer) =>
+      exports.sendNotification(customer._id, title, message, data, 'Promotional')
+    )
+  );
+};
+
+/**
  * Send a notification to all admin users
  * @param {string} title - Notification title
  * @param {string} message - Notification body

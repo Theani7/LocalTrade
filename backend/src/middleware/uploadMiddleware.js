@@ -1,9 +1,16 @@
 const multer = require('multer');
+const path = require('path');
 
 // Store files in memory as buffers before uploading to Cloudinary
 const storage = multer.memoryStorage();
 
-const path = require('path');
+// Magic byte signatures for allowed image formats
+const IMAGE_SIGNATURES = [
+  [0xff, 0xd8, 0xff], // jpeg
+  [0x89, 0x50, 0x4e, 0x47], // png
+  [0x52, 0x49, 0x46, 0x46], // webp (RIFF....WEBP)
+  [0x47, 0x49, 0x46], // gif
+];
 
 // Filter to ensure only image files are uploaded
 const fileFilter = (req, file, cb) => {
@@ -16,6 +23,26 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(new Error('Invalid file type. Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.'), false);
   }
+};
+
+// Reject uploaded files whose content doesn't match a known image signature.
+// Runs after multer has populated req.files/req.file buffers.
+const validateImageContent = (req, res, next) => {
+  const files = req.files ? (Array.isArray(req.files) ? req.files : Object.values(req.files).flat()) : (req.file ? [req.file] : []);
+
+  for (const file of files) {
+    if (!file || !file.buffer || file.buffer.length < 4) {
+      return next(new Error('File is empty or too small to be an image.'));
+    }
+    const matches = IMAGE_SIGNATURES.some((sig) =>
+      sig.every((byte, i) => file.buffer[i] === byte)
+    );
+    if (!matches) {
+      return next(new Error('File content is not a valid image.'));
+    }
+  }
+
+  next();
 };
 
 /**
@@ -33,3 +60,4 @@ const upload = multer({
 });
 
 module.exports = upload;
+module.exports.validateImageContent = validateImageContent;

@@ -1,5 +1,4 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'dart:convert';
 import '../constants/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
@@ -17,7 +16,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -34,7 +33,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -56,7 +55,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -79,7 +78,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -107,7 +106,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -132,7 +131,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -150,7 +149,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -169,7 +168,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -188,7 +187,7 @@ class AuthService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }

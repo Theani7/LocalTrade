@@ -10,8 +10,9 @@ class CartItem {
   final String imageUrl;
   final String vendorId;
   final String vendorName;
-  int quantity;
+  double quantity;
   final String? size;
+  double minOrder;
 
   CartItem({
     required this.id,
@@ -23,6 +24,7 @@ class CartItem {
     this.vendorName = '',
     this.quantity = 1,
     this.size,
+    this.minOrder = 1,
   });
 
   String get priceUnitLabel {
@@ -37,6 +39,10 @@ class CartItem {
     }
   }
 
+  bool get isWeightUnit => priceUnit == 'kg' || priceUnit == '100g' || priceUnit == 'liter';
+
+  double get step => isWeightUnit ? 0.5 : 1;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
@@ -47,6 +53,7 @@ class CartItem {
     'vendorName': vendorName,
     'quantity': quantity,
     'size': size,
+    'minOrder': minOrder,
   };
 
   factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
@@ -57,13 +64,15 @@ class CartItem {
     imageUrl: json['imageUrl'],
     vendorId: json['vendorId'],
     vendorName: json['vendorName'] ?? '',
-    quantity: json['quantity'],
+    quantity: (json['quantity'] ?? 1).toDouble(),
     size: json['size'],
+    minOrder: (json['minOrder'] ?? 1).toDouble(),
   );
 }
 
 class CartProvider with ChangeNotifier {
   Map<String, CartItem> _items = {};
+  String _cartNote = '';
   bool _disposed = false;
 
   CartProvider() {
@@ -89,6 +98,14 @@ class CartProvider with ChangeNotifier {
 
   Map<String, CartItem> get items => {..._items};
 
+  String get cartNote => _cartNote;
+
+  Future<void> setCartNote(String note) async {
+    _cartNote = note;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cart_note', note);
+  }
+
   int get itemCount => _items.length;
 
   double get totalAmount {
@@ -108,6 +125,7 @@ class CartProvider with ChangeNotifier {
   Future<void> _loadCart() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      _cartNote = prefs.getString('cart_note') ?? '';
       if (!prefs.containsKey('shopping_cart')) return;
 
       final cartJson = prefs.getString('shopping_cart');
@@ -126,21 +144,25 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = '', String priceUnit = 'piece', String? size}) {
+  void addItem(String productId, String title, double price, String imageUrl, String vendorId, {String vendorName = '', String priceUnit = 'piece', String? size, double quantity = 1, double minOrder = 1}) {
     final key = '${productId}_${size ?? ''}';
+    final qty = quantity < minOrder ? minOrder : quantity;
     if (_items.containsKey(key)) {
+      final existing = _items[key]!;
+      final newQty = existing.isWeightUnit ? (existing.quantity + qty) : (existing.quantity.toInt() + qty.toInt()).toDouble();
       _items.update(
         key,
-        (existingItem) => CartItem(
-          id: existingItem.id,
-          title: existingItem.title,
-          price: existingItem.price,
-          priceUnit: existingItem.priceUnit,
-          imageUrl: existingItem.imageUrl,
-          vendorId: existingItem.vendorId,
-          vendorName: existingItem.vendorName,
-          quantity: existingItem.quantity + 1,
-          size: existingItem.size,
+        (_) => CartItem(
+          id: existing.id,
+          title: existing.title,
+          price: existing.price,
+          priceUnit: existing.priceUnit,
+          imageUrl: existing.imageUrl,
+          vendorId: existing.vendorId,
+          vendorName: existing.vendorName,
+          quantity: newQty,
+          size: existing.size,
+          minOrder: existing.minOrder,
         ),
       );
     } else {
@@ -154,7 +176,9 @@ class CartProvider with ChangeNotifier {
           imageUrl: imageUrl,
           vendorId: vendorId,
           vendorName: vendorName,
+          quantity: qty,
           size: size,
+          minOrder: minOrder,
         ),
       );
     }
@@ -205,7 +229,7 @@ class CartProvider with ChangeNotifier {
     _safeNotifyListeners();
   }
 
-  void updateQuantity(String productId, int quantity, {String? size}) {
+  void updateQuantity(String productId, double quantity, {String? size}) {
     final key = '${productId}_${size ?? ''}';
     if (!_items.containsKey(key)) return;
     if (quantity <= 0) {
@@ -226,6 +250,7 @@ class CartProvider with ChangeNotifier {
 
   void clear() {
     _items.clear();
+    _cartNote = '';
     _saveCart();
     _safeNotifyListeners();
   }

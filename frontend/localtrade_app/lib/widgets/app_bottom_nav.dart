@@ -152,7 +152,7 @@ class _AppBottomNavState extends State<AppBottomNav>
                                   '${widget.cartItemCount}',
                                   style: const TextStyle(
                                     fontSize: 10,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                     color: AppColors.ink,
                                   ),
                                   textAlign: TextAlign.center,

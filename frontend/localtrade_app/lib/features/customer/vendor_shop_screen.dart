@@ -416,7 +416,7 @@ class _VendorShopScreenState extends State<VendorShopScreen> {
       children: [
         Text(value,
             style: const TextStyle(
-                fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                fontSize: 18, fontWeight: FontWeight.w500, color: AppColors.ink)),
         const SizedBox(height: 4),
         Text(label,
             style: const TextStyle(

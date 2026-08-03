@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../network/api_service.dart';
 import '../network/auth_service.dart';
 
@@ -17,7 +16,7 @@ class OrderService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -37,7 +36,7 @@ class OrderService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -57,7 +56,7 @@ class OrderService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -77,7 +76,7 @@ class OrderService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -99,7 +98,7 @@ class OrderService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }
@@ -124,7 +123,7 @@ class OrderService {
 
     final Map<String, dynamic> data;
     try {
-      data = json.decode(response.body);
+      data = ApiService.decodeBody(response.body);
     } catch (e) {
       return {'success': false, 'message': 'Invalid server response'};
     }

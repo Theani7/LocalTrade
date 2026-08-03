@@ -131,9 +131,9 @@ class _AdminVendorDetailScreenState extends State<AdminVendorDetailScreen> {
               children: [
                 Expanded(child: _buildStatCard(Icons.shopping_bag_outlined, '${stats['totalProducts'] ?? 0}', 'Products', AppColors.coralLight)),
                 const SizedBox(width: 8),
-                Expanded(child: _buildStatCard(Icons.receipt_long_outlined, '${stats['totalOrders'] ?? 0}', 'Orders', const Color(0xFFE8F5E9))),
+                Expanded(child: _buildStatCard(Icons.receipt_long_outlined, '${stats['totalOrders'] ?? 0}', 'Orders', AppColors.successLight)),
                 const SizedBox(width: 8),
-                Expanded(child: _buildStatCard(Icons.check_circle_outline, '${stats['deliveredOrders'] ?? 0}', 'Delivered', const Color(0xFFE3F2FD))),
+                Expanded(child: _buildStatCard(Icons.check_circle_outline, '${stats['deliveredOrders'] ?? 0}', 'Delivered', AppColors.blueLight)),
               ],
             ),
           ),

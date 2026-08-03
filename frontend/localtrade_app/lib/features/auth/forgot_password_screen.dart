@@ -188,7 +188,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: TextStyle(
               fontSize: 36,
               height: 1.1,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: AppColors.ink,
               letterSpacing: -1,
             ),
@@ -236,7 +236,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: const Text('Back to login',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.coral),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.coral),
               textAlign: TextAlign.center,
             ),
           ),
@@ -261,7 +261,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: TextStyle(
               fontSize: 36,
               height: 1.1,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: AppColors.ink,
               letterSpacing: -1,
             ),
@@ -280,7 +280,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.ink, fontSize: 32, letterSpacing: 8, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: AppColors.ink, fontSize: 32, letterSpacing: 8, fontWeight: FontWeight.w500),
             decoration: InputDecoration(
               hintText: '------',
               hintStyle: const TextStyle(fontSize: 32, letterSpacing: 8, color: AppColors.divider),
@@ -309,7 +309,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           TextButton(
             onPressed: _submitEmail,
             child: const Text('Resend OTP',
-              style: TextStyle(fontSize: 15, color: AppColors.coral, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 15, color: AppColors.coral, fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -332,7 +332,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: TextStyle(
               fontSize: 36,
               height: 1.1,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: AppColors.ink,
               letterSpacing: -1,
             ),

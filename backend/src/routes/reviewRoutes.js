@@ -1,6 +1,6 @@
 const express = require('express');
 const reviewController = require('../controllers/reviewController');
-const { protect, restrictTo } = require('../middleware/authMiddleware');
+const { protect, restrictTo, isApprovedVendor } = require('../middleware/authMiddleware');
 
 const router = express.Router({ mergeParams: true });
 
@@ -12,9 +12,9 @@ router.use(protect);
 // GET /api/v1/reviews/my-reviews (must be before /:id routes)
 router.get('/my-reviews', restrictTo('customer'), reviewController.getMyReviews);
 
-router.post('/', restrictTo('customer', 'admin'), reviewController.createReview);
+router.post('/', restrictTo('customer'), reviewController.createReview);
 router.patch('/:id', restrictTo('customer'), reviewController.updateReview);
-router.patch('/:id/reply', restrictTo('vendor', 'admin'), reviewController.addVendorReply);
+router.patch('/:id/reply', restrictTo('vendor', 'admin'), isApprovedVendor, reviewController.addVendorReply);
 router.delete('/:id', restrictTo('customer', 'admin'), reviewController.deleteReview);
 
 module.exports = router;

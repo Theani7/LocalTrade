@@ -1,4 +1,3 @@
-import 'dart:convert';
 import '../network/api_service.dart';
 import '../network/auth_service.dart';
 
@@ -14,7 +13,7 @@ class FeedbackService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 201) {
       return data;
     } else {
@@ -28,7 +27,7 @@ class FeedbackService {
       'Authorization': 'Bearer $token',
     });
 
-    final data = json.decode(response.body);
+    final data = ApiService.decodeBody(response.body);
     if (response.statusCode == 200) {
       return data;
     } else {
