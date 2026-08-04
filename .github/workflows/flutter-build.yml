@@ -53,7 +53,7 @@ jobs:
           import base64, os, pathlib, sys
           raw = os.environ["KEYSTORE_B64"]
           data = base64.b64decode(raw, validate=False)
-          if len(data) < 2000 or data[:4] != b"\xfe\xed\xfe\xed":
+          if len(data) < 2000 or not (data[:4] == b"\xfe\xed\xfe\xed" or data[:2] == b"\x30\x82"):
               print(f"::error::Decoded keystore is invalid ({len(data)} bytes, magic={data[:4].hex()}). KEYSTORE_BASE64 is corrupt — re-add it: base64 -i android/app/localtrade-release.jks | tr -d '\\n' | gh secret set KEYSTORE_BASE64 -R Theani7/LocalTrade")
               sys.exit(1)
           pathlib.Path("android/app/localtrade-release.jks").write_bytes(data)
