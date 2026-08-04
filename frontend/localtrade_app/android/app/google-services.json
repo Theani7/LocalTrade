@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:423866413064:android:436bbdb8a15d637bd5a1bd",
         "android_client_info": {
-          "package_name": "com.example.localtrade_app"
+          "package_name": "com.localtrade.app"
         }
       },
       "oauth_client": [],

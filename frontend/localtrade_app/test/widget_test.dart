@@ -60,6 +60,7 @@ class FakeFirebaseMessagingPlatform extends FirebaseMessagingPlatform {
   @override
   Future<String?> getToken({
     String? vapidKey,
+    String? serviceWorkerScriptPath,
   }) async {
     return 'fake-token';
   }

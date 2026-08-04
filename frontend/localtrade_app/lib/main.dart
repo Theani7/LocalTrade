@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode, PlatformDispatcher;
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -33,16 +36,21 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  FlutterError.onError = (details) {
-    debugPrint('Flutter error: ${details.exception}');
-    debugPrintStack(stackTrace: details.stack);
-  };
-
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    if (Platform.isAndroid || Platform.isIOS) {
+      await FirebaseCrashlytics.instance
+          .setCrashlyticsCollectionEnabled(kReleaseMode);
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
+    }
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
