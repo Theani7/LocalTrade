@@ -260,7 +260,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             (user['address']['zipCode'] ?? '').toString().isNotEmpty);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -312,7 +312,7 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
 
           // ── Logout (neutral row) ──
           _buildLogoutRow(),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
         ],
       ),
     );

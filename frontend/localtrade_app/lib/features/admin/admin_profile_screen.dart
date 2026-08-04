@@ -23,6 +23,7 @@ class AdminProfileScreen extends StatelessWidget {
 
     return SafeArea(
       child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -206,7 +207,7 @@ class AdminProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
           ],
         ),
       ),

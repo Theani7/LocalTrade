@@ -305,7 +305,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           _buildHeader(canGoBack),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
