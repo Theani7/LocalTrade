@@ -18,6 +18,7 @@ import 'providers/vendor_provider.dart';
 import 'providers/feedback_provider.dart';
 import 'providers/review_provider.dart';
 import 'providers/category_provider.dart';
+import 'providers/wishlist_provider.dart';
 import 'features/common/splash_screen.dart';
 import 'features/customer/order_tracking_screen.dart';
 import 'features/customer/notification_screen.dart';
@@ -75,6 +76,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FeedbackProvider()),
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => WishlistProvider()),
       ],
       child: Builder(
         builder: (context) {

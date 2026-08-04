@@ -21,6 +21,7 @@ import 'notification_screen.dart';
 import 'help_support_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'my_reviews_screen.dart';
+import 'my_wishlist_screen.dart';
 import '../common/change_password_screen.dart';
 import '../common/logout_dialog.dart';
 
@@ -614,6 +615,16 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
             iconColor: AppColors.blueDark,
             onTap: () => Navigator.push(context,
                 SlideFadePageRoute(builder: (_) => const MyReviewsScreen())),
+          ),
+          const Divider(height: 1, indent: 52),
+          _buildSettingsTile(
+            icon: Icons.favorite_border_rounded,
+            title: 'My Wishlist',
+            subtitle: 'Items you saved',
+            iconBg: AppColors.coralLight,
+            iconColor: AppColors.coralDark,
+            onTap: () => Navigator.push(context,
+                SlideFadePageRoute(builder: (_) => const MyWishlistScreen())),
           ),
           const Divider(height: 1, indent: 52),
           _buildSettingsTile(
