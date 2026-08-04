@@ -90,10 +90,12 @@ class _MyWishlistScreenState extends State<MyWishlistScreen> {
                             right: 8,
                             child: GestureDetector(
                               onTap: () async {
+                                final messenger =
+                                    ScaffoldMessenger.of(context);
                                 await provider.removeFromWishlist(
                                     product['_id'].toString());
                                 if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                messenger.showSnackBar(
                                     SnackBar(
                                       duration: const Duration(seconds: 2),
                                       behavior: SnackBarBehavior.floating,
