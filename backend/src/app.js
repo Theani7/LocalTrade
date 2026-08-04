@@ -69,7 +69,7 @@ app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     const isLocalhost = /^http:\/\/localhost:\d+$/.test(origin);
-    if (isLocalhost && process.env.NODE_ENV !== 'production') {
+    if (isLocalhost) {
       return callback(null, true);
     }
     if (allowedOrigins.indexOf(origin) === -1) {
