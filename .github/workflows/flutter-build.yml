@@ -2,7 +2,7 @@ name: Flutter Build APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, early-alpha]
     paths:
       - 'frontend/**'
       - '.github/workflows/flutter-build.yml'
