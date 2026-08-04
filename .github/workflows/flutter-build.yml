@@ -38,10 +38,28 @@ jobs:
             echo "::error::KEYSTORE_BASE64 = base64 -i android/app/localtrade-release.jks"
             exit 1
           fi
+          if [ "${#KEYSTORE_BASE64}" -lt 3000 ]; then
+            echo "::error::KEYSTORE_BASE64 looks too short (${#KEYSTORE_BASE64} chars, expected ~3672). Re-add it: base64 -i android/app/localtrade-release.jks | tr -d '\n' | pbcopy"
+            exit 1
+          fi
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Restore keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | tr -d ' \t\r\n' | base64 -d > android/app/localtrade-release.jks
+          python3 - <<'EOF'
+          import base64, os, pathlib, sys
+          raw = os.environ["KEYSTORE_B64"]
+          data = base64.b64decode(raw, validate=False)
+          expected = pathlib.Path("android/app/localtrade-release.jks").stat().st_size
+          if len(data) != expected:
+              print(f"::error::Keystore decodes to {len(data)} bytes, expected {expected}. KEYSTORE_BASE64 secret is corrupt or truncated — re-add it: base64 -i android/app/localtrade-release.jks | tr -d '\\n' | pbcopy")
+              sys.exit(1)
+          pathlib.Path("android/app/localtrade-release.jks").write_bytes(data)
+          print(f"Keystore restored ({len(data)} bytes)")
+          EOF
           cat > android/key.properties <<EOF
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
