@@ -6,6 +6,24 @@ LocalTrade is a full-stack mobile marketplace platform connecting local producer
 
 The app features a warm, accessible design language built for non-technical users, with a cream background (`#FBF5EA`), coral accents (`#FF6F52`), and high-contrast ink text.
 
+### Customer app
+
+| Login | Home | Cart | Profile |
+|---|---|---|---|
+| <img src="screenshots/login_screen.png" width="200"> | <img src="screenshots/customer_screen.png" width="200"> | <img src="screenshots/cart.png" width="200"> | <img src="screenshots/customer_profile.png" width="200"> |
+
+### Vendor app
+
+| Vendor dashboard |
+|---|
+| <img src="screenshots/vendor_dashboard.png" width="200"> |
+
+### Admin app
+
+| Admin dashboard |
+|---|
+| <img src="screenshots/admin_dashboard.png" width="200"> |
+
 ## Features
 
 ### Customer
