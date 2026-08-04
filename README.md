@@ -1,332 +1,368 @@
-# LocalTrade — Nepal's Community Marketplace
+<div align="center">
 
-LocalTrade is a full-stack mobile marketplace platform connecting local producers — vegetable sellers, handicraft makers, dairy farmers, tailors, bakers — directly with their community through a reservation-based ordering system. Built for Nepal's micro and small businesses.
+# LocalTrade
+
+**Nepal's community marketplace — connecting local producers directly with their community**
+
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)](https://expressjs.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+[![Backend CI](https://github.com/Theani7/LocalTrade/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Theani7/LocalTrade/actions/workflows/backend-ci.yml)
+[![Flutter Build](https://github.com/Theani7/LocalTrade/actions/workflows/flutter-build.yml/badge.svg)](https://github.com/Theani7/LocalTrade/actions/workflows/flutter-build.yml)
+[![Release](https://img.shields.io/github/v/release/Theani7/LocalTrade?color=orange&label=latest%20release)](https://github.com/Theani7/LocalTrade/releases)
+
+</div>
+
+LocalTrade is a full-stack mobile marketplace platform that connects local producers — vegetable sellers, handicraft makers, dairy farmers, tailors, and bakers — directly with their community through a reservation-based ordering system. Built for Nepal's micro and small businesses.
+
+## Table of Contents
+
+- [Screenshots](#screenshots)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+  - [Web Development (Chrome)](#web-development-chrome)
+  - [Building the App](#building-the-app)
+- [Testing](#testing)
+- [CI/CD and Releases](#cicd-and-releases)
+- [API Overview](#api-overview)
+- [Useful Commands](#useful-commands)
+- [Design System](#design-system)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Screenshots
 
-The app features a warm, accessible design language built for non-technical users, with a cream background (`#FBF5EA`), coral accents (`#FF6F52`), and high-contrast ink text.
-
-### Customer app
-
 | Login | Home | Cart | Profile |
-|---|---|---|---|
+|:---:|:---:|:---:|:---:|
 | <img src="screenshots/login_screen.png" width="200"> | <img src="screenshots/customer_screen.png" width="200"> | <img src="screenshots/cart.png" width="200"> | <img src="screenshots/customer_profile.png" width="200"> |
 
-### Vendor app
-
-| Vendor dashboard |
-|---|
-| <img src="screenshots/vendor_dashboard.png" width="200"> |
-
-### Admin app
-
-| Admin dashboard |
-|---|
-| <img src="screenshots/admin_dashboard.png" width="200"> |
+| Vendor Dashboard | Admin Dashboard |
+|:---:|:---:|
+| <img src="screenshots/vendor_dashboard.png" width="200"> | <img src="screenshots/admin_dashboard.png" width="200"> |
 
 ## Features
 
 ### Customer
 - Browse products by category with search and filtering
 - Product detail view with image carousel, pricing units (kg, piece, liter, etc.), and quantity stepper
-- Shopping cart with animated add-to-cart fly effect
+- Shopping cart with animated add-to-cart effect
 - Checkout with saved delivery addresses and order notes
 - Order tracking with real-time status updates and ETA
 - Order cancellation with feedback prompt
 - Vendor shop pages
 - Reviews and ratings on delivered products
-- Push notifications with segmented unread/earlier views
+- Push notifications (Firebase Cloud Messaging)
+- In-app update checks via GitHub Releases
 - Help & Support and Privacy Policy screens
-- Profile management with address book
 
 ### Vendor
 - Dashboard with sales analytics, order stats, and revenue overview
-- Product management with multi-image upload (up to 4 images via Cloudinary)
-- Pricing units: per piece, per kg, per 100g, per liter, per dozen, per packet, per bundle
+- Product management with multi-image upload (up to 5 images via Cloudinary)
+- Flexible pricing units: piece, kg, 100g, liter, dozen, packet, bundle
 - Minimum order quantity per product
-- Inventory management with stock tracking and edit/delete
+- Inventory management with stock tracking
 - Order management with status updates (Confirm, Process, Ship, Deliver)
 - Vendor profile and business information
-- Pending approval status screen with progress tracker
+- Pending-approval status screen with progress tracker
 
-### Admin (Flutter Mobile + React Web Dashboard)
-- **Web Admin Dashboard** hosted at [https://localtrade-admin-web-123ab.web.app](https://localtrade-admin-web-123ab.web.app)
-- Gorgeous custom glassmorphism UI with Recharts analytics (Area, Bar, and Pie charts)
+### Admin
 - Platform overview dashboard with real-time analytics and stat tiles
-- Vendor management: approve, suspend, reject vendors
-- Product moderation: view, approve, deactivate products
-- Order oversight with status tracking and sticky-header data tables
-- Dynamic category management (CRUD with sorting)
+- Vendor management: approve, suspend, reject
+- Product moderation: view, deactivate, delete
+- Order oversight with status tracking
+- Dynamic category management (CRUD + reordering)
 - User management and feedback results
-- Export analytics (CSV via secure auth headers)
-- Profile with admin identity card
+- Analytics export (CSV)
+- Companion React web dashboard for the admin role
 
 ### Shared
-- Role-based authentication (Customer, Vendor, Admin)
-- JWT-based auth with secure token storage
+- Role-based authentication (Customer, Vendor, Admin) with JWT
 - Push notifications via Firebase Cloud Messaging
-- Standardized bottom navigation across all roles
-- Custom design system with shared components (AppButton, StatusBadge, ProductCard, etc.)
-- Skeleton loaders and micro-animations (stagger, fade-slide, page transitions)
-- Responsive layout with accessibility considerations
-- Reduce-motion support
-
-## Project Structure
-
-```
-PROJ_CT/
-├── backend/                     # Node.js/Express REST API
-│   ├── src/
-│   │   ├── controllers/         # Business logic (8 controllers)
-│   │   ├── models/              # Mongoose schemas (7 models)
-│   │   ├── routes/              # API routes (8 route files)
-│   │   ├── middleware/          # Auth, upload middleware
-│   │   ├── config/             # DB, Cloudinary, Firebase config
-│   │   └── utils/              # Error handling, notifications, auth
-│   ├── tests/                  # Jest + Supertest (in-memory MongoDB)
-│   └── .env.example            # Required env vars
-├── admin_web/                   # React + Vite Web Admin Dashboard
-│   ├── src/
-│   │   ├── App.jsx              # Main SPA layout, tabs, state management
-│   │   └── index.css            # Premium UI, glassmorphism, custom animations
-│   ├── firebase.json            # Firebase Hosting configuration
-│   └── package.json             # Vite/React dependencies
-├── frontend/localtrade_app/     # Flutter mobile app
-│   ├── lib/
-│   │   ├── core/               # Constants, theme, network, models, utils
-│   │   │   ├── constants/      # App-wide constants
-│   │   │   ├── models/         # Data models (Product, Cart, etc.)
-│   │   │   ├── network/        # API services (Auth, Product, Order, etc.)
-│   │   │   ├── theme/          # AppColors, AppTextStyles, AppSpacing
-│   │   │   └── utils/          # Animations, auth guard, helpers
-│   │   ├── features/           # Screen modules by role
-│   │   │   ├── auth/           # Login, Register, Forgot Password
-│   │   │   ├── customer/       # Home, Cart, Checkout, Orders, etc. (14 screens)
-│   │   │   ├── vendor/         # Dashboard, Products, Orders, etc. (6 screens)
-│   │   │   ├── admin/          # Dashboard, Vendors, Products, etc. (6 screens)
-│   │   │   └── common/         # Splash, Logout dialog, Change password
-│   │   ├── providers/          # Provider state management (8 providers)
-│   │   └── widgets/            # Shared widgets (ProductCard, StatusBadge, etc.)
-│   ├── assets/images/          # App icon and images
-│   └── pubspec.yaml
-├── DESIGN_LANGUAGE.md          # Color, typography, spacing, component specs
-├── localtrade-design-system-revised.md  # Full design system reference
-└── render.yaml                 # Render deployment config
-```
+- Standardized bottom navigation across roles
+- Shared design system (buttons, status badges, product cards, skeleton loaders)
+- Micro-animations with reduce-motion support
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend (Mobile) | Flutter 3.x, Dart, Provider state management |
-| Frontend (Web) | React, Vite, Recharts, Lucide Icons (Firebase Hosting) |
-| Backend | Node.js, Express 5, Mongoose 8 |
-| Database | MongoDB Atlas (SRV connection) |
+| Mobile | Flutter 3.x, Dart, Provider (state management) |
+| Admin Web | React, Vite, Recharts, Lucide Icons (Firebase Hosting) |
+| Backend | Node.js 20, Express 5, Mongoose 9 |
+| Database | MongoDB Atlas |
 | Auth | JWT with bcrypt password hashing |
 | Image Storage | Cloudinary |
 | Push Notifications | Firebase Cloud Messaging |
 | Testing | Jest + Supertest + mongodb-memory-server |
-| Deployment | Render (backend), Flutter build (frontend) |
+| CI/CD | GitHub Actions (tests, builds, releases) |
+| Backend Hosting | Render |
 
-## API Endpoints
+## Project Structure
 
-### Authentication
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| POST | `/api/v1/auth/register` | Public |
-| POST | `/api/v1/auth/login` | Public |
-| POST | `/api/v1/auth/forgot-password` | Public |
-| GET | `/api/v1/auth/me` | Authenticated |
-| PATCH | `/api/v1/auth/update-password` | Authenticated |
-| PATCH | `/api/v1/auth/change-password` | Authenticated |
+```
+├── backend/                    # Node.js/Express REST API
+│   ├── src/
+│   │   ├── controllers/        # Request handlers
+│   │   ├── models/             # Mongoose schemas
+│   │   ├── routes/             # API route definitions
+│   │   ├── middleware/         # Auth, upload, error handling
+│   │   ├── config/             # DB, Cloudinary, Firebase config
+│   │   └── utils/              # Shared helpers
+│   ├── tests/                  # Jest + Supertest suites
+│   ├── seed-*.js               # Admin/category/data seeding scripts
+│   └── .env.example            # Environment variable template
+├── frontend/localtrade_app/    # Flutter mobile app
+│   ├── lib/
+│   │   ├── core/               # Constants, theme, network, models, utils
+│   │   ├── features/           # Screens grouped by role (auth, customer, vendor, admin)
+│   │   ├── providers/          # Provider state management
+│   │   └── widgets/            # Shared UI components
+│   └── android/                # Android build config, keystore, notification icons
+├── admin_web/                  # React web admin dashboard
+├── screenshots/                # README screenshots
+├── .github/workflows/          # GitHub Actions CI/CD
+├── DESIGN_LANGUAGE.md          # Design system specification
+└── render.yaml                 # Render deployment blueprint
+```
 
-### Products
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | `/api/v1/products` | Public |
-| GET | `/api/v1/products/:id` | Public |
-| POST | `/api/v1/products` | Vendor |
-| PATCH | `/api/v1/products/:id` | Vendor (owner) |
-| DELETE | `/api/v1/products/:id` | Vendor (owner) / Admin |
-
-### Orders
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| POST | `/api/v1/orders` | Customer |
-| GET | `/api/v1/orders/my-orders` | Customer |
-| GET | `/api/v1/orders/vendor-orders` | Vendor |
-| PATCH | `/api/v1/orders/:id/status` | Vendor |
-| PATCH | `/api/v1/orders/:id/cancel` | Customer |
-
-### Categories
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | `/api/v1/categories` | Public |
-| GET | `/api/v1/categories/admin` | Admin |
-| POST | `/api/v1/categories` | Admin |
-| PATCH | `/api/v1/categories/:id` | Admin |
-| DELETE | `/api/v1/categories/:id` | Admin |
-
-### Reviews
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | `/api/v1/reviews/product/:productId` | Public |
-| POST | `/api/v1/reviews` | Customer (delivered order) |
-
-### Notifications
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | `/api/v1/notifications` | Authenticated |
-| PATCH | `/api/v1/notifications/:id/read` | Authenticated |
-| PATCH | `/api/v1/notifications/read-all` | Authenticated |
-
-### Admin
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | `/api/v1/admin/analytics` | Admin |
-| GET | `/api/v1/admin/vendors` | Admin |
-| PATCH | `/api/v1/admin/vendors/:id/approve` | Admin |
-| PATCH | `/api/v1/admin/vendors/:id/reject` | Admin |
-| PATCH | `/api/v1/admin/vendors/:id/suspend` | Admin |
-| GET | `/api/v1/admin/products` | Admin |
-| PATCH | `/api/v1/admin/products/:id/status` | Admin |
-| GET | `/api/v1/admin/orders` | Admin |
-| GET | `/api/v1/admin/users` | Admin |
-| DELETE | `/api/v1/admin/users/:id` | Admin |
-| GET | `/api/v1/admin/feedback` | Admin |
-| GET | `/api/v1/admin/export/analytics` | Admin |
-
-## Setup
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Flutter 3.x with Dart SDK
+
+- Node.js 20+ and npm
+- Flutter 3.x (stable channel) with Dart SDK
 - MongoDB Atlas account
 - Cloudinary account
-- Firebase project (for push notifications)
+- Firebase project (push notifications; optional for local development)
 
-### 1. Environment Configuration
+### Backend Setup
+
 ```bash
 cd backend
-cp .env.example .env
-# Fill in your credentials (see .env.example for all required vars)
-```
-
-### 2. Backend
-```bash
-cd backend
+cp .env.example .env        # Fill in your credentials (see .env.example)
 npm install
-node seed-admin.js          # Create default admin user
-node seed-categories.js     # Seed 10 default product categories
-node seed-data.js           # Populate sample vendors + products
-npm run dev                 # Start dev server on port 5000
+
+node seed-admin.js           # Create the default admin user (from .env)
+node seed-categories.js      # Seed 10 default product categories
+node seed-data.js            # Optional: populate sample vendors + products
+
+npm run dev                  # Start dev server on http://localhost:5000
 ```
 
-### 3. Frontend
+### Frontend Setup
 
 ```bash
 cd frontend/localtrade_app
 flutter pub get
-flutter run                  # Run on connected device/emulator
-flutter run -d chrome        # Run on Chrome (web)
+flutter run                   # Connected device or emulator
 ```
 
-#### Chrome / Web Setup
+### Web Development (Chrome)
 
-Running on Chrome is the primary development mode. Follow these steps:
+Chrome is the primary development mode for this project.
 
-1. **Enable web support** (if not already):
-   ```bash
-   flutter config --enable-web
-   ```
+```bash
+flutter config --enable-web   # One-time setup if web is not enabled
+flutter run -d chrome
+```
 
-2. **Set the API base URL** in `lib/core/constants/app_constants.dart`:
-   ```dart
-   // For local backend development:
-   static const String baseUrl = 'http://localhost:5000/api/v1';
-   // For production:
-   // static const String baseUrl = 'https://localtrade-backend-jg9l.onrender.com/api/v1';
-   ```
+Set the API base URL in `lib/core/constants/app_constants.dart`:
 
-3. **CORS:** The backend at `localtrade-backend-jg9l.onrender.com` has CORS enabled. For local backend, ensure your `.env` includes the Chrome origin (`http://localhost`).
+| Environment | Base URL |
+|---|---|
+| Android emulator | `http://10.0.2.2:5000/api/v1` |
+| iOS simulator / Chrome | `http://localhost:5000/api/v1` |
+| Production | `https://localtrade-backend-jg9l.onrender.com/api/v1` |
 
-4. **Firebase / Notifications:** Push notifications are blocked on Chrome unless the user grants permission via the browser's notification prompt. The app works without push notifications — Firebase init is skipped gracefully if `firebase_options.dart` is missing.
+**Notes for web development:**
+- Push notifications require the user to grant browser permission; the app works without them.
+- Firebase initialization is skipped gracefully if `firebase_options.dart` is missing.
+- The in-app update flow (APK download/install) is Android-only; on web the changelog is shown but no download is offered.
+- CORS is enabled on the production backend.
 
-5. **In-app updates:** The "Check for updates" feature hits the GitHub Releases API. On Chrome, `PackageInfo.fromPlatform()` falls back gracefully, and the download/install flow (APK) is Android-only — the dialog will show the changelog but won't download on web.
+### Building the App
 
-Update the API base URL in `lib/core/constants/app_constants.dart`:
-- **Local dev (Android emulator):** `http://10.0.2.2:5000/api/v1`
-- **Local dev (iOS simulator):** `http://localhost:5000/api/v1`
-- **Chrome / web:** `http://localhost:5000/api/v1`
-- **Production (all):** `https://localtrade-backend-jg9l.onrender.com/api/v1`
-
-### 4. Build
 ```bash
 cd frontend/localtrade_app
-flutter build apk            # Android APK
-flutter build ios            # iOS (macOS + Xcode)
+flutter build apk --release --split-per-abi   # Signed split APKs (arm64-v8a, armeabi-v7a, x86_64)
+flutter build ios                             # iOS (macOS + Xcode)
 ```
 
-## Commands
+## Testing
+
+Backend tests use Jest + Supertest with an in-memory MongoDB server — no external database required.
+
+```bash
+cd backend
+npm test                   # Run all test suites
+npm run test:watch         # Watch mode
+```
+
+Coverage: authentication, product CRUD, order lifecycle, reviews, and address handling.
+
+## CI/CD and Releases
+
+GitHub Actions automates the entire pipeline (see `.github/workflows/`):
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `backend-ci.yml` | Push/PR touching `backend/` | Runs the Jest test suite |
+| `flutter-build.yml` | Push touching `frontend/`, manual dispatch | Runs `flutter analyze`, builds signed split APKs, uploads artifacts |
+| `release-apk.yml` | Push of a `v*` tag | Builds signed + obfuscated split APKs, publishes a GitHub Release |
+
+**To ship a release:**
+
+1. Bump the version in `frontend/localtrade_app/pubspec.yaml` (e.g. `2.4.0+14`)
+2. Push the changes, then create and push a matching tag:
+
+```bash
+git tag v2.4.0+14 && git push origin v2.4.0+14
+```
+
+The release workflow builds the APKs, attaches them to a GitHub Release with auto-generated notes, and stores obfuscation debug symbols as a CI artifact. Users update through the in-app update checker, which downloads the APK matching their device architecture.
+
+## API Overview
+
+All endpoints are prefixed with `/api/v1`.
+
+### Authentication
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/auth/register` | Public |
+| POST | `/auth/login` | Public |
+| POST | `/auth/forgot-password` | Public |
+| POST | `/auth/verify-otp` | Public |
+| PATCH | `/auth/reset-password-with-otp` | Public |
+| GET | `/auth/me` | Authenticated |
+| PATCH | `/auth/profile` | Authenticated |
+| PATCH | `/auth/change-password` | Authenticated |
+| PATCH | `/auth/force-change-password` | Authenticated (first login) |
+| PATCH | `/auth/update-fcm-token` | Authenticated |
+
+### Products
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/products` | Public |
+| GET | `/products/:id` | Public |
+| GET | `/products/vendors/:id/profile` | Public |
+| GET | `/products/my-products` | Vendor |
+| POST | `/products` | Vendor |
+| PATCH | `/products/:id` | Vendor / Admin |
+| PATCH | `/products/:id/stock` | Vendor / Admin |
+| DELETE | `/products/:id` | Vendor / Admin |
+| GET | `/products/:id/deletable` | Vendor / Admin |
+
+### Orders
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/orders` | Customer |
+| GET | `/orders/my-orders` | Customer |
+| GET | `/orders/vendor-orders` | Vendor |
+| GET | `/orders/:id` | Authenticated |
+| PATCH | `/orders/:id/status` | Vendor / Admin |
+| PATCH | `/orders/:id/cancel` | Customer / Admin |
+
+### Reviews
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/reviews` (filter by `productId`) | Public |
+| GET | `/reviews/my-reviews` | Customer |
+| POST | `/reviews` | Customer (delivered order required) |
+| PATCH | `/reviews/:id` | Customer (owner) |
+| PATCH | `/reviews/:id/reply` | Vendor / Admin |
+| DELETE | `/reviews/:id` | Customer (owner) / Admin |
+
+### Categories
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/categories` | Public |
+| GET | `/categories/admin` | Admin |
+| POST | `/categories` | Admin |
+| PATCH | `/categories/reorder` | Admin |
+| PATCH | `/categories/:id` | Admin |
+| DELETE | `/categories/:id` | Admin |
+
+### Notifications
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/notifications` | Authenticated |
+| PATCH | `/notifications/:id/read` | Authenticated |
+| PATCH | `/notifications/mark-all-read` | Authenticated |
+| DELETE | `/notifications/:id` | Authenticated |
+
+### Vendor
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/vendor/analytics` | Vendor |
+| GET | `/vendor/profile` | Vendor |
+| PATCH | `/vendor/profile` | Vendor |
+
+### Feedback
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/feedback` | Authenticated |
+| GET | `/feedback` | Admin |
+
+### Admin
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/admin/analytics` | Admin |
+| GET | `/admin/analytics/export` | Admin (CSV) |
+| GET | `/admin/users` | Admin |
+| PATCH | `/admin/users/:id/toggle-status` | Admin |
+| GET | `/admin/vendors` | Admin |
+| GET | `/admin/vendors/:id` | Admin |
+| PATCH | `/admin/vendors/:id/status` | Admin |
+| GET | `/admin/products` | Admin |
+| GET | `/admin/products/:id` | Admin |
+| GET | `/admin/orders` | Admin |
+| DELETE | `/admin/products/:id` | Admin |
+
+## Useful Commands
 
 | Command | Location | Description |
 |---------|----------|-------------|
-| `npm run dev` | backend | Start dev server with nodemon |
+| `npm run dev` | backend | Start dev server (nodemon) |
 | `npm test` | backend | Run tests (in-memory MongoDB) |
-| `npm run clear:data` | backend | Reset database |
+| `npm run clear:data` | backend | Reset non-admin data |
 | `node seed-admin.js` | backend | Create/update admin user |
 | `node seed-categories.js` | backend | Seed default categories |
 | `node seed-data.js` | backend | Seed sample vendors + products |
 | `flutter run` | frontend | Run app on connected device |
 | `flutter run -d chrome` | frontend | Run app on Chrome (web) |
-| `flutter analyze` | frontend | Lint check |
-| `flutter build apk` | frontend | Build release APK |
-
-## Testing
-
-Backend tests use Jest + Supertest with an in-memory MongoDB server (no external DB required).
-
-```bash
-cd backend
-npm test                    # Run all tests
-npm run test:watch          # Watch mode
-```
-
-Tests cover:
-- Authentication (register, login, password reset, role-based access)
-- Product CRUD (create, read, update, delete with authorization)
-- Order lifecycle (place, track, update status, cancel)
-- Reviews (purchase-gated, rating validation)
-- Address handling (embedded subdocument format)
-
-## Deployment
-
-### Backend (Render)
-The app is deployed on Render using the `render.yaml` blueprint. The backend runs at:
-`https://localtrade-backend-jg9l.onrender.com`
-
-### Frontend
-Build the APK and distribute, or deploy to App Store / Google Play.
+| `flutter analyze` | frontend | Static analysis / lint |
+| `flutter build apk --release --split-per-abi` | frontend | Build signed split APKs |
 
 ## Design System
 
-The app follows a consistent design language defined in `DESIGN_LANGUAGE.md`:
+The app follows a consistent design language documented in [`DESIGN_LANGUAGE.md`](DESIGN_LANGUAGE.md) and [`localtrade-design-system-revised.md`](localtrade-design-system-revised.md):
 
-- **Colors:** Cream background, coral accents, ink text — warm and accessible
-- **Typography:** Inter/Noto Sans, 400/500 weights, sentence case, min 12px
+- **Colors:** Cream background (`#FBF5EA`), coral accents (`#FF6F52`), high-contrast ink text
+- **Typography:** Inter/Noto Sans, 400/500 weights, sentence case
 - **Cards:** 16px radius, soft shadows, 12-18px padding
-- **Buttons:** Primary (coral fill + ink text), secondary (outline), destructive (red)
-- **Status badges:** Light-fill + dark-text pattern, never saturated fill
 - **Touch targets:** 44px minimum, 52px for primary actions
-- **Animations:** Micro (150-250ms), page transitions (250-300ms), staggered lists
-- **Accessibility:** Reduce-motion support, high contrast, large tap targets
+- **Animations:** 150-400ms durations, staggered lists, reduce-motion support
 
-## Default Credentials
+## Contributing
 
-Admin credentials are configured via environment variables (`ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`). See `.env.example` for the required format.
+Contributions are welcome. To contribute:
 
-On first login, the admin **must change their password** — the account is locked until a new password is set.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/your-feature`)
+3. Commit your changes following [Conventional Commits](https://www.conventionalcommits.org) (`feat(scope): description`)
+4. Push and open a pull request against `main`
+
+Please ensure `flutter analyze` and `npm test` pass before submitting.
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the [MIT License](LICENSE).
