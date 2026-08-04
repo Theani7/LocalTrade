@@ -13,6 +13,7 @@ import '../../providers/order_provider.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/skeleton_loaders.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 final _priceFormat = NumberFormat('#,##0');
 
@@ -100,15 +101,44 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     super.dispose();
   }
 
+  Future<void> _shareProduct(BuildContext context) async {
+    final Map product = Map<String, dynamic>.from(widget.product as Map);
+    final title = (product['title'] ?? 'LocalTrade product').toString();
+    final price = (product['price'] ?? 0).toDouble();
+    final priceUnit = product['priceUnit'] ?? 'piece';
+    final vendorName = (product['vendorName'] ?? '').toString();
+    final location = (product['location'] ?? '').toString();
+
+    final unitLabel = _sentenceCase(priceUnit.toString());
+    final priceText = 'Rs. ${_priceFormat.format(price.toInt())}'
+        '${unitLabel.isNotEmpty && unitLabel != 'Piece' ? '/$unitLabel' : ''}';
+
+    final buffer = StringBuffer('Check this out on LocalTrade!\n\n');
+    buffer.writeln('$title — $priceText');
+    if (vendorName.isNotEmpty) buffer.writeln('Sold by: $vendorName');
+    if (location.isNotEmpty) buffer.writeln('Available near: $location');
+    buffer.write('\nDownload LocalTrade to order: '
+        'https://github.com/Theani7/LocalTrade/releases/latest');
+
+    final box = context.findRenderObject() as RenderBox?;
+    await Share.share(
+      buffer.toString(),
+      sharePositionOrigin: box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : const Rect.fromLTWH(0, 0, 100, 100),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final List images = widget.product['images'] ?? [];
-    final int stock = widget.product['stockQuantity'] ?? 0;
-    final String status = widget.product['productStatus'] ?? 'Available';
+    final Map product = Map<String, dynamic>.from(widget.product as Map);
+    final List images = product['images'] ?? [];
+    final int stock = product['stockQuantity'] ?? 0;
+    final String status = product['productStatus'] ?? 'Available';
     final bool isOutOfStock = status == 'OutOfStock' || stock <= 0;
     final bool isLowStock = stock > 0 && stock < 5;
-    final String category = (widget.product['category'] ?? '').toString();
-    final List<String> productSizes = (widget.product['sizes'] as List?)?.cast<String>() ?? [];
+    final String category = (product['category'] ?? '').toString();
+    final List<String> productSizes = (product['sizes'] as List?)?.cast<String>() ?? [];
     final bool isClothingCategory = category.toLowerCase().contains('clothing') || category.toLowerCase().contains('tailor');
     final bool requireSize = isClothingCategory && productSizes.isNotEmpty;
 
@@ -116,13 +146,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final isAdmin = user?['role'] == 'admin';
 
     final double price =
-        (widget.product['price'] ?? 0).toDouble();
-    final String priceUnit = widget.product['priceUnit'] ?? 'piece';
+        (product['price'] ?? 0).toDouble();
+    final String priceUnit = product['priceUnit'] ?? 'piece';
     final String unitLabel = _unitLabel(priceUnit);
     final double? originalPrice =
-        widget.product['originalPrice'] != null &&
-                widget.product['originalPrice'] > price
-            ? (widget.product['originalPrice'] ?? 0).toDouble()
+        product['originalPrice'] != null &&
+                product['originalPrice'] > price
+            ? (product['originalPrice'] ?? 0).toDouble()
             : null;
 
     return AppScaffold(
@@ -148,6 +178,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
               ),
             ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.surface,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.share_rounded,
+                        color: AppColors.ink),
+                    onPressed: () => _shareProduct(context),
+                    tooltip: 'Share product',
+                  ),
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
