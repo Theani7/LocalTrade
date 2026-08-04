@@ -1,0 +1,83 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/localtrade_app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Verify signing secrets
+        run: |
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.KEY_ALIAS }}" ] || [ -z "${{ secrets.KEY_PASSWORD }}" ]; then
+            echo "::error::Missing Android signing secrets. Add KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD to the repository secrets (Settings > Secrets and variables > Actions)."
+            echo "::error::KEYSTORE_BASE64 = base64 -i android/app/localtrade-release.jks"
+            exit 1
+          fi
+          if [ "${#KEYSTORE_BASE64}" -lt 3000 ]; then
+            echo "::error::KEYSTORE_BASE64 looks too short (${#KEYSTORE_BASE64} chars, expected ~3672). Re-add it: base64 -i android/app/localtrade-release.jks | tr -d '\n' | gh secret set KEYSTORE_BASE64 -R Theani7/LocalTrade"
+            exit 1
+          fi
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Restore keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          python3 - <<'EOF'
+          import base64, os, pathlib, sys
+          raw = os.environ["KEYSTORE_B64"]
+          data = base64.b64decode(raw, validate=False)
+          if len(data) < 2000 or not (data[:4] == b"\xfe\xed\xfe\xed" or data[:2] == b"\x30\x82"):
+              print(f"::error::Decoded keystore is invalid ({len(data)} bytes, magic={data[:4].hex()}). KEYSTORE_BASE64 is corrupt — re-add it: base64 -i android/app/localtrade-release.jks | tr -d '\\n' | gh secret set KEYSTORE_BASE64 -R Theani7/LocalTrade")
+              sys.exit(1)
+          pathlib.Path("android/app/localtrade-release.jks").write_bytes(data)
+          print(f"Keystore restored ({len(data)} bytes)")
+          EOF
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=localtrade-release.jks
+          EOF
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            build/app/outputs/flutter-apk/app-release.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Localtrade $GITHUB_REF_NAME" \
+            --generate-notes
