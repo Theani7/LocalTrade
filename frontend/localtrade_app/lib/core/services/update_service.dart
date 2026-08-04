@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -37,9 +38,11 @@ class UpdateService {
     if (_cachedInfo != null && !force) return _cachedInfo!;
 
     String currentVersion;
+    int currentBuild = 0;
     try {
       final info = await PackageInfo.fromPlatform();
       currentVersion = info.version;
+      currentBuild = int.tryParse(info.buildNumber) ?? 0;
     } catch (_) {
       currentVersion = _fallbackVersion;
     }
@@ -67,18 +70,27 @@ class UpdateService {
       String apkUrl = 'https://github.com/$_repo/releases/latest';
       final assets = data['assets'] as List<dynamic>?;
       if (assets != null) {
+        final abis = await _deviceAbis();
+        String? fallbackUrl;
         for (final asset in assets) {
           final name = asset['name'] as String? ?? '';
-          if (name.endsWith('.apk')) {
-            apkUrl = asset['browser_download_url'] as String? ?? apkUrl;
+          if (!name.endsWith('.apk')) continue;
+          final url = asset['browser_download_url'] as String?;
+          if (url == null) continue;
+          if (abis.isNotEmpty && abis.any(name.contains)) {
+            apkUrl = url;
             break;
           }
+          fallbackUrl ??= url;
+        }
+        if (apkUrl == 'https://github.com/$_repo/releases/latest' && fallbackUrl != null) {
+          apkUrl = fallbackUrl;
         }
       }
 
       final releaseNotes = (data['body'] as String?) ?? '';
 
-      final hasUpdate = _isNewer(tag, currentVersion);
+      final hasUpdate = _isNewer(tag, currentVersion, currentBuild);
 
       _cachedInfo = UpdateInfo(
         hasUpdate: hasUpdate,
@@ -98,6 +110,15 @@ class UpdateService {
     }
 
     return _cachedInfo!;
+  }
+
+  Future<List<String>> _deviceAbis() async {
+    try {
+      final info = await DeviceInfoPlugin().androidInfo;
+      return info.supportedAbis;
+    } catch (_) {
+      return const [];
+    }
   }
 
   Future<String> downloadApk({
@@ -123,9 +144,10 @@ class UpdateService {
     return file.path;
   }
 
-  bool _isNewer(String latest, String current) {
-    final latestParts = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-    final currentParts = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+  bool _isNewer(String latest, String current, int currentBuild) {
+    final latestParts = _versionParts(latest);
+    final currentParts = _versionParts(current);
+    final latestBuild = _buildNumber(latest);
 
     final maxLen = latestParts.length > currentParts.length ? latestParts.length : currentParts.length;
     for (var i = 0; i < maxLen; i++) {
@@ -134,6 +156,16 @@ class UpdateService {
       if (l > c) return true;
       if (l < c) return false;
     }
-    return false;
+    return latestBuild > currentBuild;
+  }
+
+  List<int> _versionParts(String version) {
+    final clean = version.split('+').first;
+    return clean.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+  }
+
+  int _buildNumber(String version) {
+    final parts = version.split('+');
+    return parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
   }
 }
