@@ -73,11 +73,13 @@ jobs:
         run: flutter analyze
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/symbols --strip
 
-      - name: Upload APK
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: localtrade-release-apk
-          path: frontend/localtrade_app/build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            frontend/localtrade_app/build/app/outputs/flutter-apk/app-*-release.apk
+            frontend/localtrade_app/build/app/outputs/flutter-apk/*.so.symbols
           retention-days: 30
