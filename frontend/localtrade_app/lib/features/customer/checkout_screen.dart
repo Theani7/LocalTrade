@@ -115,14 +115,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _showError('Please enter your state');
       return;
     }
-    if (_zipController.text.trim().isEmpty) {
+    final zipCode = _zipController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (zipCode.isEmpty) {
       _showError('Please enter your zip code');
       return;
     }
-    if (!RegExp(r'^\d{4,6}$').hasMatch(_zipController.text.trim())) {
+    if (zipCode.length < 4 || zipCode.length > 6) {
       _showError('Zip code must be 4-6 digits');
       return;
     }
+    _zipController.text = zipCode;
 
     final cart = Provider.of<CartProvider>(context, listen: false);
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
@@ -714,7 +716,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         maxLines: maxLines,
         style: AppTextStyles.body,
         inputFormatters: keyboardType == TextInputType.number
-            ? [FilteringTextInputFormatter.digitsOnly]
+            ? [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)]
             : null,
         decoration: InputDecoration(
           hintText: label,
