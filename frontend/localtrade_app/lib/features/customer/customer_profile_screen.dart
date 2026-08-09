@@ -171,6 +171,18 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
   void _submitAddress() async {
     if (!_addressFormKey.currentState!.validate()) return;
 
+    final zipCode = _zipController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (zipCode.length < 4 || zipCode.length > 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Zip code must be 4-6 digits'),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     final provider = Provider.of<AuthProvider>(context, listen: false);
 
     final address = {
@@ -180,8 +192,9 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
       'landmark': _landmarkController.text.trim(),
       'city': _cityController.text.trim(),
       'state': _stateController.text.trim(),
-      'zipCode': _zipController.text.trim(),
+      'zipCode': zipCode,
     };
+    _zipController.text = zipCode;
 
     final success = await provider.updateProfile({
       'fullName': _fullNameController.text.trim(),
@@ -1065,7 +1078,10 @@ class _CustomerProfileBodyState extends State<CustomerProfileBody> {
       style: const TextStyle(fontSize: 14, color: AppColors.ink),
       inputFormatters: keyboardType == TextInputType.phone ||
               keyboardType == TextInputType.number
-          ? [FilteringTextInputFormatter.digitsOnly]
+          ? [
+              FilteringTextInputFormatter.digitsOnly,
+              if (label == 'Zip code') LengthLimitingTextInputFormatter(6),
+            ]
           : null,
       decoration: InputDecoration(
         labelText: label,
