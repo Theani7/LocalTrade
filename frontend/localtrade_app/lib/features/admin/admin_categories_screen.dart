@@ -63,7 +63,7 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                   child: Text('No categories yet', style: TextStyle(color: AppColors.muted)),
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 80),
                   itemCount: _categories.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {

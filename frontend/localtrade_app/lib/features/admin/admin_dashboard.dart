@@ -237,7 +237,7 @@ class AdminAnalyticsTab extends StatelessWidget {
     return Consumer<AdminProvider>(
       builder: (context, admin, _) {
         if (admin.isLoading && admin.analytics == null) {
-          return const SingleChildScrollView(padding: EdgeInsets.all(16), child: _AdminAnalyticsSkeleton());
+          return SingleChildScrollView(padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 80), child: const _AdminAnalyticsSkeleton());
         }
 
         if (admin.analytics == null) {
@@ -294,7 +294,7 @@ class AdminAnalyticsTab extends StatelessWidget {
           onRefresh: admin.fetchAnalytics,
           color: AppColors.coral,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1334,7 +1334,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                   onRefresh: provider.fetchUsers,
                   color: AppColors.coral,
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
                     itemCount: provider.users.length,
                     separatorBuilder: (_, __) => const Divider(height: 1, indent: 56, endIndent: 14),
                     itemBuilder: (context, index) {
@@ -1727,7 +1727,7 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
       items.addAll(filteredList.map((v) => _buildApprovedVendorCard(context, v, provider)));
     }
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
       itemCount: items.length,
       itemBuilder: (_, i) => items[i],
     );
@@ -2138,7 +2138,7 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
                 onRefresh: provider.fetchProducts,
                 color: AppColors.coral,
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
                   itemCount: provider.products.length,
                   separatorBuilder: (_, __) => const Divider(height: 1, indent: 68, endIndent: 14),
                   itemBuilder: (context, index) {
@@ -2447,7 +2447,12 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> {
                 child: filteredOrders.isEmpty
                     ? Center(child: Text('No $_selectedFilter orders', style: AppTextStyles.bodyMuted))
                     : ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.fromLTRB(
+                          16,
+                          0,
+                          16,
+                          MediaQuery.of(context).padding.bottom + 80,
+                        ),
                         itemCount: filteredOrders.length,
                         separatorBuilder: (_, __) => const Divider(height: 1, indent: 14, endIndent: 14),
                         itemBuilder: (context, index) {
