@@ -37,21 +37,20 @@ class AdminShellState extends State<AdminShell> {
         children: [
           const ConnectionStatusBanner(),
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              child: _selectedIndex == 0
-                  ? AdminDashboard(
-                      key: _dashboardKey,
-                      onTabChanged: (tabIndex) {
-                        setState(() {
-                          _selectedIndex = 0;
-                          _activeNavIndex = tabIndex;
-                        });
-                      },
-                    )
-                  : const AdminProfileScreen(key: ValueKey('admin_profile')),
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: [
+                AdminDashboard(
+                  key: _dashboardKey,
+                  onTabChanged: (tabIndex) {
+                    setState(() {
+                      _selectedIndex = 0;
+                      _activeNavIndex = tabIndex;
+                    });
+                  },
+                ),
+                const AdminProfileScreen(key: ValueKey('admin_profile')),
+              ],
             ),
           ),
         ],

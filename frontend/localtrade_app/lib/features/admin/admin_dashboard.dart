@@ -1218,13 +1218,27 @@ class AdminUsersTab extends StatefulWidget {
   State<AdminUsersTab> createState() => _AdminUsersTabState();
 }
 
-class _AdminUsersTabState extends State<AdminUsersTab> {
+class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveClientMixin {
   String? _togglingUserId;
   final _searchController = TextEditingController();
   Timer? _debounce;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
+    _searchController.removeListener(() {
+      setState(() {});
+    });
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -1239,6 +1253,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.users.isEmpty) return const ListSkeleton(itemCount: 5);
@@ -1333,7 +1348,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 child: RefreshIndicator(
                   onRefresh: provider.fetchUsers,
                   color: AppColors.coral,
-                  child: ListView.separated(
+child: provider.products.isEmpty
+    ? (_searchController.text.isNotEmpty
+        ? EmptyState(icon: Icons.search_off_rounded, title: 'No products found', message: 'No products match "${_searchController.text}"')
+        : ListView(children: const [
+            EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.')
+          ]))
+    : ListView.separated(
                     padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
                     itemCount: provider.users.length,
                     separatorBuilder: (_, __) => const Divider(height: 1, indent: 56, endIndent: 14),
@@ -1530,13 +1551,27 @@ class AdminVendorsTab extends StatefulWidget {
   State<AdminVendorsTab> createState() => _AdminVendorsTabState();
 }
 
-class _AdminVendorsTabState extends State<AdminVendorsTab> {
+class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAliveClientMixin {
   final _searchController = TextEditingController();
   Timer? _debounce;
   String _selectedStatus = 'All';
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
+    _searchController.removeListener(() {
+      setState(() {});
+    });
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -1554,10 +1589,11 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.vendors.isEmpty) return const ListSkeleton(itemCount: 5);
-        if (provider.vendors.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
+        if (provider.vendors.isEmpty && _searchController.text.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
 
         final vStats = provider.vendorStats;
         final totalV = vStats?['totalVendors'] ?? provider.vendors.length;
@@ -1689,9 +1725,11 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> {
               child: RefreshIndicator(
                 onRefresh: provider.fetchVendors,
                 color: AppColors.coral,
-                child: filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true)
-                    ? EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No $_selectedStatus vendors found.')
-                    : _buildVendorListView(pendingVendors, filteredList, context, provider),
+child: filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true)
+    ? _searchController.text.isNotEmpty
+        ? EmptyState(icon: Icons.search_off_rounded, title: 'No vendors found', message: 'No vendors match "${_searchController.text}"')
+        : EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No $_selectedStatus vendors found.')
+    : _buildVendorListView(pendingVendors, filteredList, context, provider),
               ),
             ),
           ],
@@ -2024,13 +2062,27 @@ class AdminProductsTab extends StatefulWidget {
   State<AdminProductsTab> createState() => _AdminProductsTabState();
 }
 
-class _AdminProductsTabState extends State<AdminProductsTab> {
+class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepAliveClientMixin {
   String? _deletingProductId;
   final _searchController = TextEditingController();
   Timer? _debounce;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
+    _searchController.removeListener(() {
+      setState(() {});
+    });
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -2045,10 +2097,11 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.products.isEmpty) return const ListSkeleton(itemCount: 5);
-        if (provider.products.isEmpty) return const EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.');
+        if (provider.products.isEmpty && _searchController.text.isEmpty) return const EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.');
 
         final pStats = provider.productStats;
         final totalP = pStats?['totalProducts'] ?? provider.products.length;
@@ -2137,7 +2190,13 @@ class _AdminProductsTabState extends State<AdminProductsTab> {
               child: RefreshIndicator(
                 onRefresh: provider.fetchProducts,
                 color: AppColors.coral,
-                child: ListView.separated(
+child: provider.products.isEmpty
+    ? (_searchController.text.isNotEmpty
+        ? EmptyState(icon: Icons.search_off_rounded, title: 'No products found', message: 'No products match "${_searchController.text}"')
+        : ListView(children: const [
+            EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.')
+          ]))
+    : ListView.separated(
                   padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
                   itemCount: provider.products.length,
                   separatorBuilder: (_, __) => const Divider(height: 1, indent: 68, endIndent: 14),
@@ -2344,12 +2403,16 @@ class AdminOrdersTab extends StatefulWidget {
   State<AdminOrdersTab> createState() => _AdminOrdersTabState();
 }
 
-class _AdminOrdersTabState extends State<AdminOrdersTab> {
+class _AdminOrdersTabState extends State<AdminOrdersTab> with AutomaticKeepAliveClientMixin {
   String _selectedFilter = 'All';
   static const _filters = ['All', 'Pending', 'Confirmed', 'Delivered', 'Rejected', 'Cancelled'];
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.orders.isEmpty) return const OrderCardSkeleton();
