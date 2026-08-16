@@ -2209,13 +2209,19 @@ class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepA
     });
   }
 
+  void _clearSearch(AdminProvider provider) {
+    _debounce?.cancel();
+    _searchController.clear();
+    FocusScope.of(context).unfocus();
+    provider.fetchProducts();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.products.isEmpty) return const ListSkeleton(itemCount: 5);
-        if (provider.products.isEmpty) return const EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.');
 
         final pStats = provider.productStats;
         final totalP = pStats?['totalProducts'] ?? provider.products.length;
@@ -2274,10 +2280,7 @@ class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepA
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
-                          onPressed: () {
-                            _searchController.clear();
-                            provider.fetchProducts();
-                          },
+                          onPressed: () => _clearSearch(provider),
                         )
                       : null,
                   filled: true,
@@ -2299,104 +2302,137 @@ class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepA
               ),
             ),
 
-            // List
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: provider.fetchProducts,
-                color: AppColors.coral,
-                child: ListView.separated(
-                  padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
-                  itemCount: provider.products.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 68, endIndent: 14),
-                  itemBuilder: (context, index) {
-                    final product = provider.products[index];
-                    final isAvailable = (product['stockQuantity'] ?? 0) > 0 && product['productStatus'] != 'unavailable';
-                    final isDeleting = _deletingProductId == product['_id'];
+            if (_searchController.text.trim().isNotEmpty && provider.products.isNotEmpty)
+              _buildActiveSearchBanner(
+                query: _searchController.text.trim(),
+                count: provider.products.length,
+                onClear: () => _clearSearch(provider),
+              ),
 
-                    return GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        SlideFadePageRoute(builder: (_) => AdminProductDetailScreen(productId: product['_id'])),
+            // List
+            if (provider.products.isEmpty)
+              if (_searchController.text.isNotEmpty)
+                Expanded(
+                  child: EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'No products found',
+                    message: 'No products match "${_searchController.text}". Check your spelling or try another term.',
+                    actionLabel: 'Clear search',
+                    onAction: () => _clearSearch(provider),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView(
+                    children: [
+                      EmptyState(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'No products',
+                        message: 'No products listed yet.',
+                        actionLabel: 'Refresh',
+                        onAction: () => provider.fetchProducts(),
                       ),
-                      child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      child: Row(
-                        children: [
-                          // Thumbnail
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              color: AppColors.background,
-                              child: product['images'] != null && product['images'].isNotEmpty
-                                  ? Image.network(product['images'][0], fit: BoxFit.cover)
-                                  : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 18),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Name + vendor
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product['title'] ?? '',
-                                  style: AppTextStyles.cardTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                    ],
+                  ),
+                )
+            else
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => provider.fetchProducts(search: _searchController.text.isEmpty ? null : _searchController.text),
+                  color: AppColors.coral,
+                  child: ListView.separated(
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
+                    itemCount: provider.products.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 68, endIndent: 14),
+                    itemBuilder: (context, index) {
+                      final product = provider.products[index];
+                      final isAvailable = (product['stockQuantity'] ?? 0) > 0 && product['productStatus'] != 'unavailable';
+                      final isDeleting = _deletingProductId == product['_id'];
+
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          SlideFadePageRoute(builder: (_) => AdminProductDetailScreen(productId: product['_id'])),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          child: Row(
+                            children: [
+                              // Thumbnail
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  color: AppColors.background,
+                                  child: product['images'] != null && product['images'].isNotEmpty
+                                      ? Image.network(product['images'][0], fit: BoxFit.cover)
+                                      : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 18),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  product['vendorId']?['shopName'] ?? product['vendorId']?['fullName'] ?? 'Vendor',
-                                  style: AppTextStyles.caption,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Price + status + delete
-                          Flexible(
-                            fit: FlexFit.loose,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
+                              ),
+                              const SizedBox(width: 12),
+                              // Name + vendor
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                    const SizedBox(height: 4),
-                                    _buildProductStatusChip(isAvailable),
+                                    Text(
+                                      product['title'] ?? '',
+                                      style: AppTextStyles.cardTitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      product['vendorId']?['shopName'] ?? product['vendorId']?['fullName'] ?? 'Vendor',
+                                      style: AppTextStyles.caption,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ],
                                 ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: isDeleting ? AppColors.mutedLight : AppColors.dangerLight,
-                                      borderRadius: BorderRadius.circular(8),
+                              ),
+                              const SizedBox(width: 8),
+                              // Price + status + delete
+                              Flexible(
+                                fit: FlexFit.loose,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        const SizedBox(height: 4),
+                                        _buildProductStatusChip(isAvailable),
+                                      ],
                                     ),
-                                    child: isDeleting
-                                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
-                                         : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: isDeleting ? AppColors.mutedLight : AppColors.dangerLight,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: isDeleting
+                                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                            : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      ),
-                    );
-                  },
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
           ],
         );
       },
