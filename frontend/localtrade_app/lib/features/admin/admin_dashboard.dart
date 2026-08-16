@@ -1226,19 +1226,19 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
   @override
   bool get wantKeepAlive => true;
 
+  void _onSearchControllerChanged() {
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      setState(() {});
-    });
+    _searchController.addListener(_onSearchControllerChanged);
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(() {
-      setState(() {});
-    });
+    _searchController.removeListener(_onSearchControllerChanged);
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -1348,13 +1348,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                 child: RefreshIndicator(
                   onRefresh: provider.fetchUsers,
                   color: AppColors.coral,
-child: provider.products.isEmpty
-    ? (_searchController.text.isNotEmpty
-        ? EmptyState(icon: Icons.search_off_rounded, title: 'No products found', message: 'No products match "${_searchController.text}"')
-        : ListView(children: const [
-            EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.')
-          ]))
-    : ListView.separated(
+                  child: ListView.separated(
                     padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
                     itemCount: provider.users.length,
                     separatorBuilder: (_, __) => const Divider(height: 1, indent: 56, endIndent: 14),
@@ -1559,19 +1553,19 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
   @override
   bool get wantKeepAlive => true;
 
+  void _onSearchControllerChanged() {
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      setState(() {});
-    });
+    _searchController.addListener(_onSearchControllerChanged);
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(() {
-      setState(() {});
-    });
+    _searchController.removeListener(_onSearchControllerChanged);
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -1593,7 +1587,7 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.vendors.isEmpty) return const ListSkeleton(itemCount: 5);
-        if (provider.vendors.isEmpty && _searchController.text.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
+        if (provider.vendors.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
 
         final vStats = provider.vendorStats;
         final totalV = vStats?['totalVendors'] ?? provider.vendors.length;
@@ -1725,11 +1719,9 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
               child: RefreshIndicator(
                 onRefresh: provider.fetchVendors,
                 color: AppColors.coral,
-child: filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true)
-    ? _searchController.text.isNotEmpty
-        ? EmptyState(icon: Icons.search_off_rounded, title: 'No vendors found', message: 'No vendors match "${_searchController.text}"')
-        : EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No $_selectedStatus vendors found.')
-    : _buildVendorListView(pendingVendors, filteredList, context, provider),
+                child: filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true)
+                    ? EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No $_selectedStatus vendors found.')
+                    : _buildVendorListView(pendingVendors, filteredList, context, provider),
               ),
             ),
           ],
@@ -2070,19 +2062,19 @@ class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepA
   @override
   bool get wantKeepAlive => true;
 
+  void _onSearchControllerChanged() {
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(() {
-      setState(() {});
-    });
+    _searchController.addListener(_onSearchControllerChanged);
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(() {
-      setState(() {});
-    });
+    _searchController.removeListener(_onSearchControllerChanged);
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -2101,7 +2093,7 @@ class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepA
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.products.isEmpty) return const ListSkeleton(itemCount: 5);
-        if (provider.products.isEmpty && _searchController.text.isEmpty) return const EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.');
+        if (provider.products.isEmpty) return const EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.');
 
         final pStats = provider.productStats;
         final totalP = pStats?['totalProducts'] ?? provider.products.length;
@@ -2190,13 +2182,7 @@ class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepA
               child: RefreshIndicator(
                 onRefresh: provider.fetchProducts,
                 color: AppColors.coral,
-child: provider.products.isEmpty
-    ? (_searchController.text.isNotEmpty
-        ? EmptyState(icon: Icons.search_off_rounded, title: 'No products found', message: 'No products match "${_searchController.text}"')
-        : ListView(children: const [
-            EmptyState(icon: Icons.inventory_2_outlined, title: 'No products', message: 'No products listed yet.')
-          ]))
-    : ListView.separated(
+                child: ListView.separated(
                   padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
                   itemCount: provider.products.length,
                   separatorBuilder: (_, __) => const Divider(height: 1, indent: 68, endIndent: 14),

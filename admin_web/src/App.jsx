@@ -256,9 +256,32 @@ function App() {
               </div>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                 {activeTab !== 'overview' && activeTab !== 'categories' && (
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative', width: '250px' }}>
                     <Search size={18} color="var(--color-muted)" style={{ position: 'absolute', left: '12px', top: '12px' }} />
-                    <input type="text" placeholder={`Search ${activeTab}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input-field" style={{ paddingLeft: '40px', width: '250px', backgroundColor: 'white' }} />
+                    <input type="text" placeholder={`Search ${activeTab}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input-field" style={{ paddingLeft: '40px', paddingRight: '30px', width: '100%', backgroundColor: 'white' }} />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-muted)',
+                          cursor: 'pointer',
+                          padding: '0',
+                          width: '24px',
+                          height: '24px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <XCircle size={18} color="var(--color-muted)" />
+                      </button>
+                    )}
                   </div>
                 )}
                 <div style={{ position: 'relative' }}>
