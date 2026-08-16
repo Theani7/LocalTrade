@@ -1208,6 +1208,67 @@ class _AdvancedStatCard extends StatelessWidget {
   }
 }
 
+Widget _buildActiveSearchBanner({
+  required String query,
+  required int count,
+  required VoidCallback onClear,
+}) {
+  return Container(
+    margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: AppColors.divider),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.search_rounded, size: 16, color: AppColors.coral),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Results for "$query" • $count found',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.ink,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: onClear,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.coralLight,
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.close_rounded, size: 12, color: AppColors.coralDark),
+                SizedBox(width: 4),
+                Text(
+                  'Clear',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.coralDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // Users Tab
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1249,6 +1310,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
     _debounce = Timer(const Duration(milliseconds: 400), () {
       provider.fetchUsers(search: query.isEmpty ? null : query);
     });
+  }
+
+  void _clearSearch(AdminProvider provider) {
+    _debounce?.cancel();
+    _searchController.clear();
+    FocusScope.of(context).unfocus();
+    provider.fetchUsers();
   }
 
   @override
@@ -1315,10 +1383,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
-                          onPressed: () {
-                            _searchController.clear();
-                            provider.fetchUsers();
-                          },
+                          onPressed: () => _clearSearch(provider),
                         )
                       : null,
                   filled: true,
@@ -1340,9 +1405,35 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
               ),
             ),
 
+            if (_searchController.text.trim().isNotEmpty && provider.users.isNotEmpty)
+              _buildActiveSearchBanner(
+                query: _searchController.text.trim(),
+                count: provider.users.length,
+                onClear: () => _clearSearch(provider),
+              ),
+
             // List
             if (provider.users.isEmpty)
-              const Expanded(child: EmptyState(icon: Icons.people_outline_rounded, title: 'No customers', message: 'No customers registered yet.'))
+              if (_searchController.text.isNotEmpty)
+                Expanded(
+                  child: EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'No customers found',
+                    message: 'No customers match "${_searchController.text}". Check your spelling or try another term.',
+                    actionLabel: 'Clear search',
+                    onAction: () => _clearSearch(provider),
+                  ),
+                )
+              else
+                Expanded(
+                  child: EmptyState(
+                    icon: Icons.people_outline_rounded,
+                    title: 'No customers',
+                    message: 'No customers registered yet.',
+                    actionLabel: 'Refresh',
+                    onAction: () => provider.fetchUsers(),
+                  ),
+                )
             else
               Expanded(
                 child: RefreshIndicator(
