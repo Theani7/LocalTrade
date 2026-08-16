@@ -1662,6 +1662,15 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
     super.dispose();
   }
 
+  void _clearSearch(AdminProvider provider) {
+    _debounce?.cancel();
+    _searchController.clear();
+    FocusScope.of(context).unfocus();
+    provider.fetchVendors(
+      status: _selectedStatus == 'All' ? null : _selectedStatus,
+    );
+  }
+
   void _onSearchChanged(String query, AdminProvider provider) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
@@ -1678,7 +1687,6 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
     return Consumer<AdminProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.vendors.isEmpty) return const ListSkeleton(itemCount: 5);
-        if (provider.vendors.isEmpty) return const EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No vendors registered yet.');
 
         final vStats = provider.vendorStats;
         final totalV = vStats?['totalVendors'] ?? provider.vendors.length;
@@ -1743,10 +1751,7 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
-                          onPressed: () {
-                            _searchController.clear();
-                            provider.fetchVendors(status: _selectedStatus == 'All' ? null : _selectedStatus);
-                          },
+                          onPressed: () => _clearSearch(provider),
                         )
                       : null,
                   filled: true,
@@ -1804,14 +1809,40 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
                 },
               ),
             ),
+            const SizedBox(height: 10),
+
+            if (_searchController.text.trim().isNotEmpty &&
+                (_selectedStatus == 'All' ? (filteredList.isNotEmpty || pendingVendors.isNotEmpty) : filteredList.isNotEmpty))
+              _buildActiveSearchBanner(
+                query: _searchController.text.trim(),
+                count: _selectedStatus == 'All' ? filteredList.length + pendingVendors.length : filteredList.length,
+                onClear: () => _clearSearch(provider),
+              ),
 
             // List
             Expanded(
               child: RefreshIndicator(
-                onRefresh: provider.fetchVendors,
+                onRefresh: () => provider.fetchVendors(
+                  search: _searchController.text.isEmpty ? null : _searchController.text,
+                  status: _selectedStatus == 'All' ? null : _selectedStatus,
+                ),
                 color: AppColors.coral,
-                child: filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true)
-                    ? EmptyState(icon: Icons.storefront_outlined, title: 'No vendors', message: 'No $_selectedStatus vendors found.')
+                child: (filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true))
+                    ? (_searchController.text.isNotEmpty
+                        ? EmptyState(
+                            icon: Icons.search_off_rounded,
+                            title: 'No vendors found',
+                            message: 'No vendors match "${_searchController.text}". Check your spelling or try another term.',
+                            actionLabel: 'Clear search',
+                            onAction: () => _clearSearch(provider),
+                          )
+                        : EmptyState(
+                            icon: Icons.storefront_outlined,
+                            title: 'No vendors',
+                            message: 'No ${_selectedStatus == 'All' ? '' : '$_selectedStatus '}vendors found.',
+                            actionLabel: 'Refresh',
+                            onAction: () => provider.fetchVendors(status: _selectedStatus == 'All' ? null : _selectedStatus),
+                          ))
                     : _buildVendorListView(pendingVendors, filteredList, context, provider),
               ),
             ),
