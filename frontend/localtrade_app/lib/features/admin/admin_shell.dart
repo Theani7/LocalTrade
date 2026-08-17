@@ -185,9 +185,10 @@ class AdminShellState extends State<AdminShell> {
                 if (showBadge)
                   Consumer<AdminProvider>(
                     builder: (_, admin, __) {
-                      final pendingCount = admin.vendors
-                          .where((v) => v['vendorApprovalStatus'] == 'pending')
-                          .length;
+                      final pendingCount = (admin.vendorStats?['pendingVendors'] as int?) ??
+                          admin.vendors
+                              .where((v) => v['vendorApprovalStatus'] == 'pending')
+                              .length;
                       if (pendingCount == 0) return const SizedBox.shrink();
                       return Positioned(
                         right: 2,

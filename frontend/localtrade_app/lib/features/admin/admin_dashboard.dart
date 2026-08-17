@@ -301,9 +301,10 @@ class AdminAnalyticsTab extends StatelessWidget {
                 // Pending approval banner
                 Consumer<AdminProvider>(
                   builder: (_, adminProv, __) {
-                    final pendingCount = adminProv.vendors
-                        .where((v) => v['vendorApprovalStatus'] == 'pending')
-                        .length;
+                    final pendingCount = (adminProv.vendorStats?['pendingVendors'] as int?) ??
+                        adminProv.vendors
+                            .where((v) => v['vendorApprovalStatus'] == 'pending')
+                            .length;
                     if (pendingCount == 0) return const SizedBox.shrink();
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
@@ -1281,6 +1282,8 @@ class AdminUsersTab extends StatefulWidget {
 
 class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveClientMixin {
   String? _togglingUserId;
+  String? _approvingVendorId;
+  String _selectedRole = 'All';
   final _searchController = TextEditingController();
   Timer? _debounce;
 
@@ -1305,10 +1308,21 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
     super.dispose();
   }
 
+  String? _getApiRole(String role) {
+    if (role == 'All') return null;
+    if (role == 'Customers') return 'customer';
+    if (role == 'Vendors') return 'vendor';
+    if (role == 'Admins') return 'admin';
+    return null;
+  }
+
   void _onSearchChanged(String query, AdminProvider provider) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
-      provider.fetchUsers(search: query.isEmpty ? null : query);
+      provider.fetchUsers(
+        search: query.isEmpty ? null : query,
+        role: _getApiRole(_selectedRole),
+      );
     });
   }
 
@@ -1316,7 +1330,9 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
     _debounce?.cancel();
     _searchController.clear();
     FocusScope.of(context).unfocus();
-    provider.fetchUsers();
+    provider.fetchUsers(
+      role: _getApiRole(_selectedRole),
+    );
   }
 
   @override
@@ -1328,8 +1344,9 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
 
         final stats = provider.userStats;
         final total = stats?['totalUsers'] ?? provider.users.length;
-        final active = stats?['activeUsers'] ?? 0;
-        final inactive = stats?['inactiveUsers'] ?? 0;
+        final totalCustomers = stats?['totalCustomers'] ?? total;
+        final totalVendors = stats?['totalVendors'] ?? 0;
+        final pendingVendors = stats?['pendingVendors'] ?? 0;
 
         return Column(
           children: [
@@ -1345,7 +1362,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                         Text('Users', style: AppTextStyles.screenTitle),
                         const SizedBox(height: 2),
                         Text(
-                          '$total registered customer${total == 1 ? '' : 's'}',
+                          '$total registered user${total == 1 ? '' : 's'}',
                           style: AppTextStyles.caption,
                         ),
                       ],
@@ -1360,14 +1377,67 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
-                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.people_rounded, '$total', 'Total users', AppColors.blueLight, AppColors.blueDark))),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.people_rounded, '$total', 'Total', AppColors.blueLight, AppColors.blueDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.check_circle_outline_rounded, '$active', 'Active', AppColors.successLight, AppColors.successDark))),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.person_outline_rounded, '$totalCustomers', 'Customers', AppColors.successLight, AppColors.successDark))),
                   const SizedBox(width: 8),
-                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.block_rounded, '$inactive', 'Inactive', AppColors.mutedLight, AppColors.muted))),
+                  Expanded(child: FadeScaleIn(child: AdminStatTile(Icons.storefront_rounded, '$totalVendors', 'Vendors', AppColors.coralLight, AppColors.coralDark))),
                 ],
               ),
             ),
+
+            // Pending approval alert banner
+            if (pendingVendors > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.warningLight,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.pending_actions_rounded, size: 20, color: AppColors.warningDark),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$pendingVendors vendor application${pendingVendors == 1 ? '' : 's'} awaiting approval',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.warningDark),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Review applications to onboard new vendors',
+                              style: TextStyle(fontSize: 11, color: AppColors.warningDark.withValues(alpha: 0.8)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          final dashboardState = context.findAncestorStateOfType<AdminDashboardState>();
+                          dashboardState?.switchTab(2);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.coral,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: const Text(
+                            'Review',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             // Search bar
             Padding(
@@ -1377,7 +1447,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                 onChanged: (q) => _onSearchChanged(q, provider),
                 style: const TextStyle(fontSize: 13, color: AppColors.ink),
                 decoration: InputDecoration(
-                  hintText: 'Search customers...',
+                  hintText: 'Search users...',
                   hintStyle: TextStyle(fontSize: 13, color: AppColors.muted.withValues(alpha: 0.6)),
                   prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.muted),
                   suffixIcon: _searchController.text.isNotEmpty
@@ -1405,6 +1475,49 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
               ),
             ),
 
+            // Role filter chips
+            SizedBox(
+              height: 38,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: ['All', 'Customers', 'Vendors', 'Admins'].length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final role = ['All', 'Customers', 'Vendors', 'Admins'][index];
+                  final isSelected = _selectedRole == role;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedRole = role);
+                      provider.fetchUsers(
+                        search: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
+                        role: _getApiRole(role),
+                        refresh: true,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.coral : AppColors.surface,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: isSelected ? AppColors.coral : AppColors.divider),
+                      ),
+                      child: Text(
+                        role,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? AppColors.ink : AppColors.muted,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
             if (_searchController.text.trim().isNotEmpty && provider.users.isNotEmpty)
               _buildActiveSearchBanner(
                 query: _searchController.text.trim(),
@@ -1418,8 +1531,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                 Expanded(
                   child: EmptyState(
                     icon: Icons.search_off_rounded,
-                    title: 'No customers found',
-                    message: 'No customers match "${_searchController.text}". Check your spelling or try another term.',
+                    title: 'No users found',
+                    message: 'No users match "${_searchController.text}". Check your spelling or try another term.',
                     actionLabel: 'Clear search',
                     onAction: () => _clearSearch(provider),
                   ),
@@ -1428,16 +1541,16 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                 Expanded(
                   child: EmptyState(
                     icon: Icons.people_outline_rounded,
-                    title: 'No customers',
-                    message: 'No customers registered yet.',
+                    title: 'No users',
+                    message: 'No ${_selectedRole == 'All' ? '' : '$_selectedRole '}users registered yet.',
                     actionLabel: 'Refresh',
-                    onAction: () => provider.fetchUsers(),
+                    onAction: () => provider.fetchUsers(role: _getApiRole(_selectedRole)),
                   ),
                 )
             else
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: provider.fetchUsers,
+                  onRefresh: () => provider.fetchUsers(role: _getApiRole(_selectedRole)),
                   color: AppColors.coral,
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
@@ -1470,8 +1583,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                         }
                         final user = provider.users[index];
                         final isActive = user['isActive'] != false;
+                        final role = (user['role'] as String?) ?? 'customer';
+                        final isVendor = role == 'vendor';
+                        final vendorStatus = user['vendorApprovalStatus'] as String?;
+                        final isPendingVendor = isVendor && vendorStatus == 'pending';
                         final joinDate = user['createdAt'] != null ? _formatJoinDate(user['createdAt']) : '';
                         final isToggling = _togglingUserId == user['_id'];
+                        final isApproving = _approvingVendorId == user['_id'];
 
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1481,34 +1599,77 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                               Container(
                                 width: 40,
                                 height: 40,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.blueLight,
+                                decoration: BoxDecoration(
+                                  color: isVendor
+                                      ? AppColors.coralLight
+                                      : (role == 'admin' ? AppColors.surface : AppColors.blueLight),
                                   shape: BoxShape.circle,
+                                  border: role == 'admin' ? Border.all(color: AppColors.divider) : null,
                                 ),
                                 child: Center(
                                   child: Text(
                                     _getInitials(user['fullName'] ?? ''),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
-                                      color: AppColors.blueDark,
+                                      color: isVendor
+                                          ? AppColors.coralDark
+                                          : (role == 'admin' ? AppColors.ink : AppColors.blueDark),
                                     ),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              // Name + email + join date
+                              // Name + role tag + email + shop info
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      user['fullName'] ?? '',
-                                      style: AppTextStyles.cardTitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            user['fullName'] ?? '',
+                                            style: AppTextStyles.cardTitle,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isVendor
+                                                ? AppColors.coralLight
+                                                : (role == 'admin' ? AppColors.surface : AppColors.blueLight),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: role == 'admin' ? Border.all(color: AppColors.divider) : null,
+                                          ),
+                                          child: Text(
+                                            role == 'vendor'
+                                                ? 'Vendor'
+                                                : (role == 'admin' ? 'Admin' : 'Customer'),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
+                                              color: isVendor
+                                                  ? AppColors.coralDark
+                                                  : (role == 'admin' ? AppColors.ink : AppColors.blueDark),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: 2),
+                                    if (isVendor && user['shopName'] != null && user['shopName'].toString().isNotEmpty) ...[
+                                      Text(
+                                        'Shop: ${user['shopName']}',
+                                        style: AppTextStyles.caption.copyWith(color: AppColors.ink, fontSize: 11),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                    ],
                                     Text(
                                       user['email'] ?? '',
                                       style: AppTextStyles.caption,
@@ -1529,60 +1690,99 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: isActive ? AppColors.successLight : AppColors.mutedLight,
-                                      borderRadius: BorderRadius.circular(100),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                                          size: 10,
-                                          color: isActive ? AppColors.successDark : AppColors.muted,
-                                        ),
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          isActive ? 'Active' : 'Inactive',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w500,
-                                            color: isActive ? AppColors.successDark : AppColors.muted,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  GestureDetector(
-                                    onTap: isToggling ? null : () => _toggleUserStatus(context, user, provider),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  if (isPendingVendor) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: isActive ? null : AppColors.successLight,
-                                        border: isActive ? Border.all(color: AppColors.divider) : null,
+                                        color: AppColors.warningLight,
                                         borderRadius: BorderRadius.circular(100),
                                       ),
-                                      child: isToggling
-                                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
-                                          : Text(
-                                              isActive ? 'Deactivate' : 'Activate',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
-                                                color: isActive ? AppColors.muted : AppColors.successDark,
-                                              ),
-                                            ),
+                                      child: const Text(
+                                        'Pending',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.warningDark,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 6),
+                                    GestureDetector(
+                                      onTap: isApproving ? null : () => _approveVendorFromUsers(context, user, provider),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.coral,
+                                          borderRadius: BorderRadius.circular(100),
+                                        ),
+                                        child: isApproving
+                                            ? const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))
+                                            : const Text(
+                                                'Approve',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: AppColors.ink,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: isActive ? AppColors.successLight : AppColors.mutedLight,
+                                        borderRadius: BorderRadius.circular(100),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                                            size: 10,
+                                            color: isActive ? AppColors.successDark : AppColors.muted,
+                                          ),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            isActive ? 'Active' : 'Inactive',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
+                                              color: isActive ? AppColors.successDark : AppColors.muted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    GestureDetector(
+                                      onTap: isToggling ? null : () => _toggleUserStatus(context, user, provider),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: isActive ? null : AppColors.successLight,
+                                          border: isActive ? Border.all(color: AppColors.divider) : null,
+                                          borderRadius: BorderRadius.circular(100),
+                                        ),
+                                        child: isToggling
+                                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                            : Text(
+                                                isActive ? 'Deactivate' : 'Activate',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isActive ? AppColors.muted : AppColors.successDark,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
-                          ],
-                        ),
-                      );
-                    },
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -1591,6 +1791,44 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
         );
       },
     );
+  }
+
+  void _approveVendorFromUsers(BuildContext context, dynamic user, AdminProvider provider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: Text('Approve Vendor', style: AppTextStyles.sectionHeading),
+        content: Text(
+          'Approve "${user['shopName'] ?? user['fullName']}" as a vendor?',
+          style: AppTextStyles.bodyMuted,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Approve', style: AppTextStyles.label.copyWith(color: AppColors.successDark)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _approvingVendorId = user['_id']);
+      final success = await provider.updateVendorStatus(user['_id'], 'approved');
+      if (!mounted) return;
+      setState(() => _approvingVendorId = null);
+      ScaffoldMessenger.of(this.context).showSnackBar(
+        SnackBar(
+          content: Text(success ? '${user['fullName']} approved as vendor' : 'Failed to approve vendor'),
+          backgroundColor: success ? AppColors.success : AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _toggleUserStatus(BuildContext context, dynamic user, AdminProvider provider) {
@@ -1718,11 +1956,13 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
         final approved = vStats?['approvedVendors'] ?? 0;
         final pending = vStats?['pendingVendors'] ?? 0;
 
-        final pendingVendors = provider.vendors.where((v) => v['vendorApprovalStatus'] == 'pending').toList();
+        final pendingVendors = _selectedStatus == 'All'
+            ? provider.vendors.where((v) => v['vendorApprovalStatus'] == 'pending').toList()
+            : (_selectedStatus == 'Pending' ? provider.vendors : <dynamic>[]);
 
         final filteredList = _selectedStatus == 'All'
             ? provider.vendors.where((v) => v['vendorApprovalStatus'] != 'pending').toList()
-            : provider.vendors.where((v) => v['vendorApprovalStatus'] == _selectedStatus.toLowerCase()).toList();
+            : (_selectedStatus == 'Pending' ? <dynamic>[] : provider.vendors);
 
         return Column(
           children: [
@@ -1812,6 +2052,11 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
                   return GestureDetector(
                     onTap: () {
                       setState(() => _selectedStatus = status);
+                      provider.fetchVendors(
+                        search: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
+                        status: status == 'All' ? null : status,
+                        refresh: true,
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -1836,11 +2081,10 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
             ),
             const SizedBox(height: 10),
 
-            if (_searchController.text.trim().isNotEmpty &&
-                (_selectedStatus == 'All' ? (filteredList.isNotEmpty || pendingVendors.isNotEmpty) : filteredList.isNotEmpty))
+            if (_searchController.text.trim().isNotEmpty && (filteredList.isNotEmpty || pendingVendors.isNotEmpty))
               _buildActiveSearchBanner(
                 query: _searchController.text.trim(),
-                count: _selectedStatus == 'All' ? filteredList.length + pendingVendors.length : filteredList.length,
+                count: filteredList.length + pendingVendors.length,
                 onClear: () => _clearSearch(provider),
               ),
 
@@ -1852,7 +2096,7 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
                   status: _selectedStatus == 'All' ? null : _selectedStatus,
                 ),
                 color: AppColors.coral,
-                child: (filteredList.isEmpty && (_selectedStatus == 'All' ? pendingVendors.isEmpty : true))
+                child: (filteredList.isEmpty && pendingVendors.isEmpty)
                     ? (_searchController.text.isNotEmpty
                         ? EmptyState(
                             icon: Icons.search_off_rounded,

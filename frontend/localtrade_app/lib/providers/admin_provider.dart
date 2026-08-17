@@ -325,6 +325,7 @@ class AdminProvider with ChangeNotifier {
       await _adminService.updateVendorStatus(vendorId, status);
       await Future.wait([
         fetchVendors(refresh: true),
+        fetchUsers(refresh: true),
         fetchAnalytics(),
       ]);
       return true;

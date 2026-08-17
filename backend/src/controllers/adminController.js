@@ -140,16 +140,14 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc    Get all users (with search, filter, pagination)
+// @desc    Get all users (with search, role filter, pagination)
 // @route   GET /api/v1/admin/users
 // @access  Private/Admin
 exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const { search, role, page = 1, limit = 10 } = req.query;
+  const { search, role, page = 1, limit = 20 } = req.query;
   const filter = {};
   if (role && role !== 'All' && role !== 'all') {
-    filter.role = role;
-  } else if (!role) {
-    filter.role = 'customer';
+    filter.role = role.toLowerCase();
   }
 
   const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -159,24 +157,38 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     filter.$or = [
       { fullName: { $regex: escapedSearch, $options: 'i' } },
       { email: { $regex: escapedSearch, $options: 'i' } },
-      { phone: { $regex: escapedSearch, $options: 'i' } }
+      { phone: { $regex: escapedSearch, $options: 'i' } },
+      { shopName: { $regex: escapedSearch, $options: 'i' } }
     ];
   }
 
-  const totalCustomers = await User.countDocuments({ role: 'customer' });
-  const activeCustomers = await User.countDocuments({ role: 'customer', isActive: true });
-  const inactiveCustomers = await User.countDocuments({ role: 'customer', isActive: false });
-
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
   const skip = (pageNum - 1) * limitNum;
-  const users = await User.find(filter)
-    .select('-password')
-    .sort('-createdAt')
-    .skip(skip)
-    .limit(limitNum);
 
-  const totalCount = await User.countDocuments(filter);
+  const [
+    totalUsers,
+    activeUsers,
+    inactiveUsers,
+    totalCustomers,
+    totalVendors,
+    pendingVendors,
+    users,
+    totalCount
+  ] = await Promise.all([
+    User.countDocuments(),
+    User.countDocuments({ isActive: true }),
+    User.countDocuments({ isActive: false }),
+    User.countDocuments({ role: 'customer' }),
+    User.countDocuments({ role: 'vendor' }),
+    User.countDocuments({ role: 'vendor', vendorApprovalStatus: { $in: ['pending', null, undefined] } }),
+    User.find(filter)
+      .select('-password')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limitNum),
+    User.countDocuments(filter),
+  ]);
 
   res.status(200).json({
     success: true,
@@ -188,9 +200,12 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     data: {
       users,
       stats: {
-        totalUsers: totalCustomers,
-        activeUsers: activeCustomers,
-        inactiveUsers: inactiveCustomers,
+        totalUsers,
+        activeUsers,
+        inactiveUsers,
+        totalCustomers,
+        totalVendors,
+        pendingVendors,
       }
     }
   });
@@ -200,7 +215,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/admin/vendors
 // @access  Private/Admin
 exports.getAllVendors = catchAsync(async (req, res, next) => {
-  const { search, status, page = 1, limit = 10 } = req.query;
+  const { search, status, page = 1, limit = 20 } = req.query;
   const filter = { role: 'vendor' };
 
   const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -214,23 +229,38 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
     ];
   }
 
-  if (status && status !== 'All') {
-    filter.vendorApprovalStatus = status;
+  if (status && status !== 'All' && status !== 'all') {
+    const statusLower = status.toLowerCase();
+    if (statusLower === 'pending') {
+      filter.vendorApprovalStatus = { $in: ['pending', null, undefined] };
+    } else {
+      filter.vendorApprovalStatus = statusLower;
+    }
   }
 
-  const totalVendors = await User.countDocuments({ role: 'vendor' });
-  const approvedVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'approved' });
-  const pendingVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: { $in: ['pending', null, undefined] } });
-  const suspendedVendors = await User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'suspended' });
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+  const skip = (pageNum - 1) * limitNum;
 
-  const skip = (page - 1) * limit;
-  const vendors = await User.find(filter)
-    .select('-password')
-    .sort('-createdAt')
-    .skip(skip)
-    .limit(parseInt(limit, 10));
-
-  const totalCount = await User.countDocuments(filter);
+  const [
+    totalVendors,
+    approvedVendors,
+    pendingVendors,
+    suspendedVendors,
+    vendors,
+    totalCount
+  ] = await Promise.all([
+    User.countDocuments({ role: 'vendor' }),
+    User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'approved' }),
+    User.countDocuments({ role: 'vendor', vendorApprovalStatus: { $in: ['pending', null, undefined] } }),
+    User.countDocuments({ role: 'vendor', vendorApprovalStatus: 'suspended' }),
+    User.find(filter)
+      .select('-password')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limitNum),
+    User.countDocuments(filter),
+  ]);
 
   const vendorIds = vendors.map(v => v._id);
   const productCounts = await Product.aggregate([
@@ -250,8 +280,8 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
     success: true,
     status: 'success',
     totalCount,
-    page: parseInt(page, 10),
-    totalPages: Math.ceil(totalCount / limit),
+    page: pageNum,
+    totalPages: Math.ceil(totalCount / limitNum),
     results: vendors.length,
     data: {
       vendors: vendorsWithCounts,
