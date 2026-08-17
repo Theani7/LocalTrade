@@ -111,7 +111,8 @@ function App() {
       const resData = await res.json();
       if (resData.status === 'success' || resData.success === true) {
         const arr = resData.data[stateKey] || resData.data.data || resData.data || resData.data.user || [];
-        setData(prev => ({ ...prev, [stateKey]: arr }));
+        const stats = resData.data.stats || null;
+        setData(prev => ({ ...prev, [stateKey]: arr, stats: { ...(prev.stats || {}), [stateKey]: stats } }));
       }
     } catch (err) { console.error(err); }
   };
@@ -311,7 +312,7 @@ function App() {
             {activeTab === 'overview' && <AnalyticsTab analytics={data.analytics} />}
             {activeTab === 'users' && <UsersTab users={data.users} filters={filters.users} setPage={(p) => setFilters(prev => ({...prev, users: {...prev.users, page: p}}))} onToggle={confirmUserToggle} />}
             {activeTab === 'vendors' && <VendorsTab vendors={data.vendors} filters={filters.vendors} setPage={(p) => setFilters(prev => ({...prev, vendors: {...prev.vendors, page: p}}))} onStatusChange={confirmVendorStatus} onView={(id) => loadDetail('vendor', id)} />}
-            {activeTab === 'products' && <ProductsTab products={data.products} filters={filters.products} setPage={(p) => setFilters(prev => ({...prev, products: {...prev.products, page: p}}))} onDelete={confirmProductDelete} onView={(id) => loadDetail('product', id)} />}
+            {activeTab === 'products' && <ProductsTab products={data.products} stats={data.stats?.products} filters={filters.products} setPage={(p) => setFilters(prev => ({...prev, products: {...prev.products, page: p}}))} onDelete={confirmProductDelete} onView={(id) => loadDetail('product', id)} />}
             {activeTab === 'orders' && <OrdersTab orders={data.orders} filters={filters.orders} setPage={(p) => setFilters(prev => ({...prev, orders: {...prev.orders, page: p}}))} onView={(id) => loadDetail('order', id)} />}
             {activeTab === 'categories' && <CategoriesTab categories={data.categories} onAdd={() => setCategoryModal({ isOpen: true, data: null })} onEdit={(c) => setCategoryModal({ isOpen: true, data: c })} />}
             {activeTab === 'feedback' && <FeedbackTab feedback={data.feedback} />}
@@ -563,11 +564,11 @@ function VendorsTab({ vendors, onStatusChange, onView, filters, setPage }) {
   );
 }
 
-function ProductsTab({ products, onDelete, onView, filters, setPage }) {
+function ProductsTab({ products, stats, onDelete, onView, filters, setPage }) {
   if (!products.length && filters.page === 1) return <TableSkeleton headers={['Product Name', 'Category', 'Price', 'Stock', 'Actions']} />;
   
-  const total = products.length;
-  const inStock = products.filter(p => p.stockQuantity > 0).length;
+  const total = stats?.totalProducts ?? products.length;
+  const inStock = stats?.availableProducts ?? products.filter(p => p.stockQuantity > 0).length;
 
   return (
     <div className="animate-fade-in">

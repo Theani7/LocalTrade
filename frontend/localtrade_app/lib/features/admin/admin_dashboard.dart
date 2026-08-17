@@ -1439,126 +1439,151 @@ class _AdminUsersTabState extends State<AdminUsersTab> with AutomaticKeepAliveCl
                 child: RefreshIndicator(
                   onRefresh: provider.fetchUsers,
                   color: AppColors.coral,
-                  child: ListView.separated(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
-                    itemCount: provider.users.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 56, endIndent: 14),
-                    itemBuilder: (context, index) {
-                      final user = provider.users[index];
-                      final isActive = user['isActive'] != false;
-                      final joinDate = user['createdAt'] != null ? _formatJoinDate(user['createdAt']) : '';
-                      final isToggling = _togglingUserId == user['_id'];
-
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        child: Row(
-                          children: [
-                            // Avatar
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.blueLight,
-                                shape: BoxShape.circle,
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200 &&
+                          provider.hasMoreUsers &&
+                          !provider.isFetchingMoreUsers) {
+                        provider.loadMoreUsers();
+                      }
+                      return false;
+                    },
+                    child: ListView.separated(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
+                      itemCount: provider.users.length + (provider.isFetchingMoreUsers ? 1 : 0),
+                      separatorBuilder: (_, index) {
+                        if (index >= provider.users.length) return const SizedBox.shrink();
+                        return const Divider(height: 1, indent: 56, endIndent: 14);
+                      },
+                      itemBuilder: (context, index) {
+                        if (index == provider.users.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral),
                               ),
-                              child: Center(
-                                child: Text(
-                                  _getInitials(user['fullName'] ?? ''),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.blueDark,
+                            ),
+                          );
+                        }
+                        final user = provider.users[index];
+                        final isActive = user['isActive'] != false;
+                        final joinDate = user['createdAt'] != null ? _formatJoinDate(user['createdAt']) : '';
+                        final isToggling = _togglingUserId == user['_id'];
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          child: Row(
+                            children: [
+                              // Avatar
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.blueLight,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _getInitials(user['fullName'] ?? ''),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.blueDark,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Name + email + join date
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    user['fullName'] ?? '',
-                                    style: AppTextStyles.cardTitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    user['email'] ?? '',
-                                    style: AppTextStyles.caption,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (joinDate.isNotEmpty) ...[
+                              const SizedBox(width: 12),
+                              // Name + email + join date
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user['fullName'] ?? '',
+                                      style: AppTextStyles.cardTitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      'Joined $joinDate',
-                                      style: AppTextStyles.caption.copyWith(fontSize: 11),
+                                      user['email'] ?? '',
+                                      style: AppTextStyles.caption,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            // Status + actions
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: isActive ? AppColors.successLight : AppColors.mutedLight,
-                                    borderRadius: BorderRadius.circular(100),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                                        size: 10,
-                                        color: isActive ? AppColors.successDark : AppColors.muted,
-                                      ),
-                                      const SizedBox(width: 3),
+                                    if (joinDate.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
                                       Text(
-                                        isActive ? 'Active' : 'Inactive',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color: isActive ? AppColors.successDark : AppColors.muted,
-                                        ),
+                                        'Joined $joinDate',
+                                        style: AppTextStyles.caption.copyWith(fontSize: 11),
                                       ),
                                     ],
-                                  ),
+                                  ],
                                 ),
-                                const SizedBox(height: 6),
-                                GestureDetector(
-                                  onTap: isToggling ? null : () => _toggleUserStatus(context, user, provider),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              ),
+                              // Status + actions
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: isActive ? null : AppColors.successLight,
-                                      border: isActive ? Border.all(color: AppColors.divider) : null,
+                                      color: isActive ? AppColors.successLight : AppColors.mutedLight,
                                       borderRadius: BorderRadius.circular(100),
                                     ),
-                                    child: isToggling
-                                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
-                                        : Text(
-                                            isActive ? 'Deactivate' : 'Activate',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
-                                              color: isActive ? AppColors.muted : AppColors.successDark,
-                                            ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                                          size: 10,
+                                          color: isActive ? AppColors.successDark : AppColors.muted,
+                                        ),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          isActive ? 'Active' : 'Inactive',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            color: isActive ? AppColors.successDark : AppColors.muted,
                                           ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    );
-                  },
+                                  const SizedBox(height: 6),
+                                  GestureDetector(
+                                    onTap: isToggling ? null : () => _toggleUserStatus(context, user, provider),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: isActive ? null : AppColors.successLight,
+                                        border: isActive ? Border.all(color: AppColors.divider) : null,
+                                        borderRadius: BorderRadius.circular(100),
+                                      ),
+                                      child: isToggling
+                                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                          : Text(
+                                              isActive ? 'Deactivate' : 'Activate',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                                color: isActive ? AppColors.muted : AppColors.successDark,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                    ),
                   ),
                 ),
               ),
@@ -1878,10 +1903,32 @@ class _AdminVendorsTabState extends State<AdminVendorsTab> with AutomaticKeepAli
       items.add(const SizedBox(height: 8));
       items.addAll(filteredList.map((v) => _buildApprovedVendorCard(context, v, provider)));
     }
-    return ListView.builder(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
-      itemCount: items.length,
-      itemBuilder: (_, i) => items[i],
+    if (provider.isFetchingMoreVendors) {
+      items.add(const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral),
+          ),
+        ),
+      ));
+    }
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200 &&
+            provider.hasMoreVendors &&
+            !provider.isFetchingMoreVendors) {
+          provider.loadMoreVendors();
+        }
+        return false;
+      },
+      child: ListView.builder(
+        padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
+        itemCount: items.length,
+        itemBuilder: (_, i) => items[i],
+      ),
     );
   }
 
@@ -2340,96 +2387,121 @@ class _AdminProductsTabState extends State<AdminProductsTab> with AutomaticKeepA
                 child: RefreshIndicator(
                   onRefresh: () => provider.fetchProducts(search: _searchController.text.isEmpty ? null : _searchController.text),
                   color: AppColors.coral,
-                  child: ListView.separated(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
-                    itemCount: provider.products.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 68, endIndent: 14),
-                    itemBuilder: (context, index) {
-                      final product = provider.products[index];
-                      final isAvailable = (product['stockQuantity'] ?? 0) > 0 && product['productStatus'] != 'unavailable';
-                      final isDeleting = _deletingProductId == product['_id'];
-
-                      return GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          SlideFadePageRoute(builder: (_) => AdminProductDetailScreen(productId: product['_id'])),
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          child: Row(
-                            children: [
-                              // Thumbnail
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Container(
-                                  width: 44,
-                                  height: 44,
-                                  color: AppColors.background,
-                                  child: product['images'] != null && product['images'].isNotEmpty
-                                      ? Image.network(product['images'][0], fit: BoxFit.cover)
-                                      : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 18),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              // Name + vendor
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      product['title'] ?? '',
-                                      style: AppTextStyles.cardTitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      product['vendorId']?['shopName'] ?? product['vendorId']?['fullName'] ?? 'Vendor',
-                                      style: AppTextStyles.caption,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Price + status + delete
-                              Flexible(
-                                fit: FlexFit.loose,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                        const SizedBox(height: 4),
-                                        _buildProductStatusChip(isAvailable),
-                                      ],
-                                    ),
-                                    const SizedBox(width: 8),
-                                    GestureDetector(
-                                      onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: isDeleting ? AppColors.mutedLight : AppColors.dangerLight,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: isDeleting
-                                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
-                                            : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200 &&
+                          provider.hasMoreProducts &&
+                          !provider.isFetchingMoreProducts) {
+                        provider.loadMoreProducts(search: _searchController.text.isEmpty ? null : _searchController.text);
+                      }
+                      return false;
                     },
+                    child: ListView.separated(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 80),
+                      itemCount: provider.products.length + (provider.isFetchingMoreProducts ? 1 : 0),
+                      separatorBuilder: (_, index) {
+                        if (index >= provider.products.length) return const SizedBox.shrink();
+                        return const Divider(height: 1, indent: 68, endIndent: 14);
+                      },
+                      itemBuilder: (context, index) {
+                        if (index == provider.products.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral),
+                              ),
+                            ),
+                          );
+                        }
+                        final product = provider.products[index];
+                        final isAvailable = (product['stockQuantity'] ?? 0) > 0 && product['productStatus'] != 'unavailable';
+                        final isDeleting = _deletingProductId == product['_id'];
+
+                        return GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            SlideFadePageRoute(builder: (_) => AdminProductDetailScreen(productId: product['_id'])),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            child: Row(
+                              children: [
+                                // Thumbnail
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    color: AppColors.background,
+                                    child: product['images'] != null && product['images'].isNotEmpty
+                                        ? Image.network(product['images'][0], fit: BoxFit.cover)
+                                        : const Icon(Icons.inventory_2_outlined, color: AppColors.muted, size: 18),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Name + vendor
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        product['title'] ?? '',
+                                        style: AppTextStyles.cardTitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        product['vendorId']?['shopName'] ?? product['vendorId']?['fullName'] ?? 'Vendor',
+                                        style: AppTextStyles.caption,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Price + status + delete
+                                Flexible(
+                                  fit: FlexFit.loose,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text('Rs. ${product['price']}${(product['priceUnit'] ?? 'piece') != 'piece' ? '/${_unitLabel(product['priceUnit'] ?? 'piece')}' : ''}', style: AppTextStyles.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                          const SizedBox(height: 4),
+                                          _buildProductStatusChip(isAvailable),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: isDeleting ? null : () => _showDeleteDialog(context, product, provider),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: isDeleting ? AppColors.mutedLight : AppColors.dangerLight,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: isDeleting
+                                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.muted))
+                                              : const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -2653,80 +2725,105 @@ class _AdminOrdersTabState extends State<AdminOrdersTab> with AutomaticKeepAlive
                 color: AppColors.coral,
                 child: filteredOrders.isEmpty
                     ? Center(child: Text('No $_selectedFilter orders', style: AppTextStyles.bodyMuted))
-                    : ListView.separated(
-                        padding: EdgeInsets.fromLTRB(
-                          16,
-                          0,
-                          16,
-                          MediaQuery.of(context).padding.bottom + 80,
-                        ),
-                        itemCount: filteredOrders.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1, indent: 14, endIndent: 14),
-                        itemBuilder: (context, index) {
-                          final order = filteredOrders[index];
-                          return Container(
-                            padding: const EdgeInsets.all(14),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '#${(() { final id = order['_id'].toString(); return id.length > 6 ? id.substring(id.length - 6) : id; })().toUpperCase()}',
-                                      style: AppTextStyles.label.copyWith(color: AppColors.muted),
-                                    ),
-                                    StatusBadge(status: _mapStatus(order['orderStatus'])),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.muted),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        order['customerId']?['fullName'] ?? 'Customer',
-                                        style: AppTextStyles.cardTitle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.storefront_rounded, size: 16, color: AppColors.muted),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        order['vendorId']?['shopName'] ?? 'Vendor',
-                                        style: AppTextStyles.bodyMuted,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '${order['products']?.length ?? 0} items',
-                                      style: AppTextStyles.caption,
-                                    ),
-                                    Text(
-                                      'Rs. ${order['totalAmount']}',
-                                      style: AppTextStyles.price,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
+                    : NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200 &&
+                              provider.hasMoreOrders &&
+                              !provider.isFetchingMoreOrders) {
+                            provider.loadMoreOrders();
+                          }
+                          return false;
                         },
+                        child: ListView.separated(
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            0,
+                            16,
+                            MediaQuery.of(context).padding.bottom + 80,
+                          ),
+                          itemCount: filteredOrders.length + (provider.isFetchingMoreOrders ? 1 : 0),
+                          separatorBuilder: (_, index) {
+                            if (index >= filteredOrders.length) return const SizedBox.shrink();
+                            return const Divider(height: 1, indent: 14, endIndent: 14);
+                          },
+                          itemBuilder: (context, index) {
+                            if (index == filteredOrders.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.coral),
+                                  ),
+                                ),
+                              );
+                            }
+                            final order = filteredOrders[index];
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '#${(() { final id = order['_id'].toString(); return id.length > 6 ? id.substring(id.length - 6) : id; })().toUpperCase()}',
+                                        style: AppTextStyles.label.copyWith(color: AppColors.muted),
+                                      ),
+                                      StatusBadge(status: _mapStatus(order['orderStatus'])),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.muted),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          order['customerId']?['fullName'] ?? 'Customer',
+                                          style: AppTextStyles.cardTitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.storefront_rounded, size: 16, color: AppColors.muted),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          order['vendorId']?['shopName'] ?? 'Vendor',
+                                          style: AppTextStyles.bodyMuted,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '${order['products']?.length ?? 0} items',
+                                        style: AppTextStyles.caption,
+                                      ),
+                                      Text(
+                                        'Rs. ${order['totalAmount']}',
+                                        style: AppTextStyles.price,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
               ),
             ),

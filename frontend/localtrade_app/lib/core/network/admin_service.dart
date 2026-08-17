@@ -19,9 +19,10 @@ class AdminService {
     }
   }
 
-  Future<Map<String, dynamic>> getAllUsers({String? search, String? role, int page = 1}) async {
+  Future<Map<String, dynamic>> getAllUsers({String? search, String? role, int page = 1, int? limit}) async {
     final token = await _authService.getToken();
     String query = '?page=$page';
+    if (limit != null) query += '&limit=$limit';
     if (search != null && search.isNotEmpty) query += '&search=$search';
     if (role != null && role != 'All') query += '&role=$role';
 
@@ -37,9 +38,10 @@ class AdminService {
     }
   }
 
-  Future<Map<String, dynamic>> getAllVendors({String? search, String? status, int page = 1}) async {
+  Future<Map<String, dynamic>> getAllVendors({String? search, String? status, int page = 1, int? limit}) async {
     final token = await _authService.getToken();
     String query = '?page=$page';
+    if (limit != null) query += '&limit=$limit';
     if (search != null && search.isNotEmpty) query += '&search=$search';
     if (status != null && status != 'All') query += '&status=$status';
 
@@ -55,9 +57,10 @@ class AdminService {
     }
   }
 
-  Future<Map<String, dynamic>> getAllProducts({String? search, String? category, int page = 1}) async {
+  Future<Map<String, dynamic>> getAllProducts({String? search, String? category, int page = 1, int? limit}) async {
     final token = await _authService.getToken();
     String query = '?page=$page';
+    if (limit != null) query += '&limit=$limit';
     if (search != null && search.isNotEmpty) query += '&search=$search';
     if (category != null && category != 'All') query += '&category=$category';
 
@@ -73,9 +76,10 @@ class AdminService {
     }
   }
 
-  Future<Map<String, dynamic>> getAllOrders({String? search, String? status, int page = 1}) async {
+  Future<Map<String, dynamic>> getAllOrders({String? search, String? status, int page = 1, int? limit}) async {
     final token = await _authService.getToken();
     String query = '?page=$page';
+    if (limit != null) query += '&limit=$limit';
     if (search != null && search.isNotEmpty) query += '&search=$search';
     if (status != null && status != 'All') query += '&status=$status';
 

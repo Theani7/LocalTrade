@@ -269,7 +269,7 @@ exports.getAllVendors = catchAsync(async (req, res, next) => {
 // @route   GET /api/v1/admin/products
 // @access  Private/Admin
 exports.getAllProducts = catchAsync(async (req, res, next) => {
-  const { search, category, page = 1, limit = 10 } = req.query;
+  const { search, category, page = 1, limit = 20 } = req.query;
   const filter = {};
 
   const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -286,25 +286,28 @@ exports.getAllProducts = catchAsync(async (req, res, next) => {
     filter.category = category;
   }
 
-  const totalProducts = await Product.countDocuments();
-  const availableProducts = await Product.countDocuments({ productStatus: 'Available' });
-  const unavailableProducts = await Product.countDocuments({ productStatus: { $in: ['OutOfStock', 'Inactive'] } });
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+  const skip = (pageNum - 1) * limitNum;
 
-  const skip = (page - 1) * limit;
-  const products = await Product.find(filter)
-    .populate('vendorId', 'fullName shopName')
-    .sort('-createdAt')
-    .skip(skip)
-    .limit(parseInt(limit, 10));
-
-  const totalCount = await Product.countDocuments(filter);
+  const [products, totalCount, totalProducts, availableProducts, unavailableProducts] = await Promise.all([
+    Product.find(filter)
+      .populate('vendorId', 'fullName shopName')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(limitNum),
+    Product.countDocuments(filter),
+    Product.countDocuments(),
+    Product.countDocuments({ productStatus: 'Available' }),
+    Product.countDocuments({ productStatus: { $in: ['OutOfStock', 'Inactive'] } }),
+  ]);
 
   res.status(200).json({
     success: true,
     status: 'success',
     totalCount,
-    page: parseInt(page, 10),
-    totalPages: Math.ceil(totalCount / limit),
+    page: pageNum,
+    totalPages: Math.ceil(totalCount / limitNum),
     results: products.length,
     data: {
       products,
