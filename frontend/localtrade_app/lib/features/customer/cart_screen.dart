@@ -214,10 +214,15 @@ class _CartBodyState extends State<CartBody> {
     const deliveryFee = 0.0;
     final total = subtotal + deliveryFee;
 
+    final isStandalone = Navigator.canPop(context);
+    final double bottomPadding = isStandalone
+        ? 24.0
+        : MediaQuery.of(context).padding.bottom + 84.0;
+
     return FadeSlideIn(
       duration: const Duration(milliseconds: 300),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
         decoration: const BoxDecoration(
           color: AppColors.surface,
           border: Border(

@@ -213,9 +213,11 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
       color: AppColors.coral,
       backgroundColor: AppColors.surface,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.screenPaddingH,
-          vertical: AppSpacing.screenPaddingTop,
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.screenPaddingH,
+          AppSpacing.screenPaddingTop,
+          AppSpacing.screenPaddingH,
+          MediaQuery.of(context).padding.bottom + 100,
         ),
         itemCount: orderProvider.orders.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),

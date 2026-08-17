@@ -413,7 +413,7 @@ class VendorOverviewTab extends StatelessWidget {
                 ),
               ),
 
-              SliverToBoxAdapter(child: SizedBox(height: MediaQuery.of(context).padding.bottom + 80)),
+              SliverToBoxAdapter(child: SizedBox(height: MediaQuery.of(context).padding.bottom + 100)),
             ],
           ),
         );
@@ -729,7 +729,7 @@ class _OverviewSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 80),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

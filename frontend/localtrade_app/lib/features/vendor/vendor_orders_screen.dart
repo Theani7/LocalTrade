@@ -37,14 +37,26 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, _) {
           if (orderProvider.isLoading && orderProvider.vendorOrders.isEmpty) {
-            return const OrderCardSkeleton();
+            return Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 100),
+              child: const Column(
+                children: [
+                  OrderCardSkeleton(),
+                  SizedBox(height: 12),
+                  OrderCardSkeleton(),
+                ],
+              ),
+            );
           }
 
           if (orderProvider.vendorOrders.isEmpty) {
-            return const EmptyState(
-              icon: Icons.receipt_long_outlined,
-              title: 'No orders yet',
-              message: 'Orders from customers will appear here.',
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60),
+              child: const EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title: 'No orders yet',
+                message: 'Orders from customers will appear here.',
+              ),
             );
           }
 
@@ -69,8 +81,9 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                       color: AppColors.coral,
                       child: filtered.isEmpty
                           ? SingleChildScrollView(
-                              child: Column(
-                                children: const [
+                              padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80),
+                              child: const Column(
+                                children: [
                                   SizedBox(height: 80),
                                   EmptyState(
                                     icon: Icons.receipt_long_outlined,
@@ -91,7 +104,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                                 return false;
                               },
                               child: ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                                padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).padding.bottom + 100),
                                 itemCount: filtered.length + (orderProvider.hasMore ? 1 : 0),
                                 itemBuilder: (context, index) {
                                   if (index == filtered.length) {

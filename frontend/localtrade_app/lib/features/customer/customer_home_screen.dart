@@ -469,6 +469,9 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
               ),
             ),
           ),
+        SliverToBoxAdapter(
+          child: SizedBox(height: MediaQuery.of(context).padding.bottom + 90),
+        ),
       ],
     );
   }

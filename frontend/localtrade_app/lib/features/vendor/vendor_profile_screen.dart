@@ -305,7 +305,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           _buildHeader(canGoBack),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+              padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -385,7 +385,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                   _buildUpdateSection(),
                   const SizedBox(height: 16),
                   _buildLogoutSection(),
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -1445,7 +1445,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     return Consumer<VendorProvider>(
       builder: (context, provider, _) {
         return Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            MediaQuery.of(context).padding.bottom + 90,
+          ),
           decoration: const BoxDecoration(
             color: AppColors.surface,
             border: Border(

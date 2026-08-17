@@ -81,19 +81,25 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
               child: Consumer<ProductProvider>(
                 builder: (context, provider, _) {
                   if (provider.isLoading && provider.myProducts.isEmpty) {
-                    return const ListSkeleton(itemCount: 4);
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 100),
+                      child: const ListSkeleton(itemCount: 4),
+                    );
                   }
 
                   if (provider.myProducts.isEmpty) {
-                    return EmptyState(
-                      icon: Icons.inventory_2_outlined,
-                      title: 'No products yet',
-                      message: 'Add products to start managing your inventory.',
-                      onAction: () => Navigator.push(
-                        context,
-                        SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60),
+                      child: EmptyState(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'No products yet',
+                        message: 'Add products to start managing your inventory.',
+                        onAction: () => Navigator.push(
+                          context,
+                          SlideFadePageRoute(builder: (_) => const AddEditProductScreen()),
+                        ),
+                        actionLabel: 'Add product',
                       ),
-                      actionLabel: 'Add product',
                     );
                   }
 
@@ -101,16 +107,19 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
 
                   if (filtered.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.search_off_rounded, size: 48, color: AppColors.muted.withValues(alpha: 0.5)),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No products match this filter',
-                            style: AppTextStyles.bodyMuted,
-                          ),
-                        ],
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 60),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.search_off_rounded, size: 48, color: AppColors.muted.withValues(alpha: 0.5)),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No products match this filter',
+                              style: AppTextStyles.bodyMuted,
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }
@@ -129,7 +138,7 @@ class _VendorInventoryScreenState extends State<VendorInventoryScreen> {
                         return false;
                       },
                       child: ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                        padding: EdgeInsets.fromLTRB(16, 14, 16, MediaQuery.of(context).padding.bottom + 100),
                         itemCount: filtered.length + 1 + (provider.myHasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == filtered.length) {
