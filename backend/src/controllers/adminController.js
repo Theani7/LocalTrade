@@ -67,11 +67,28 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
     { $sort: { revenue: -1 } }
   ]);
 
+  // Helper to ensure continuous 7-day timeline with 0 values for inactive days
+  const fill7DayTimeline = (rawStats, defaultFields = { count: 0 }) => {
+    const map = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      map[dateStr] = { _id: dateStr, ...defaultFields };
+    }
+    for (const stat of rawStats) {
+      if (map[stat._id]) {
+        map[stat._id] = stat;
+      }
+    }
+    return Object.values(map);
+  };
+
   // Orders per day (last 7 days)
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   
-  const dailyStats = await Order.aggregate([
+  const rawDailyStats = await Order.aggregate([
     { $match: { createdAt: { $gte: sevenDaysAgo } } },
     {
       $group: {
@@ -86,8 +103,9 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
     },
     { $sort: { _id: 1 } }
   ]);
+  const dailyStats = fill7DayTimeline(rawDailyStats, { count: 0, revenue: 0 });
 
-  const userDailyStats = await User.aggregate([
+  const rawUserDailyStats = await User.aggregate([
     { $match: { createdAt: { $gte: sevenDaysAgo } } },
     {
       $group: {
@@ -97,8 +115,9 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
     },
     { $sort: { _id: 1 } }
   ]);
+  const userDailyStats = fill7DayTimeline(rawUserDailyStats, { count: 0 });
 
-  const productDailyStats = await Product.aggregate([
+  const rawProductDailyStats = await Product.aggregate([
     { $match: { createdAt: { $gte: sevenDaysAgo } } },
     {
       $group: {
@@ -108,6 +127,7 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
     },
     { $sort: { _id: 1 } }
   ]);
+  const productDailyStats = fill7DayTimeline(rawProductDailyStats, { count: 0 });
 
   const recentOrders = await Order.find()
     .populate('customerId', 'fullName')
