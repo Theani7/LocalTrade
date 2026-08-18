@@ -112,8 +112,8 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Health Check Route
-app.get('/health', (req, res) => {
+// Health Check Route (handles both /health and /api/v1/health)
+app.get(['/health', '/api/v1/health'], (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'LocalTrade API is healthy and running',

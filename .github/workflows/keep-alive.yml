@@ -1,0 +1,24 @@
+name: Backend Keep-Alive
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free instance from sleeping
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping-backend:
+    name: Keep Alive Ping
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Health Check
+        run: |
+          echo "Pinging LocalTrade backend at $(date)..."
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" https://localtrade-backend-jg9l.onrender.com/health)
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | tr -d '\r' | grep "HTTP_STATUS" | cut -d':' -f2)
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "Backend is awake and responding (Status: $STATUS)"
+          else
+            echo "Backend responded with error status: $STATUS (or is waking up)"
+          fi
