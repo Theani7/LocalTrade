@@ -479,8 +479,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                       child: OutlinedButton(
                         onPressed: _updatingOrderId != null
                             ? null
-                            : () => _updateStatus(
-                                order['_id'], 'Cancelled', context),
+                            : () => _confirmReject(order['_id']),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.muted,
                           disabledForegroundColor: AppColors.muted
@@ -517,7 +516,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                         onPressed: _updatingOrderId != null
                             ? null
                             : () => _updateStatus(
-                                order['_id'], 'Confirmed', context),
+                                order['_id'], 'Confirmed'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.coral,
                           disabledBackgroundColor:
@@ -560,7 +559,7 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
                   onPressed: _updatingOrderId != null
                       ? null
                       : () => _updateStatus(
-                          order['_id'], 'Delivered', context),
+                          order['_id'], 'Delivered'),
                   icon: _updatingOrderId == order['_id']
                       ? const SizedBox(
                           width: 16,
@@ -618,9 +617,52 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
     );
   }
 
-  Future<void> _updateStatus(
-      String orderId, String status, BuildContext context) async {
+  Future<void> _confirmReject(String orderId) async {
+    final shortId = orderId.length > 6
+        ? orderId.substring(orderId.length - 6).toUpperCase()
+        : orderId;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        backgroundColor: AppColors.surface,
+        title: Text('Reject order #$shortId?', style: AppTextStyles.cardTitle),
+        content: Text(
+          'Are you sure you want to reject this order? The order will be cancelled and item quantities will be restored to your inventory stock.',
+          style: AppTextStyles.body.copyWith(color: AppColors.muted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
+            child: Text('Cancel',
+                style: AppTextStyles.label.copyWith(color: AppColors.muted)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+            ),
+            child: const Text('Reject order'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      _updateStatus(orderId, 'Cancelled');
+    }
+  }
+
+  Future<void> _updateStatus(String orderId, String status) async {
     if (_updatingOrderId != null) return;
+    if (!mounted) return;
 
     setState(() => _updatingOrderId = orderId);
 

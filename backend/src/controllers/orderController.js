@@ -322,7 +322,8 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   }
 
   if (status === 'Cancelled') {
-    return next(new AppError('Cancellation must be done through the cancel endpoint so stock is restored', 400));
+    // If status is updated to Cancelled, perform full cancellation and stock rollback
+    return exports.cancelOrder(req, res, next);
   }
 
   const statusValues = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
@@ -358,7 +359,7 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc    Cancel order (Customer/Admin)
+// @desc    Cancel/Reject order (Customer/Vendor/Admin)
 // @route   PATCH /api/v1/orders/:id/cancel
 // @access  Private
 exports.cancelOrder = catchAsync(async (req, res, next) => {
@@ -368,13 +369,22 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('No order found with that ID', 404));
   }
 
-  // Only customer or admin can cancel
-  if (order.customerId.toString() !== req.user.id && req.user.role !== 'admin') {
+  const isCustomer = order.customerId.toString() === req.user.id;
+  const isVendor = order.vendorId.toString() === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+
+  // Only customer, vendor, or admin can cancel
+  if (!isCustomer && !isVendor && !isAdmin) {
     return next(new AppError('You are not authorized to cancel this order', 403));
   }
 
+  // Cannot cancel already delivered or cancelled order
+  if (order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled') {
+    return next(new AppError('Cannot cancel a delivered or already cancelled order', 400));
+  }
+
   // Customer can only cancel Pending orders
-  if (order.orderStatus !== 'Pending' && req.user.role !== 'admin') {
+  if (isCustomer && !isAdmin && order.orderStatus !== 'Pending') {
     return next(new AppError('Order cannot be cancelled after confirmation', 400));
   }
 
@@ -382,7 +392,7 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
     req.params.id,
     {
       orderStatus: 'Cancelled',
-      cancellationReason: req.body.reason || undefined,
+      cancellationReason: req.body.reason || (isVendor ? 'Rejected by vendor' : undefined),
       cancellationFeedback: req.body.feedback || undefined,
     },
     { new: true, runValidators: false }
@@ -407,14 +417,40 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
     }
   }
 
-  // Send notification to vendor
-  await sendNotification(
-    order.vendorId,
-    'Order cancelled by customer',
-    `Order #${order._id.toString().substring(18)} was cancelled. Stock has been restored.`,
-    { orderId: order._id.toString(), type: 'order_cancelled' },
-    'Order'
-  );
+  // Send appropriate notifications
+  if (isCustomer) {
+    await sendNotification(
+      order.vendorId,
+      'Order cancelled by customer',
+      `Order #${order._id.toString().substring(18)} was cancelled by the customer. Stock has been restored.`,
+      { orderId: order._id.toString(), type: 'order_cancelled' },
+      'Order'
+    );
+  } else if (isVendor) {
+    await sendNotification(
+      order.customerId,
+      'Order rejected by vendor',
+      `Your order #${order._id.toString().substring(18)} was rejected by the vendor.`,
+      { orderId: order._id.toString(), type: 'order_cancelled' },
+      'Order'
+    );
+  } else {
+    // Admin cancelled - notify both
+    await sendNotification(
+      order.customerId,
+      'Order cancelled by admin',
+      `Your order #${order._id.toString().substring(18)} was cancelled by support.`,
+      { orderId: order._id.toString(), type: 'order_cancelled' },
+      'Order'
+    );
+    await sendNotification(
+      order.vendorId,
+      'Order cancelled by admin',
+      `Order #${order._id.toString().substring(18)} was cancelled by support. Stock has been restored.`,
+      { orderId: order._id.toString(), type: 'order_cancelled' },
+      'Order'
+    );
+  }
 
   res.status(200).json({
     success: true,

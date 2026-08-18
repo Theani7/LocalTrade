@@ -122,4 +122,49 @@ describe('Orders API', () => {
 
     expect(res.statusCode).toBe(403);
   });
+
+  test('Should allow vendor to reject/cancel order via /cancel route and restore stock', async () => {
+    const res = await request(app)
+      .patch(`/api/v1/orders/${orderId}/cancel`)
+      .set('Authorization', `Bearer ${vendorToken}`)
+      .send({
+        reason: 'Out of ingredients'
+      });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.order.orderStatus).toBe('Cancelled');
+    expect(res.body.data.order.cancellationReason).toBe('Out of ingredients');
+
+    const Product = require('../src/models/productModel');
+    const updatedProd = await Product.findById(productId);
+    expect(updatedProd.stockQuantity).toBe(10);
+  });
+
+  test('Should allow vendor to reject/cancel order via /status route and restore stock', async () => {
+    // Create another order to test /status cancellation
+    const oRes = await request(app)
+      .post('/api/v1/orders')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        items: [{ productId: productId, quantity: 2, vendorId: vendorId }],
+        shippingAddress: { fullName: 'Order Customer', phone: '9822222222', street: 'Street 1', city: 'Kathmandu', state: 'Bagmati', zipCode: '44600' },
+        phone: '9822222222'
+      });
+
+    const newOrderId = oRes.body.data.order._id;
+
+    const res = await request(app)
+      .patch(`/api/v1/orders/${newOrderId}/status`)
+      .set('Authorization', `Bearer ${vendorToken}`)
+      .send({
+        status: 'Cancelled'
+      });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.data.order.orderStatus).toBe('Cancelled');
+
+    const Product = require('../src/models/productModel');
+    const updatedProd = await Product.findById(productId);
+    expect(updatedProd.stockQuantity).toBe(9);
+  });
 });
