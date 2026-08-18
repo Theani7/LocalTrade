@@ -45,7 +45,21 @@ class _MyWishlistScreenState extends State<MyWishlistScreen> {
           }
 
           if (provider.items.isEmpty) {
-            return _buildEmptyState();
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                return RefreshIndicator(
+                  onRefresh: () => provider.loadWishlist(),
+                  color: AppColors.coral,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: _buildEmptyState(),
+                    ),
+                  ),
+                );
+              },
+            );
           }
 
           return RefreshIndicator(

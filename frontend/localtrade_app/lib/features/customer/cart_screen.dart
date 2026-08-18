@@ -745,7 +745,13 @@ class _EmptyCartBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          32,
+          16,
+          32,
+          MediaQuery.of(context).padding.bottom + 100,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

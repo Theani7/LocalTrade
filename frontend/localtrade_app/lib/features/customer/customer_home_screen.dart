@@ -320,7 +320,13 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
   Widget _buildProductList(ProductProvider provider) {
     if (provider.isLoading && provider.products.isEmpty) {
       return ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          8,
+          16,
+          MediaQuery.of(context).padding.bottom + 100,
+        ),
         itemCount: 6,
         itemBuilder: (_, __) => const Padding(
           padding: EdgeInsets.only(bottom: 12),
@@ -330,40 +336,56 @@ class CustomerHomeBodyState extends State<CustomerHomeBody> {
     }
 
     if (provider.error != null && provider.products.isEmpty) {
-      return SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.15,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom + 100,
+                ),
+                child: Center(
+                  child: EmptyState(
+                    icon: Icons.error_outline_rounded,
+                    title: 'Something went wrong',
+                    message: provider.error!,
+                    onAction: () => _fetchProducts(),
+                    actionLabel: 'Try again',
+                  ),
+                ),
+              ),
             ),
-            EmptyState(
-              icon: Icons.error_outline_rounded,
-              title: 'Something went wrong',
-              message: provider.error!,
-              onAction: () => _fetchProducts(),
-              actionLabel: 'Try again',
-            ),
-          ],
-        ),
+          );
+        },
       );
     }
 
     if (provider.products.isEmpty) {
-      return SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.15,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom + 100,
+                ),
+                child: Center(
+                  child: EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'No products found',
+                    message: 'Try adjusting your search or categories.',
+                    onAction: _clearAllFilters,
+                    actionLabel: 'View all products',
+                  ),
+                ),
+              ),
             ),
-            EmptyState(
-              icon: Icons.search_off_rounded,
-              title: 'No products found',
-              message: 'Try adjusting your search or categories.',
-              onAction: _clearAllFilters,
-              actionLabel: 'View all products',
-            ),
-          ],
-        ),
+          );
+        },
       );
     }
 

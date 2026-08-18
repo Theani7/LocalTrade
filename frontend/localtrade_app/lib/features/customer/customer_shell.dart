@@ -70,7 +70,10 @@ class _CustomerShellState extends State<CustomerShell> {
                           onCategoryTap: _onCategoryTap,
                         )
                       : _currentIndex == 2
-                          ? const CustomerOrdersBody(key: ValueKey('orders_tab'))
+                          ? CustomerOrdersBody(
+                              key: const ValueKey('orders_tab'),
+                              onBrowseProducts: () => _switchTab(0),
+                            )
                           : const CustomerProfileBody(key: ValueKey('profile_tab')),
             ),
           ),

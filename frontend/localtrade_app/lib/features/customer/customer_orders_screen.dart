@@ -48,7 +48,9 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
 // CustomerOrdersBody — reusable content widget (used by CustomerShell)
 // ═════════════════════════════════════════════════════════════════════════════
 class CustomerOrdersBody extends StatefulWidget {
-  const CustomerOrdersBody({super.key});
+  final VoidCallback? onBrowseProducts;
+
+  const CustomerOrdersBody({super.key, this.onBrowseProducts});
 
   @override
   State<CustomerOrdersBody> createState() => _CustomerOrdersBodyState();
@@ -198,13 +200,72 @@ class _CustomerOrdersBodyState extends State<CustomerOrdersBody> {
       return const OrderCardSkeleton();
     }
 
+    if (orderProvider.error != null && orderProvider.orders.isEmpty) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return RefreshIndicator(
+            onRefresh: () async => orderProvider.fetchMyOrders(),
+            color: AppColors.coral,
+            backgroundColor: AppColors.surface,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 100,
+                  ),
+                  child: Center(
+                    child: EmptyState(
+                      icon: Icons.error_outline_rounded,
+                      title: 'Something went wrong',
+                      message: orderProvider.error!,
+                      onAction: () => orderProvider.fetchMyOrders(),
+                      actionLabel: 'Try again',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     if (orderProvider.orders.isEmpty) {
-      return EmptyState(
-        icon: Icons.receipt_long_outlined,
-        title: 'No orders yet',
-        message: 'Place your first order to see it here.',
-        onAction: () {},
-        actionLabel: 'Browse products',
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return RefreshIndicator(
+            onRefresh: () async => orderProvider.fetchMyOrders(),
+            color: AppColors.coral,
+            backgroundColor: AppColors.surface,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 100,
+                  ),
+                  child: Center(
+                    child: EmptyState(
+                      icon: Icons.receipt_long_outlined,
+                      title: 'No orders yet',
+                      message: 'Place your first order to see it here.',
+                      onAction: widget.onBrowseProducts ??
+                          () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          },
+                      actionLabel: 'Browse products',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       );
     }
 

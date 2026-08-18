@@ -198,18 +198,58 @@ class VendorOverviewTab extends StatelessWidget {
         if (provider.isLoading) return const _OverviewSkeleton();
 
         if (provider.error != null) {
-          return EmptyState(
-            icon: Icons.error_outline_rounded,
-            title: 'Failed to load data',
-            message: provider.error!,
-            onAction: () => provider.fetchAnalytics(),
-            actionLabel: 'Retry',
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return RefreshIndicator(
+                onRefresh: provider.fetchAnalytics,
+                color: AppColors.coral,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom + 100,
+                      ),
+                      child: Center(
+                        child: EmptyState(
+                          icon: Icons.error_outline_rounded,
+                          title: 'Failed to load data',
+                          message: provider.error!,
+                          onAction: () => provider.fetchAnalytics(),
+                          actionLabel: 'Retry',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           );
         }
 
         if (provider.analytics == null) {
-          return Center(
-            child: Text('No data available', style: AppTextStyles.bodyMuted),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return RefreshIndicator(
+                onRefresh: provider.fetchAnalytics,
+                color: AppColors.coral,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom + 100,
+                      ),
+                      child: Center(
+                        child: Text('No data available', style: AppTextStyles.bodyMuted),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           );
         }
 

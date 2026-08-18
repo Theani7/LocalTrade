@@ -50,7 +50,21 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
           }
 
           if (provider.myReviews.isEmpty) {
-            return _buildEmptyState();
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                return RefreshIndicator(
+                  onRefresh: () => provider.fetchMyReviews(),
+                  color: AppColors.coral,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: _buildEmptyState(),
+                    ),
+                  ),
+                );
+              },
+            );
           }
 
           return ListView.separated(
