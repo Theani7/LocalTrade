@@ -255,18 +255,19 @@ class AdminAnalyticsTab extends StatelessWidget {
         final productDailyStats = admin.analytics!['productDailyStats'] as List? ?? [];
 
         Map<String, dynamic> getTrendData(List<dynamic> data, String valueKey) {
-          if (data.isEmpty) return {'trend': 'No recent data', 'chart': <double>[]};
+          if (data.isEmpty) return {'trend': '0.0%', 'chart': <double>[]};
           final chartData = data.map((e) => (e[valueKey] ?? 0).toDouble()).toList().cast<double>();
-          if (chartData.length < 2) return {'trend': '↑ +100%', 'chart': chartData};
+          if (chartData.length < 2) return {'trend': '+100%', 'chart': chartData};
           
           final current = chartData.last;
           final previous = chartData[chartData.length - 2];
-          if (previous == 0) return {'trend': '↑ +100%', 'chart': chartData};
+          if (previous == 0) return {'trend': '+100%', 'chart': chartData};
           
           final diff = current - previous;
           final pct = (diff / previous) * 100;
+          final formattedPct = pct.abs() >= 100 ? pct.toStringAsFixed(0) : pct.toStringAsFixed(1);
           return {
-            'trend': '${pct >= 0 ? '↑ +' : '↓ '}${pct.toStringAsFixed(1)}% from yesterday',
+            'trend': '${pct >= 0 ? '+' : ''}$formattedPct%',
             'chart': chartData
           };
         }
@@ -408,11 +409,11 @@ class AdminAnalyticsTab extends StatelessWidget {
                   builder: (context, constraints) {
                     final width = constraints.maxWidth;
                     int crossAxisCount = 2;
-                    double childAspectRatio = 1.25;
+                    double childAspectRatio = 1.32;
                     
                     if (width >= 800) {
                       crossAxisCount = 4;
-                      childAspectRatio = 1.2;
+                      childAspectRatio = 1.35;
                     } else if (width >= 500) {
                       crossAxisCount = 2;
                       childAspectRatio = 1.6;
@@ -1193,49 +1194,117 @@ class _AdvancedStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNegative = growthText.contains('↓');
+    final isNegative = growthText.contains('↓') || growthText.startsWith('-');
     final activeContentColor = isNegative ? AppColors.danger : contentColor;
+    final cleanGrowth = growthText
+        .replaceFirst('↑ ', '')
+        .replaceFirst('↓ ', '')
+        .replaceFirst(' from yesterday', '');
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.05),
+            color: Color(0x0D2B2620),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Header: Title & Value
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title, style: const TextStyle(color: AppColors.muted, fontSize: 12, fontWeight: FontWeight.w400)),
-              const SizedBox(height: 8),
-              Text(value, style: const TextStyle(color: AppColors.ink, fontSize: 22, fontWeight: FontWeight.w500)),
-              const Spacer(),
               Text(
-                growthText,
-                style: TextStyle(
-                  color: isNegative ? AppColors.danger : AppColors.success,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+                title,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
           ),
-          if (chartData.isNotEmpty)
-            Positioned(
-              right: 0,
-              bottom: 10,
-              width: 70,
-              height: 35,
-              child: isBarChart ? _buildBarChart(activeContentColor) : _buildLineChart(activeContentColor),
-            ),
+
+          // Bottom: Trend Pill on Left, Mini Sparkline on Right
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: (isNegative ? AppColors.danger : AppColors.success)
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isNegative
+                            ? Icons.trending_down_rounded
+                            : Icons.trending_up_rounded,
+                        size: 13,
+                        color:
+                            isNegative ? AppColors.danger : AppColors.success,
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          cleanGrowth,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isNegative
+                                ? AppColors.danger
+                                : AppColors.success,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (chartData.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 50,
+                  height: 24,
+                  child: isBarChart
+                      ? _buildBarChart(activeContentColor)
+                      : _buildLineChart(activeContentColor),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -1243,7 +1312,11 @@ class _AdvancedStatCard extends StatelessWidget {
 
   Widget _buildLineChart(Color chartColor) {
     final maxVal = chartData.reduce((a, b) => a > b ? a : b);
-    final spots = chartData.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
+    final spots = chartData
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value))
+        .toList();
 
     return LineChart(
       LineChartData(
@@ -1274,7 +1347,7 @@ class _AdvancedStatCard extends StatelessWidget {
 
   Widget _buildBarChart(Color chartColor) {
     final maxVal = chartData.reduce((a, b) => a > b ? a : b);
-    
+
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceBetween,
