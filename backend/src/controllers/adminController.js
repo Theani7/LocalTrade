@@ -111,7 +111,7 @@ exports.getSystemAnalytics = catchAsync(async (req, res, next) => {
 
   const recentOrders = await Order.find()
     .populate('customerId', 'fullName')
-    .populate('vendorId', 'fullName')
+    .populate('vendorId', 'shopName fullName')
     .sort('-createdAt')
     .limit(5);
 

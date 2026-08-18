@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
@@ -35,6 +36,16 @@ class UpdateService {
   static const String _fallbackVersion = '2.3.4';
 
   Future<UpdateInfo> checkForUpdate({bool force = false}) async {
+    if (kIsWeb) {
+      return UpdateInfo(
+        hasUpdate: false,
+        currentVersion: _fallbackVersion,
+        latestVersion: _fallbackVersion,
+        releaseNotes: 'Web version is always up to date.',
+        downloadUrl: '',
+      );
+    }
+
     if (_cachedInfo != null && !force) return _cachedInfo!;
 
     String currentVersion;
@@ -113,6 +124,7 @@ class UpdateService {
   }
 
   Future<List<String>> _deviceAbis() async {
+    if (kIsWeb) return const [];
     try {
       final info = await DeviceInfoPlugin().androidInfo;
       return info.supportedAbis;
