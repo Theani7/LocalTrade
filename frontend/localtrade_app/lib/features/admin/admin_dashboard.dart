@@ -683,46 +683,103 @@ class AdminAnalyticsTab extends StatelessWidget {
   }
 
   static Widget _buildPieChart(List<dynamic> revenueByCategory) {
-    final colors = [AppColors.coral, AppColors.blue, AppColors.success, AppColors.warning, AppColors.muted];
+    final colors = [
+      AppColors.coral,
+      AppColors.blue,
+      AppColors.success,
+      AppColors.warning,
+      const Color(0xFF8B5CF6),
+      const Color(0xFFEC4899),
+      AppColors.muted,
+    ];
+
+    final validCategories = revenueByCategory.where((cat) {
+      final rawVal = cat['revenue'] ?? cat['total'] ?? 0;
+      final val = (rawVal is num)
+          ? rawVal.toDouble()
+          : (double.tryParse(rawVal.toString()) ?? 0.0);
+      return val > 0;
+    }).toList();
+
+    if (validCategories.isEmpty) {
+      return const Center(
+        child: Text(
+          'No revenue recorded for categories yet',
+          style: TextStyle(fontSize: 13, color: AppColors.muted),
+        ),
+      );
+    }
+
+    final totalRevenue = validCategories.fold<double>(0.0, (sum, cat) {
+      final rawVal = cat['revenue'] ?? cat['total'] ?? 0;
+      final val = (rawVal is num)
+          ? rawVal.toDouble()
+          : (double.tryParse(rawVal.toString()) ?? 0.0);
+      return sum + val;
+    });
+
     return Row(
       children: [
         Expanded(
           flex: 3,
           child: PieChart(
             PieChartData(
-              sections: revenueByCategory.map((cat) {
-                final index = revenueByCategory.indexOf(cat);
-                final value = (cat['total'] ?? 0).toDouble();
+              sections: validCategories.map((cat) {
+                final index = validCategories.indexOf(cat);
+                final rawVal = cat['revenue'] ?? cat['total'] ?? 0;
+                final value = (rawVal is num)
+                    ? rawVal.toDouble()
+                    : (double.tryParse(rawVal.toString()) ?? 0.0);
+                final pct = totalRevenue > 0 ? (value / totalRevenue) * 100 : 0;
                 return PieChartSectionData(
                   value: value,
-                  title: '', // Hide title for cleaner look
+                  title: pct >= 12 ? '${pct.toInt()}%' : '',
+                  titleStyle: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.surface,
+                  ),
                   color: colors[index % colors.length],
-                  radius: 30, // Donut style
+                  radius: 32,
                 );
               }).toList(),
               sectionsSpace: 2,
-              centerSpaceRadius: 40,
+              centerSpaceRadius: 36,
             ),
           ),
         ),
+        const SizedBox(width: 12),
         Expanded(
-          flex: 2,
+          flex: 3,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: revenueByCategory.map((cat) {
-              final index = revenueByCategory.indexOf(cat);
+            children: validCategories.map((cat) {
+              final index = validCategories.indexOf(cat);
               final color = colors[index % colors.length];
+              final rawVal = cat['revenue'] ?? cat['total'] ?? 0;
+              final val = (rawVal is num)
+                  ? rawVal.toDouble()
+                  : (double.tryParse(rawVal.toString()) ?? 0.0);
+              final categoryName = cat['_id']?.toString() ?? 'Unknown';
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        cat['_id'] ?? 'Unknown',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.ink),
+                        '$categoryName (Rs. ${val.toInt()})',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.ink,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -814,21 +871,32 @@ class _RevenueLineChart extends StatelessWidget {
 
     final spots = <FlSpot>[];
     double maxRevenue = 0;
-    
+
     for (int i = 0; i < dailyStats.length; i++) {
       final stat = dailyStats[i];
-      final revenue = (stat['revenue'] ?? 0).toDouble();
+      final rawVal = stat['revenue'] ?? 0;
+      final revenue = (rawVal is num)
+          ? rawVal.toDouble()
+          : (double.tryParse(rawVal.toString()) ?? 0.0);
       if (revenue > maxRevenue) maxRevenue = revenue;
       spots.add(FlSpot(i.toDouble(), revenue));
     }
 
+    final double topMax = maxRevenue > 0 ? (maxRevenue * 1.25) : 100;
+    final double horizontalStep = topMax / 4 > 0 ? topMax / 4 : 25;
+
     return LineChart(
       LineChartData(
+        minY: 0,
+        maxY: topMax,
+        minX: 0,
+        maxX: spots.length > 1 ? (spots.length - 1).toDouble() : 1.0,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: maxRevenue > 0 ? (maxRevenue / 4 == 0 ? 1 : maxRevenue / 4) : 1,
-          getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.divider, strokeWidth: 1),
+          horizontalInterval: horizontalStep,
+          getDrawingHorizontalLine: (value) =>
+              const FlLine(color: AppColors.divider, strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
           show: true,
@@ -838,15 +906,18 @@ class _RevenueLineChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 22,
+              interval: 1,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
+                if (value != index.toDouble()) return const SizedBox.shrink();
                 if (index < 0 || index >= dailyStats.length) return const SizedBox.shrink();
                 final dateStr = dailyStats[index]['_id'] as String? ?? '';
                 final parts = dateStr.split('-');
                 final label = parts.length == 3 ? '${parts[1]}/${parts[2]}' : dateStr;
                 return Padding(
                   padding: const EdgeInsets.only(top: 4.0),
-                  child: Text(label, style: const TextStyle(fontSize: 10, color: AppColors.muted)),
+                  child: Text(label,
+                      style: const TextStyle(fontSize: 10, color: AppColors.muted)),
                 );
               },
             ),
@@ -855,10 +926,13 @@ class _RevenueLineChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40,
+              interval: horizontalStep,
               getTitlesWidget: (value, meta) {
                 if (value == 0) return const SizedBox.shrink();
                 return Text(
-                  value >= 1000 ? '${(value / 1000).toStringAsFixed(1)}k' : value.toStringAsFixed(0),
+                  value >= 1000
+                      ? '${(value / 1000).toStringAsFixed(1)}k'
+                      : value.toStringAsFixed(0),
                   style: const TextStyle(fontSize: 10, color: AppColors.muted),
                 );
               },
@@ -899,10 +973,13 @@ class _DailyOrdersBarChart extends StatelessWidget {
 
     final barGroups = <BarChartGroupData>[];
     double maxCount = 0;
-    
+
     for (int i = 0; i < dailyStats.length; i++) {
       final stat = dailyStats[i];
-      final count = (stat['count'] ?? 0).toDouble();
+      final rawCount = stat['count'] ?? 0;
+      final count = (rawCount is num)
+          ? rawCount.toDouble()
+          : (double.tryParse(rawCount.toString()) ?? 0.0);
       if (count > maxCount) maxCount = count;
       barGroups.add(
         BarChartGroupData(
@@ -919,15 +996,20 @@ class _DailyOrdersBarChart extends StatelessWidget {
       );
     }
 
+    final double topMax = maxCount > 0 ? (maxCount + (maxCount * 0.25)) : 10;
+    final double step = topMax / 4 > 0 ? topMax / 4 : 2.5;
+
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: maxCount > 0 ? maxCount + (maxCount * 0.2) : 10,
+        minY: 0,
+        maxY: topMax,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: maxCount > 0 ? (maxCount / 4 == 0 ? 1 : maxCount / 4) : 1,
-          getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.divider, strokeWidth: 1),
+          horizontalInterval: step,
+          getDrawingHorizontalLine: (value) =>
+              const FlLine(color: AppColors.divider, strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
           show: true,
@@ -937,8 +1019,10 @@ class _DailyOrdersBarChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
+              interval: 1,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
+                if (value != index.toDouble()) return const SizedBox.shrink();
                 if (index < 0 || index >= dailyStats.length) return const SizedBox.shrink();
                 final dateStr = dailyStats[index]['_id'] as String? ?? '';
                 final parts = dateStr.split('-');
