@@ -1,4 +1,4 @@
-const sgMail = require('@sendgrid/mail');
+import sgMail from '@sendgrid/mail';
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@localtrade.app';
@@ -12,7 +12,13 @@ if (SENDGRID_API_KEY && SENDGRID_API_KEY !== 'SG.your_sendgrid_api_key_here') {
   console.warn('SendGrid API key missing. Password reset emails will be logged to console.');
 }
 
-const sendEmail = async ({ to, subject, html }) => {
+export interface SendEmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+}
+
+export const sendEmail = async ({ to, subject, html }: SendEmailOptions): Promise<void> => {
   if (!isConfigured) {
     const otpMatch = html.match(/\b\d{6}\b/);
     const body = otpMatch
@@ -34,4 +40,5 @@ const sendEmail = async ({ to, subject, html }) => {
   });
 };
 
-module.exports = { sendEmail, isConfigured };
+export { isConfigured };
+export default { sendEmail, isConfigured };

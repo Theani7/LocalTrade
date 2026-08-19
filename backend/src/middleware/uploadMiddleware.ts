@@ -1,11 +1,13 @@
-const multer = require('multer');
-const path = require('path');
+import { Request, Response, NextFunction } from 'express';
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
+import { AuthRequest } from '../types';
 
 // Store files in memory as buffers before uploading to Cloudinary
 const storage = multer.memoryStorage();
 
 // Magic byte signatures for allowed image formats
-const IMAGE_SIGNATURES = [
+const IMAGE_SIGNATURES: number[][] = [
   [0xff, 0xd8, 0xff], // jpeg
   [0x89, 0x50, 0x4e, 0x47], // png
   [0x52, 0x49, 0x46, 0x46], // webp (RIFF....WEBP)
@@ -13,7 +15,7 @@ const IMAGE_SIGNATURES = [
 ];
 
 // Filter to ensure only image files are uploaded
-const fileFilter = (req, file, cb) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallback): void => {
   const allowedTypes = /jpeg|jpg|png|webp|gif/;
   const mimetype = allowedTypes.test(file.mimetype);
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -21,14 +23,20 @@ const fileFilter = (req, file, cb) => {
   if (mimetype && extname) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.'), false);
+    cb(new Error('Invalid file type. Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.'));
   }
 };
 
 // Reject uploaded files whose content doesn't match a known image signature.
 // Runs after multer has populated req.files/req.file buffers.
-const validateImageContent = (req, res, next) => {
-  const files = req.files ? (Array.isArray(req.files) ? req.files : Object.values(req.files).flat()) : (req.file ? [req.file] : []);
+const validateImageContent = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  const files: Express.Multer.File[] = req.files
+    ? Array.isArray(req.files)
+      ? req.files
+      : Object.values(req.files).flat()
+    : req.file
+    ? [req.file]
+    : [];
 
   for (const file of files) {
     if (!file || !file.buffer || file.buffer.length < 4) {
@@ -57,7 +65,8 @@ const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit per file
   },
-});
+}) as any;
 
-module.exports = upload;
-module.exports.validateImageContent = validateImageContent;
+upload.validateImageContent = validateImageContent;
+
+export = upload;
