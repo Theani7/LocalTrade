@@ -1,3 +1,5 @@
+export const API_URL = 'https://localtrade-backend-jg9l.onrender.com/api/v1';
+
 export interface Address {
   fullName?: string;
   phone?: string;
