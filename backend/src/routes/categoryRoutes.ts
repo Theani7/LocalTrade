@@ -1,6 +1,6 @@
-const express = require('express');
-const categoryController = require('../controllers/categoryController');
-const { protect, restrictTo } = require('../middleware/authMiddleware');
+import express from 'express';
+import * as categoryController from '../controllers/categoryController';
+import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
@@ -15,4 +15,4 @@ router.patch('/reorder', categoryController.reorderCategories);
 router.patch('/:id', categoryController.updateCategory);
 router.delete('/:id', categoryController.deleteCategory);
 
-module.exports = router;
+export = router;

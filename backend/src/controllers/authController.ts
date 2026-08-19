@@ -1,12 +1,15 @@
-const User = require('../models/userModel');
-const crypto = require('crypto');
-const { sendToken, generateOtp, createTempResetToken } = require('../utils/authUtils');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
-const { sendEmail } = require('../config/email');
-const { notifyAdmins } = require('../utils/notificationUtils');
+import { Response, NextFunction } from 'express';
+import crypto from 'crypto';
+import User from '../models/userModel';
+import { sendToken, generateOtp, createTempResetToken, signToken } from '../utils/authUtils';
+import catchAsync from '../utils/catchAsync';
+import AppError from '../utils/appError';
+import { sendEmail } from '../config/email';
+import { notifyAdmins } from '../utils/notificationUtils';
+import { uploadToCloudinary } from '../utils/cloudinaryUtils';
+import { AuthRequest } from '../types';
 
-exports.register = catchAsync(async (req, res, next) => {
+export const register = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   let { fullName, email, phone, password, role, shopName, businessDescription, categories, openingHours, address } = req.body;
 
   if (role && !['customer', 'vendor'].includes(role)) {
@@ -37,7 +40,7 @@ exports.register = catchAsync(async (req, res, next) => {
     return next(new AppError('User with this email or phone already exists', 400));
   }
 
-  const userData = {
+  const userData: any = {
     fullName,
     email,
     phone,
@@ -82,7 +85,7 @@ exports.register = catchAsync(async (req, res, next) => {
   sendToken(newUser, 201, res);
 });
 
-exports.login = catchAsync(async (req, res, next) => {
+export const login = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -100,13 +103,12 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // Include mustChangePassword in the response so frontend can force password reset
-  const userObj = user.toObject();
+  const userObj = typeof user.toObject === 'function' ? user.toObject() : { ...user };
   delete userObj.password;
   if (user.mustChangePassword) {
     userObj.mustChangePassword = true;
   }
 
-  const { signToken } = require('../utils/authUtils');
   const token = signToken(user._id);
 
   res.status(200).json({
@@ -117,8 +119,9 @@ exports.login = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getMe = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
+export const getMe = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const userId = req.user?.id || req.user?._id?.toString();
+  const user = await User.findById(userId);
 
   if (!user) {
     return next(new AppError('No user found with that ID', 404));
@@ -133,10 +136,11 @@ exports.getMe = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateFcmToken = catchAsync(async (req, res, next) => {
+export const updateFcmToken = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { fcmToken } = req.body;
+  const userId = req.user?.id || req.user?._id?.toString();
 
-  const user = await User.findByIdAndUpdate(req.user.id, { fcmToken }, {
+  const user = await User.findByIdAndUpdate(userId, { fcmToken }, {
     new: true,
     runValidators: true
   });
@@ -152,7 +156,7 @@ exports.updateFcmToken = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateProfile = catchAsync(async (req, res, next) => {
+export const updateProfile = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { fullName, phone, address, shopName, businessDescription, openingHours, categories } = req.body;
 
   if (fullName !== undefined && (typeof fullName !== 'string' || fullName.trim().length === 0 || fullName.length > 100)) {
@@ -165,7 +169,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     return next(new AppError('Shop name must be a non-empty string under 100 characters', 400));
   }
 
-  const updateData = {};
+  const updateData: any = {};
   if (fullName !== undefined) updateData.fullName = fullName;
   if (phone !== undefined) updateData.phone = phone;
 
@@ -200,12 +204,12 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   }
 
   if (req.file) {
-    const { uploadToCloudinary } = require('../utils/cloudinaryUtils');
     updateData.profileImage = await uploadToCloudinary(req.file.buffer, 'localtrade/profiles');
   }
 
+  const userId = req.user?.id || req.user?._id?.toString();
   const user = await User.findByIdAndUpdate(
-    req.user.id,
+    userId,
     updateData,
     { new: true, runValidators: true }
   ).select('-password');
@@ -221,7 +225,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.changePassword = catchAsync(async (req, res, next) => {
+export const changePassword = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
   if (!currentPassword || !newPassword || !confirmPassword) {
@@ -234,7 +238,8 @@ exports.changePassword = catchAsync(async (req, res, next) => {
     return next(new AppError('New password and confirm password do not match', 400));
   }
 
-  const user = await User.findById(req.user.id).select('+password');
+  const userId = req.user?.id || req.user?._id?.toString();
+  const user = await User.findById(userId).select('+password');
 
   if (!user) {
     return next(new AppError('No user found with that ID', 404));
@@ -257,7 +262,7 @@ exports.changePassword = catchAsync(async (req, res, next) => {
 });
 
 // Force change password for users with mustChangePassword flag (no current password required)
-exports.forceChangePassword = catchAsync(async (req, res, next) => {
+export const forceChangePassword = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { newPassword, confirmPassword } = req.body;
 
   if (!newPassword || !confirmPassword) {
@@ -270,7 +275,8 @@ exports.forceChangePassword = catchAsync(async (req, res, next) => {
     return next(new AppError('New password and confirm password do not match', 400));
   }
 
-  const user = await User.findById(req.user.id).select('+password +mustChangePassword');
+  const userId = req.user?.id || req.user?._id?.toString();
+  const user = await User.findById(userId).select('+password +mustChangePassword');
 
   if (!user) {
     return next(new AppError('No user found with that ID', 404));
@@ -294,7 +300,7 @@ exports.forceChangePassword = catchAsync(async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Forgot Password — Send OTP
 // ─────────────────────────────────────────────────────────────────────────────
-exports.forgotPassword = catchAsync(async (req, res, next) => {
+export const forgotPassword = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { email } = req.body;
 
   if (!email) {
@@ -304,16 +310,17 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       status: 'success',
       message: 'If an account with that email exists, an OTP has been sent.',
     });
+    return;
   }
 
   const { otp, hashedOtp, expires } = generateOtp();
   user.passwordResetOtp = hashedOtp;
-  user.passwordResetOtpExpires = expires;
+  user.passwordResetOtpExpires = new Date(expires);
   user.passwordResetTempToken = undefined;
   user.passwordResetTempTokenExpires = undefined;
   await user.save({ validateBeforeSave: false });
@@ -351,7 +358,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Verify OTP
 // ─────────────────────────────────────────────────────────────────────────────
-exports.verifyOtp = catchAsync(async (req, res, next) => {
+export const verifyOtp = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
@@ -364,7 +371,7 @@ exports.verifyOtp = catchAsync(async (req, res, next) => {
     return next(new AppError('No reset request found. Please request a new OTP.', 400));
   }
 
-  if (user.passwordResetOtpExpires < Date.now()) {
+  if (new Date(user.passwordResetOtpExpires).getTime() < Date.now()) {
     user.passwordResetOtp = undefined;
     user.passwordResetOtpExpires = undefined;
     await user.save({ validateBeforeSave: false });
@@ -379,7 +386,7 @@ exports.verifyOtp = catchAsync(async (req, res, next) => {
 
   const { raw, hashed, expires } = createTempResetToken();
   user.passwordResetTempToken = hashed;
-  user.passwordResetTempTokenExpires = expires;
+  user.passwordResetTempTokenExpires = new Date(expires);
   user.passwordResetOtp = undefined;
   user.passwordResetOtpExpires = undefined;
   await user.save({ validateBeforeSave: false });
@@ -395,7 +402,7 @@ exports.verifyOtp = catchAsync(async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Reset Password (after OTP verification)
 // ─────────────────────────────────────────────────────────────────────────────
-exports.resetPasswordWithOtp = catchAsync(async (req, res, next) => {
+export const resetPasswordWithOtp = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { tempToken, password } = req.body;
 
   if (!tempToken) {
@@ -427,3 +434,16 @@ exports.resetPasswordWithOtp = catchAsync(async (req, res, next) => {
     message: 'Password has been reset successfully.',
   });
 });
+
+export default {
+  register,
+  login,
+  getMe,
+  updateFcmToken,
+  updateProfile,
+  changePassword,
+  forceChangePassword,
+  forgotPassword,
+  verifyOtp,
+  resetPasswordWithOtp,
+};

@@ -1,14 +1,16 @@
-const Order = require('../models/orderModel');
-const Product = require('../models/productModel');
-const User = require('../models/userModel');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
-const { sendNotification } = require('../utils/notificationUtils');
+import { Response, NextFunction } from 'express';
+import Order from '../models/orderModel';
+import Product from '../models/productModel';
+import User from '../models/userModel';
+import catchAsync from '../utils/catchAsync';
+import AppError from '../utils/appError';
+import { sendNotification } from '../utils/notificationUtils';
+import { AuthRequest } from '../types';
 
 // @desc    Create new order
 // @route   POST /api/v1/orders
 // @access  Private/Customer
-exports.createOrder = catchAsync(async (req, res, next) => {
+export const createOrder = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   // Support both 'items' and 'products' keys for backward compatibility
   const items = req.body.items || req.body.products;
 
@@ -33,8 +35,8 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   }
 
   // Validate all products are from the same vendor
-  const vendorIds = new Set();
-  const productsById = new Map();
+  const vendorIds = new Set<string>();
+  const productsById = new Map<string, any>();
   for (const item of items) {
     const productId = item.productId || item.product;
     if (!productId) {
@@ -79,9 +81,9 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 
   // 1) Process each item
   let totalAmount = 0;
-  const orderProducts = [];
-  const processedProducts = [];
-  let vendorId = null;
+  const orderProducts: any[] = [];
+  const processedProducts: { id: string; quantity: number }[] = [];
+  let vendorId: any = null;
 
   try {
     for (const item of items) {
@@ -117,11 +119,10 @@ exports.createOrder = catchAsync(async (req, res, next) => {
       // Capture vendorId from the product (server-side, not from client)
       if (!vendorId) vendorId = updatedProduct.vendorId;
 
-      // Auto-update status if stock hits zero (The model pre-save middleware will also handle this, 
-      // but findOneAndUpdate doesn't always trigger pre-save unless explicitly handled or saved again)
+      // Auto-update status if stock hits zero
       if (updatedProduct.stockQuantity === 0) {
         updatedProduct.productStatus = 'OutOfStock';
-        await updatedProduct.save(); // Trigger model middleware for consistency
+        await updatedProduct.save();
       }
 
       totalAmount += updatedProduct.price * item.quantity;
@@ -135,8 +136,9 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     }
 
     // 2) Create order record — vendorId derived from product, not from client request
+    const customerId = req.user?.id || req.user?._id?.toString();
     const order = await Order.create({
-      customerId: req.user.id,
+      customerId,
       vendorId,
       products: orderProducts,
       totalAmount: totalAmount, // ALWAYS use server-calculated total
@@ -170,7 +172,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
           },
           { new: true }
         );
-      } catch (rollbackErr) {
+      } catch (rollbackErr: any) {
         console.error('Failed to rollback stock for product:', processed.id, rollbackErr);
       }
     }
@@ -181,7 +183,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 // @desc    Get order details
 // @route   GET /api/v1/orders/:id
 // @access  Private
-exports.getOrder = catchAsync(async (req, res, next) => {
+export const getOrder = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const order = await Order.findById(req.params.id)
     .populate('customerId', 'fullName phone email')
     .populate('vendorId', 'fullName shopName phone address')
@@ -191,12 +193,15 @@ exports.getOrder = catchAsync(async (req, res, next) => {
     return next(new AppError('No order found with that ID', 404));
   }
 
-  // Authorization: customer, vendor, or admin may access. Route-level restrictTo
-  // middleware is not needed here since ownership is verified below.
+  const reqUserId = (req.user?.id || req.user?._id?.toString() || '').toString();
+  const orderCustomerId = ((order.customerId as any)?._id?.toString() || order.customerId?.toString() || '');
+  const orderVendorId = ((order.vendorId as any)?._id?.toString() || order.vendorId?.toString() || '');
+
+  // Authorization: customer, vendor, or admin may access.
   if (
-    order.customerId._id.toString() !== req.user.id &&
-    order.vendorId._id.toString() !== req.user.id &&
-    req.user.role !== 'admin'
+    orderCustomerId !== reqUserId &&
+    orderVendorId !== reqUserId &&
+    req.user?.role !== 'admin'
   ) {
     return next(new AppError('You are not authorized to view this order', 403));
   }
@@ -211,12 +216,13 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 // @desc    Get my orders (Customer)
 // @route   GET /api/v1/orders/my-orders
 // @access  Private/Customer
-exports.getMyOrders = catchAsync(async (req, res, next) => {
-  const filter = { customerId: req.user.id };
+export const getMyOrders = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const userId = req.user?.id || req.user?._id?.toString();
+  const filter = { customerId: userId };
 
   if (req.query.page || req.query.limit) {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 20;
     const skip = (page - 1) * limit;
 
     const [orders, totalResults] = await Promise.all([
@@ -229,7 +235,7 @@ exports.getMyOrders = catchAsync(async (req, res, next) => {
       Order.countDocuments(filter),
     ]);
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       status: 'success',
       results: orders.length,
@@ -238,6 +244,7 @@ exports.getMyOrders = catchAsync(async (req, res, next) => {
       totalResults,
       data: { orders },
     });
+    return;
   }
 
   const orders = await Order.find(filter)
@@ -254,12 +261,13 @@ exports.getMyOrders = catchAsync(async (req, res, next) => {
 });
 
 // @desc    Get vendor orders
-exports.getVendorOrders = catchAsync(async (req, res, next) => {
-  const filter = { vendorId: req.user.id };
+export const getVendorOrders = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const userId = req.user?.id || req.user?._id?.toString();
+  const filter = { vendorId: userId };
 
   if (req.query.page || req.query.limit) {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 20;
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 20;
     const skip = (page - 1) * limit;
 
     const [orders, totalResults] = await Promise.all([
@@ -272,7 +280,7 @@ exports.getVendorOrders = catchAsync(async (req, res, next) => {
       Order.countDocuments(filter),
     ]);
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       status: 'success',
       results: orders.length,
@@ -281,6 +289,7 @@ exports.getVendorOrders = catchAsync(async (req, res, next) => {
       totalResults,
       data: { orders },
     });
+    return;
   }
 
   const orders = await Order.find(filter)
@@ -296,82 +305,20 @@ exports.getVendorOrders = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc    Update order status
-// @route   PATCH /api/v1/orders/:id/status
-// @access  Private/Vendor/Admin
-exports.updateOrderStatus = catchAsync(async (req, res, next) => {
-  const { status } = req.body;
-  const order = await Order.findById(req.params.id);
-
-  if (!order) {
-    return next(new AppError('No order found with that ID', 404));
-  }
-
-  // Only vendor or admin can update status
-  if (order.vendorId.toString() !== req.user.id && req.user.role !== 'admin') {
-    return next(new AppError('You are not authorized to update this order', 403));
-  }
-
-  // Status transition validation
-  if (order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled') {
-    return next(new AppError('Cannot update status of a delivered or cancelled order', 400));
-  }
-
-  if (status === 'Pending') {
-    return next(new AppError('Cannot revert status back to Pending', 400));
-  }
-
-  if (status === 'Cancelled') {
-    // If status is updated to Cancelled, perform full cancellation and stock rollback
-    return exports.cancelOrder(req, res, next);
-  }
-
-  const statusValues = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
-  if (!statusValues.includes(status)) {
-    return next(new AppError(`Invalid status: ${status}`, 400));
-  }
-  const currentIndex = statusValues.indexOf(order.orderStatus);
-  const targetIndex = statusValues.indexOf(status);
-
-  if (targetIndex <= currentIndex) {
-    return next(new AppError(`Cannot revert order status from "${order.orderStatus}" to "${status}"`, 400));
-  }
-
-  order.orderStatus = status;
-  const updatedOrder = await Order.findByIdAndUpdate(req.params.id, { orderStatus: status }, { new: true, runValidators: false })
-    .populate('customerId', 'fullName phone')
-    .populate('vendorId', 'shopName')
-    .populate('products.product', 'title images');
-
-  // Send notification to customer
-  await sendNotification(
-    order.customerId,
-    `Order ${status.toLowerCase()}`,
-    `Your order #${order._id.toString().substring(18)} is now ${status.toLowerCase()}.`,
-    { orderId: order._id.toString(), type: 'order_update' },
-    'Order'
-  );
-
-  res.status(200).json({
-    success: true,
-    status: 'success',
-    data: { order: updatedOrder },
-  });
-});
-
 // @desc    Cancel/Reject order (Customer/Vendor/Admin)
 // @route   PATCH /api/v1/orders/:id/cancel
 // @access  Private
-exports.cancelOrder = catchAsync(async (req, res, next) => {
+export const cancelOrder = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const order = await Order.findById(req.params.id);
 
   if (!order) {
     return next(new AppError('No order found with that ID', 404));
   }
 
-  const isCustomer = order.customerId.toString() === req.user.id;
-  const isVendor = order.vendorId.toString() === req.user.id;
-  const isAdmin = req.user.role === 'admin';
+  const reqUserId = (req.user?.id || req.user?._id?.toString() || '').toString();
+  const isCustomer = order.customerId.toString() === reqUserId;
+  const isVendor = order.vendorId.toString() === reqUserId;
+  const isAdmin = req.user?.role === 'admin';
 
   // Only customer, vendor, or admin can cancel
   if (!isCustomer && !isVendor && !isAdmin) {
@@ -404,15 +351,18 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
   // Rollback stock for all products in this order
   for (const item of order.products) {
     try {
+      const productId = typeof item.product === 'object' && (item.product as any)._id
+        ? (item.product as any)._id
+        : item.product;
       await Product.findOneAndUpdate(
-        { _id: item.product },
+        { _id: productId },
         {
           $inc: { stockQuantity: item.quantity },
           productStatus: 'Available',
         },
         { new: true }
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to restore stock on cancel:', item.product, err);
     }
   }
@@ -458,3 +408,77 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
     data: { order: updatedOrder },
   });
 });
+
+// @desc    Update order status
+// @route   PATCH /api/v1/orders/:id/status
+// @access  Private/Vendor/Admin
+export const updateOrderStatus = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const { status } = req.body;
+  const order = await Order.findById(req.params.id);
+
+  if (!order) {
+    return next(new AppError('No order found with that ID', 404));
+  }
+
+  const reqUserId = (req.user?.id || req.user?._id?.toString() || '').toString();
+
+  // Only vendor or admin can update status
+  if (order.vendorId.toString() !== reqUserId && req.user?.role !== 'admin') {
+    return next(new AppError('You are not authorized to update this order', 403));
+  }
+
+  // Status transition validation
+  if (order.orderStatus === 'Delivered' || order.orderStatus === 'Cancelled') {
+    return next(new AppError('Cannot update status of a delivered or cancelled order', 400));
+  }
+
+  if (status === 'Pending') {
+    return next(new AppError('Cannot revert status back to Pending', 400));
+  }
+
+  if (status === 'Cancelled') {
+    // If status is updated to Cancelled, perform full cancellation and stock rollback
+    return cancelOrder(req, res, next);
+  }
+
+  const statusValues = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
+  if (!statusValues.includes(status)) {
+    return next(new AppError(`Invalid status: ${status}`, 400));
+  }
+  const currentIndex = statusValues.indexOf(order.orderStatus);
+  const targetIndex = statusValues.indexOf(status);
+
+  if (targetIndex <= currentIndex) {
+    return next(new AppError(`Cannot revert order status from "${order.orderStatus}" to "${status}"`, 400));
+  }
+
+  order.orderStatus = status;
+  const updatedOrder = await Order.findByIdAndUpdate(req.params.id, { orderStatus: status }, { new: true, runValidators: false })
+    .populate('customerId', 'fullName phone')
+    .populate('vendorId', 'shopName')
+    .populate('products.product', 'title images');
+
+  // Send notification to customer
+  await sendNotification(
+    order.customerId,
+    `Order ${status.toLowerCase()}`,
+    `Your order #${order._id.toString().substring(18)} is now ${status.toLowerCase()}.`,
+    { orderId: order._id.toString(), type: 'order_update' },
+    'Order'
+  );
+
+  res.status(200).json({
+    success: true,
+    status: 'success',
+    data: { order: updatedOrder },
+  });
+});
+
+export default {
+  createOrder,
+  getOrder,
+  getMyOrders,
+  getVendorOrders,
+  updateOrderStatus,
+  cancelOrder,
+};

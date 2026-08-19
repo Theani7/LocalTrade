@@ -1,7 +1,7 @@
-const express = require('express');
-const authController = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+import express from 'express';
+import * as authController from '../controllers/authController';
+import { protect } from '../middleware/authMiddleware';
+import upload from '../middleware/uploadMiddleware';
 
 const router = express.Router();
 
@@ -16,4 +16,4 @@ router.post('/forgot-password', authController.forgotPassword);
 router.post('/verify-otp', authController.verifyOtp);
 router.patch('/reset-password-with-otp', authController.resetPasswordWithOtp);
 
-module.exports = router;
+export = router;

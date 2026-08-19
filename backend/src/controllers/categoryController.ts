@@ -1,9 +1,11 @@
-const Category = require('../models/categoryModel');
-const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
+import { Response, NextFunction } from 'express';
+import Category from '../models/categoryModel';
+import catchAsync from '../utils/catchAsync';
+import AppError from '../utils/appError';
+import { AuthRequest } from '../types';
 
 // Public: get all active categories
-exports.getActiveCategories = catchAsync(async (req, res) => {
+export const getActiveCategories = catchAsync(async (req: AuthRequest, res: Response): Promise<void> => {
   const categories = await Category.find({ isActive: true }).sort('sortOrder name');
   res.status(200).json({
     success: true,
@@ -12,7 +14,7 @@ exports.getActiveCategories = catchAsync(async (req, res) => {
 });
 
 // Admin: get all categories (including inactive)
-exports.getAllCategories = catchAsync(async (req, res) => {
+export const getAllCategories = catchAsync(async (req: AuthRequest, res: Response): Promise<void> => {
   const categories = await Category.find().sort('sortOrder name');
   res.status(200).json({
     success: true,
@@ -21,7 +23,7 @@ exports.getAllCategories = catchAsync(async (req, res) => {
 });
 
 // Admin: create category
-exports.createCategory = catchAsync(async (req, res, next) => {
+export const createCategory = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { name, icon, sortOrder } = req.body;
   if (!name || name.trim().length === 0) {
     return next(new AppError('Category name is required', 400));
@@ -42,7 +44,7 @@ exports.createCategory = catchAsync(async (req, res, next) => {
 });
 
 // Admin: update category
-exports.updateCategory = catchAsync(async (req, res, next) => {
+export const updateCategory = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { name, icon, sortOrder, isActive } = req.body;
   const category = await Category.findById(req.params.id);
   if (!category) {
@@ -69,7 +71,7 @@ exports.updateCategory = catchAsync(async (req, res, next) => {
 });
 
 // Admin: delete category
-exports.deleteCategory = catchAsync(async (req, res, next) => {
+export const deleteCategory = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const category = await Category.findById(req.params.id);
   if (!category) {
     return next(new AppError('Category not found', 404));
@@ -79,20 +81,29 @@ exports.deleteCategory = catchAsync(async (req, res, next) => {
 });
 
 // Admin: reorder categories
-exports.reorderCategories = catchAsync(async (req, res, next) => {
+export const reorderCategories = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { orderedIds } = req.body;
   if (!Array.isArray(orderedIds)) {
     return next(new AppError('orderedIds must be an array', 400));
   }
-  const bulkOps = orderedIds.map((id, index) => ({
+  const bulkOps = orderedIds.map((id: string, index: number) => ({
     updateOne: {
       filter: { _id: id },
       update: { sortOrder: index },
     },
   }));
-  await Category.bulkWrite(bulkOps);
+  await Category.bulkWrite(bulkOps as any);
   res.status(200).json({
     success: true,
     message: 'Categories reordered',
   });
 });
+
+export default {
+  getActiveCategories,
+  getAllCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  reorderCategories,
+};

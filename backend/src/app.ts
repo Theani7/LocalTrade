@@ -1,14 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const path = require('path');
-const dotenv = require('dotenv');
-const multer = require('multer'); // Needed for Multer error handling
-const AppError = require('./utils/appError');
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import path from 'path';
+import dotenv from 'dotenv';
+import multer from 'multer';
+import rateLimit from 'express-rate-limit';
+import AppError from './utils/appError';
 
 // Custom NoSQL query injection sanitizer middleware for Express 5 compatibility
-const sanitizeObject = (obj) => {
+const sanitizeObject = (obj: any): void => {
   if (obj && typeof obj === 'object') {
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
     for (const key in obj) {
@@ -21,13 +22,12 @@ const sanitizeObject = (obj) => {
   }
 };
 
-const customMongoSanitize = (req, res, next) => {
+const customMongoSanitize = (req: Request, res: Response, next: NextFunction): void => {
   if (req.body) sanitizeObject(req.body);
   if (req.query) sanitizeObject(req.query);
   if (req.params) sanitizeObject(req.params);
   next();
 };
-const rateLimit = require('express-rate-limit');
 
 // Load environment variables based on environment
 if (process.env.NODE_ENV === 'test') {
@@ -36,15 +36,15 @@ if (process.env.NODE_ENV === 'test') {
   dotenv.config();
 }
 
-const authRoutes = require('./routes/authRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const productRoutes = require('./routes/productRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
-const vendorRoutes = require('./routes/vendorRoutes');
-const feedbackRoutes = require('./routes/feedbackRoutes');
-const reviewRoutes = require('./routes/reviewRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
+import authRoutes from './routes/authRoutes';
+import adminRoutes from './routes/adminRoutes';
+import productRoutes from './routes/productRoutes';
+import orderRoutes from './routes/orderRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import vendorRoutes from './routes/vendorRoutes';
+import feedbackRoutes from './routes/feedbackRoutes';
+import reviewRoutes from './routes/reviewRoutes';
+import categoryRoutes from './routes/categoryRoutes';
 
 const app = express();
 
@@ -66,7 +66,7 @@ const allowedOrigins = [
   'https://localtrade-admin-web-123ab.web.app',
 ];
 app.use(cors({
-  origin: function (origin, callback) {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     if (!origin) return callback(null, true);
     const isLocalhost = /^http:\/\/localhost:\d+$/.test(origin);
     if (isLocalhost) {
@@ -113,7 +113,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Health Check Route (handles both /health and /api/v1/health)
-app.get(['/health', '/api/v1/health'], (req, res) => {
+app.get(['/health', '/api/v1/health'], (req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
     message: 'LocalTrade API is healthy and running',
@@ -146,7 +146,7 @@ app.use(`${API_PREFIX}/categories`, categoryRoutes);
 // Those errors are not caught by the generic async wrapper, so we translate
 // them into our AppError format so the global error handler can respond
 // with a consistent JSON payload.
-app.use((err, req, res, next) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     // Multer's own error codes are descriptive, we expose the message directly.
     return next(new AppError(err.message, 400));
@@ -159,14 +159,14 @@ app.use((err, req, res, next) => {
 });
 
 // 404 Route
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const error = new Error(`Can't find ${req.originalUrl} on this server!`);
   res.status(404);
   next(error);
 });
 
 // Global Error Handler
-app.use((err, req, res, next) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
@@ -192,7 +192,7 @@ app.use((err, req, res, next) => {
   }
 
   if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map(el => el.message);
+    const errors = Object.values(err.errors).map((el: any) => el.message);
     err.message = `Invalid input data. ${errors.join('. ')}`;
     err.statusCode = 400;
     err.status = 'fail';
@@ -218,5 +218,4 @@ app.use((err, req, res, next) => {
   });
 });
 
-module.exports = app;
-
+export = app;
