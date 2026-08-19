@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "seed:admin": "node seed-admin.js",
     "clear:data": "node clear-data.js",
     "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles",
@@ -32,11 +34,23 @@
     "multer": "^2.1.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^26.2.0",
+    "@types/supertest": "^7.2.1",
     "cross-env": "^10.1.0",
     "jest": "^29.7.0",
     "mongodb-memory-server": "^11.1.0",
     "nodemon": "^3.1.14",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.12",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "uuid": "^11.1.1"
