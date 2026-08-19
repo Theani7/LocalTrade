@@ -1,8 +1,15 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const Category = require('./src/models/categoryModel');
+import dotenv from 'dotenv';
+dotenv.config();
+import mongoose from 'mongoose';
+import Category from './src/models/categoryModel';
 
-const defaults = [
+interface DefaultCategory {
+  name: string;
+  icon: string;
+  sortOrder: number;
+}
+
+const defaults: DefaultCategory[] = [
   { name: 'Vegetables', icon: 'eco', sortOrder: 0 },
   { name: 'Dairy', icon: 'local_cafe', sortOrder: 1 },
   { name: 'Handicrafts', icon: 'palette', sortOrder: 2 },
@@ -15,8 +22,11 @@ const defaults = [
   { name: 'Others', icon: 'more_horiz', sortOrder: 9 },
 ];
 
-const seedCategories = async () => {
+const seedCategories = async (): Promise<void> => {
   try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI must be set in .env');
+    }
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
@@ -32,7 +42,7 @@ const seedCategories = async () => {
     console.log(`Seeded ${defaults.length} default categories`);
     await mongoose.connection.close();
     process.exit(0);
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error:', err.message);
     process.exit(1);
   }

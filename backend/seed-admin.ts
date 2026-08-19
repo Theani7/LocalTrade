@@ -1,9 +1,13 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const User = require('./src/models/userModel');
+import dotenv from 'dotenv';
+dotenv.config();
+import mongoose from 'mongoose';
+import User from './src/models/userModel';
 
-const seedAdmin = async () => {
+const seedAdmin = async (): Promise<void> => {
   try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI must be set in .env');
+    }
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
@@ -38,6 +42,8 @@ const seedAdmin = async () => {
         address: {
           fullName: 'System Admin',
           phone: '9800000000',
+          street: '',
+          landmark: '',
           city: 'Kathmandu',
           state: 'Bagmati',
           zipCode: '44600',
@@ -53,7 +59,7 @@ const seedAdmin = async () => {
 
     await mongoose.connection.close();
     process.exit(0);
-  } catch (err) {
+  } catch (err: any) {
     console.error('Seeding Error:', err.message);
     process.exit(1);
   }

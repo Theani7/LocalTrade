@@ -1,0 +1,90 @@
+import dotenv from 'dotenv';
+dotenv.config();
+import mongoose from 'mongoose';
+import User from './src/models/userModel';
+import Product from './src/models/productModel';
+import Order from './src/models/orderModel';
+import Review from './src/models/reviewModel';
+import Feedback from './src/models/feedbackModel';
+import Notification from './src/models/notificationModel';
+
+const clearData = async (): Promise<void> => {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Refusing to run clear-data.js in production environment');
+    }
+
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in the environment variables');
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected to MongoDB');
+
+    console.log('Clearing all products...');
+    const productResult = await Product.deleteMany({});
+    console.log(`✅ Deleted ${productResult.deletedCount} products.`);
+
+    console.log('Clearing all vendors...');
+    const vendorResult = await User.deleteMany({ role: 'vendor' });
+    console.log(`✅ Deleted ${vendorResult.deletedCount} vendors.`);
+
+    console.log('Clearing all customers...');
+    const customerResult = await User.deleteMany({ role: 'customer' });
+    console.log(`✅ Deleted ${customerResult.deletedCount} customers.`);
+
+    console.log('Clearing related data (orders, reviews, feedback, notifications)...');
+    const orderResult = await Order.deleteMany({});
+    const reviewResult = await Review.deleteMany({});
+    const feedbackResult = await Feedback.deleteMany({});
+    const notificationResult = await Notification.deleteMany({});
+
+    console.log(`✅ Deleted ${orderResult.deletedCount} orders.`);
+    console.log(`✅ Deleted ${reviewResult.deletedCount} reviews.`);
+    console.log(`✅ Deleted ${feedbackResult.deletedCount} feedback entries.`);
+    console.log(`✅ Deleted ${notificationResult.deletedCount} notifications.`);
+
+    console.log('\nEnsuring default admin exists...');
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error('ADMIN_PASSWORD must be set in .env to recreate the admin');
+    }
+
+    // Remove any existing user with this email to ensure fresh state
+    await User.deleteOne({ email: adminEmail });
+
+    await User.create({
+      fullName: 'System Admin',
+      email: adminEmail,
+      phone: '9800000000',
+      password: adminPassword,
+      address: {
+        fullName: 'System Admin',
+        phone: '9800000000',
+        street: '',
+        landmark: '',
+        city: 'Kathmandu',
+        state: 'Bagmati',
+        zipCode: '44600',
+      },
+      role: 'admin',
+      isActive: true,
+      vendorApprovalStatus: 'approved',
+      mustChangePassword: true,
+    });
+
+    console.log(`✅ Default Admin created/reset (must change password on first login):`);
+    console.log(`   Email: ${adminEmail}`);
+
+    console.log('\n--- Data Cleanup & Admin Reset Completed ---');
+
+    await mongoose.connection.close();
+    process.exit(0);
+  } catch (err: any) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
+};
+
+clearData();
