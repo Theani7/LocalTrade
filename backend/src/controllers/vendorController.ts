@@ -9,6 +9,8 @@ import AppError from '../utils/appError';
 import { uploadToCloudinary } from '../utils/cloudinaryUtils';
 import { AuthRequest } from '../types';
 
+const ACTIVE_REVENUE_STATUSES = ['Confirmed', 'Processing', 'Shipped', 'Delivered'];
+
 // @desc    Get vendor analytics
 // @route   GET /api/v1/vendors/analytics
 // @access  Private/Vendor
@@ -39,7 +41,11 @@ export const getVendorAnalytics = catchAsync(async (req: AuthRequest, res: Respo
         },
         totalRevenue: {
           $sum: {
-            $cond: [{ $eq: ['$orderStatus', 'Delivered'] }, '$totalAmount', 0]
+            $cond: [
+              { $in: ['$orderStatus', ACTIVE_REVENUE_STATUSES] },
+              '$totalAmount',
+              0
+            ]
           }
         }
       }

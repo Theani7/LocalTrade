@@ -68,7 +68,7 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     if (!origin) return callback(null, true);
-    const isLocalhost = /^http:\/\/localhost:\d+$/.test(origin);
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
     if (isLocalhost) {
       return callback(null, true);
     }

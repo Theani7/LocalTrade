@@ -7,6 +7,8 @@ import AppError from '../utils/appError';
 import { sendNotification } from '../utils/notificationUtils';
 import { AuthRequest } from '../types';
 
+const ACTIVE_REVENUE_STATUSES = ['Confirmed', 'Processing', 'Shipped', 'Delivered'];
+
 // @desc    Get full system analytics
 // @route   GET /api/v1/admin/analytics
 // @access  Private/Admin
@@ -30,7 +32,11 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
         },
         totalRevenue: {
           $sum: {
-            $cond: [{ $eq: ['$orderStatus', 'Delivered'] }, '$totalAmount', 0]
+            $cond: [
+              { $in: ['$orderStatus', ACTIVE_REVENUE_STATUSES] },
+              '$totalAmount',
+              0
+            ]
           }
         }
       }
@@ -49,7 +55,7 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
 
   // Revenue by category (Aggregation)
   const revenueByCategory = await Order.aggregate([
-    { $match: { orderStatus: 'Delivered' } },
+    { $match: { orderStatus: { $in: ACTIVE_REVENUE_STATUSES } } },
     { $unwind: '$products' },
     {
       $lookup: {
@@ -88,7 +94,8 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
 
   // Orders per day (last 7 days)
   const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
   
   const rawDailyStats = await Order.aggregate([
     { $match: { createdAt: { $gte: sevenDaysAgo } } },
@@ -98,7 +105,11 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
         count: { $sum: 1 },
         revenue: {
           $sum: {
-            $cond: [{ $eq: ['$orderStatus', 'Delivered'] }, '$totalAmount', 0]
+            $cond: [
+              { $in: ['$orderStatus', ACTIVE_REVENUE_STATUSES] },
+              '$totalAmount',
+              0
+            ]
           }
         }
       }
@@ -479,7 +490,11 @@ export const getVendorDetail = catchAsync(async (req: AuthRequest, res: Response
         },
         totalRevenue: {
           $sum: {
-            $cond: [{ $eq: ['$orderStatus', 'Delivered'] }, '$totalAmount', 0]
+            $cond: [
+              { $in: ['$orderStatus', ACTIVE_REVENUE_STATUSES] },
+              '$totalAmount',
+              0
+            ]
           }
         },
       }
@@ -661,7 +676,7 @@ export const exportAnalytics = catchAsync(async (req: AuthRequest, res: Response
     const totalProducts = await Product.countDocuments();
     const totalOrders = await Order.countDocuments();
     const revenueResult = await Order.aggregate([
-      { $match: { orderStatus: 'Delivered' } },
+      { $match: { orderStatus: { $in: ACTIVE_REVENUE_STATUSES } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]);
     const totalRevenue = revenueResult[0]?.total || 0;
