@@ -55,6 +55,7 @@ class _CartScreenState extends State<CartScreen> {
       ),
       body: CartBody(
         onBrowseProducts: () => Navigator.pop(context),
+        isStandalone: true,
       ),
     );
   }
@@ -66,11 +67,13 @@ class _CartScreenState extends State<CartScreen> {
 class CartBody extends StatefulWidget {
   final VoidCallback? onBrowseProducts;
   final ValueChanged<String>? onCategoryTap;
+  final bool isStandalone;
 
   const CartBody({
     super.key,
     this.onBrowseProducts,
     this.onCategoryTap,
+    this.isStandalone = false,
   });
 
   @override
@@ -198,7 +201,7 @@ class _CartBodyState extends State<CartBody> {
                   onChanged: (value) => cart.setCartNote(value),
                 );
               }
-              return const SizedBox(height: 100);
+              return const SizedBox(height: 20);
             },
           ),
         ),
@@ -214,10 +217,10 @@ class _CartBodyState extends State<CartBody> {
     const deliveryFee = 0.0;
     final total = subtotal + deliveryFee;
 
-    final isStandalone = Navigator.canPop(context);
-    final double bottomPadding = isStandalone
-        ? 24.0
-        : MediaQuery.of(context).padding.bottom + 84.0;
+    final viewPaddingBottom = MediaQuery.of(context).viewPadding.bottom;
+    final double bottomPadding = widget.isStandalone
+        ? (viewPaddingBottom > 0 ? viewPaddingBottom + 12.0 : 20.0)
+        : (viewPaddingBottom > 0 ? viewPaddingBottom + 96.0 : 96.0);
 
     return FadeSlideIn(
       duration: const Duration(milliseconds: 300),
@@ -229,70 +232,67 @@ class _CartBodyState extends State<CartBody> {
             top: BorderSide(color: AppColors.divider, width: 1),
           ),
         ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                      'Subtotal (${totalQty % 1 == 0 ? totalQty.toInt() : totalQty.toStringAsFixed(1)} item${totalQty == 1 ? '' : 's'})',
-                      style: AppTextStyles.bodyMuted,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    'Subtotal (${totalQty % 1 == 0 ? totalQty.toInt() : totalQty.toStringAsFixed(1)} item${totalQty == 1 ? '' : 's'})',
+                    style: AppTextStyles.bodyMuted,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    'Rs. ${_priceFormat.format(subtotal.toInt())}',
-                    style: AppTextStyles.body,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Delivery', style: AppTextStyles.bodyMuted),
-                  Text(
-                    deliveryFee == 0
-                        ? 'Free'
-                        : 'Rs. ${_priceFormat.format(deliveryFee.toInt())}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight:
-                          deliveryFee == 0 ? FontWeight.w500 : FontWeight.w400,
-                      color:
-                          deliveryFee == 0 ? AppColors.success : AppColors.ink,
-                    ),
-                  ),
-                ],
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 10),
-                child: Divider(color: AppColors.divider, height: 1),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Total', style: AppTextStyles.cardTitle),
-                  Text(
-                    'Rs. ${_priceFormat.format(total.toInt())}',
-                    style: AppTextStyles.price,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              AppButton(
-                label: 'Checkout',
-                onPressed: () => Navigator.push(
-                  context,
-                  SlideFadePageRoute(builder: (_) => const CheckoutScreen()),
                 ),
+                Text(
+                  'Rs. ${_priceFormat.format(subtotal.toInt())}',
+                  style: AppTextStyles.body,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Delivery', style: AppTextStyles.bodyMuted),
+                Text(
+                  deliveryFee == 0
+                      ? 'Free'
+                      : 'Rs. ${_priceFormat.format(deliveryFee.toInt())}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight:
+                        deliveryFee == 0 ? FontWeight.w500 : FontWeight.w400,
+                    color:
+                        deliveryFee == 0 ? AppColors.success : AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Divider(color: AppColors.divider, height: 1),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Total', style: AppTextStyles.cardTitle),
+                Text(
+                  'Rs. ${_priceFormat.format(total.toInt())}',
+                  style: AppTextStyles.price,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            AppButton(
+              label: 'Checkout',
+              onPressed: () => Navigator.push(
+                context,
+                SlideFadePageRoute(builder: (_) => const CheckoutScreen()),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -551,15 +551,20 @@ class _CartItemTileState extends State<_CartItemTile>
                         }
                       },
                     ),
-                    Text(
-                      'Rs. ${_priceFormat.format((widget.item.price * widget.item.quantity).toInt())}',
-                      style: AppTextStyles.cardTitle,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Rs. ${_priceFormat.format((widget.item.price * widget.item.quantity).toInt())}',
+                          style: AppTextStyles.cardTitle,
+                        ),
+                        if (widget.item.priceUnitLabel.isNotEmpty)
+                          Text(
+                            ' (${widget.item.quantity % 1 == 0 ? widget.item.quantity.toInt() : widget.item.quantity.toStringAsFixed(1)} ${widget.item.priceUnitLabel})',
+                            style: AppTextStyles.caption.copyWith(color: AppColors.muted),
+                          ),
+                      ],
                     ),
-                    if (widget.item.priceUnitLabel.isNotEmpty)
-                      Text(
-                        ' (${widget.item.quantity % 1 == 0 ? widget.item.quantity.toInt() : widget.item.quantity.toStringAsFixed(1)} ${widget.item.priceUnitLabel})',
-                        style: AppTextStyles.caption.copyWith(color: AppColors.muted),
-                      ),
                   ],
                 ),
               ],

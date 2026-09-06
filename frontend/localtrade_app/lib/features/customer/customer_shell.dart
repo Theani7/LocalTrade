@@ -68,6 +68,7 @@ class _CustomerShellState extends State<CustomerShell> {
                           key: const ValueKey('cart_tab'),
                           onBrowseProducts: () => _switchTab(0),
                           onCategoryTap: _onCategoryTap,
+                          isStandalone: false,
                         )
                       : _currentIndex == 2
                           ? CustomerOrdersBody(
