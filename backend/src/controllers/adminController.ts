@@ -75,10 +75,10 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
     { $sort: { revenue: -1 } }
   ]);
 
-  // Helper to ensure continuous 7-day timeline with 0 values for inactive days
-  const fill7DayTimeline = (rawStats: any[], defaultFields: Record<string, any> = { count: 0 }) => {
+  // Helper to ensure continuous timeline with 0 values for inactive days
+  const fillTimeline = (rawStats: any[], days: number = 30, defaultFields: Record<string, any> = { count: 0 }) => {
     const map: Record<string, any> = {};
-    for (let i = 6; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
@@ -92,13 +92,13 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
     return Object.values(map);
   };
 
-  // Orders per day (last 7 days)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
+  // Orders per day (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+  thirtyDaysAgo.setHours(0, 0, 0, 0);
   
   const rawDailyStats = await Order.aggregate([
-    { $match: { createdAt: { $gte: sevenDaysAgo } } },
+    { $match: { createdAt: { $gte: thirtyDaysAgo } } },
     {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
@@ -116,10 +116,10 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
     },
     { $sort: { _id: 1 } }
   ]);
-  const dailyStats = fill7DayTimeline(rawDailyStats, { count: 0, revenue: 0 });
+  const dailyStats = fillTimeline(rawDailyStats, 30, { count: 0, revenue: 0 });
 
   const rawUserDailyStats = await User.aggregate([
-    { $match: { createdAt: { $gte: sevenDaysAgo } } },
+    { $match: { createdAt: { $gte: thirtyDaysAgo } } },
     {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
@@ -128,10 +128,10 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
     },
     { $sort: { _id: 1 } }
   ]);
-  const userDailyStats = fill7DayTimeline(rawUserDailyStats, { count: 0 });
+  const userDailyStats = fillTimeline(rawUserDailyStats, 30, { count: 0 });
 
   const rawProductDailyStats = await Product.aggregate([
-    { $match: { createdAt: { $gte: sevenDaysAgo } } },
+    { $match: { createdAt: { $gte: thirtyDaysAgo } } },
     {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
@@ -140,7 +140,7 @@ export const getSystemAnalytics = catchAsync(async (req: AuthRequest, res: Respo
     },
     { $sort: { _id: 1 } }
   ]);
-  const productDailyStats = fill7DayTimeline(rawProductDailyStats, { count: 0 });
+  const productDailyStats = fillTimeline(rawProductDailyStats, 30, { count: 0 });
 
   const recentOrders = await Order.find()
     .populate('customerId', 'fullName')

@@ -61,13 +61,13 @@ export function AnalyticsTab({ analytics }: AnalyticsTabProps) {
   const stats = analytics.stats || {};
   const chartData =
     analytics.dailyStats?.map(day => ({
-      name: new Date(day._id).toLocaleDateString('en-US', { weekday: 'short' }),
+      name: new Date(day._id).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       revenue: day.revenue,
       orders: day.count
     })) || [];
   const userChartData =
     analytics.userDailyStats?.map(day => ({
-      name: new Date(day._id).toLocaleDateString('en-US', { weekday: 'short' }),
+      name: new Date(day._id).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       users: day.count
     })) || [];
   const categoryData =
@@ -148,7 +148,7 @@ export function AnalyticsTab({ analytics }: AnalyticsTabProps) {
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
         <div className="card animate-fade-in delay-200" style={{ height: '420px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold' }}>Revenue & Orders (Last 7 Days)</h3>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold' }}>Revenue & Orders (Last 30 Days)</h3>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -164,7 +164,8 @@ export function AnalyticsTab({ analytics }: AnalyticsTabProps) {
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: 'var(--color-muted)', fontSize: 13 }}
+                  tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
+                  interval={4}
                   dy={10}
                 />
                 <YAxis
@@ -267,13 +268,14 @@ export function AnalyticsTab({ analytics }: AnalyticsTabProps) {
           <h3 style={{ marginBottom: '24px', fontSize: '18px', fontWeight: 'bold' }}>New Users Trend</h3>
           <div style={{ flex: 1, minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={userChartData} barSize={28} margin={{ top: 10, right: 10, left: -30, bottom: 0 }}>
+              <BarChart data={userChartData} barSize={8} margin={{ top: 10, right: 10, left: -30, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(43,38,32,0.06)" />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: 'var(--color-muted)', fontSize: 13 }}
+                  tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
+                  interval={4}
                   dy={10}
                 />
                 <YAxis

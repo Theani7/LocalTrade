@@ -475,7 +475,7 @@ class AdminAnalyticsTab extends StatelessWidget {
 
                 // NEW: Revenue Line Chart
                 if (dailyStats.isNotEmpty) ...[
-                  Text('Revenue Over Time (Last 7 Days)', style: AppTextStyles.sectionHeading),
+                  Text('Revenue Over Time (Last 30 Days)', style: AppTextStyles.sectionHeading),
                   const SizedBox(height: 10),
                   Container(
                     height: 240,
@@ -509,7 +509,7 @@ class AdminAnalyticsTab extends StatelessWidget {
 
                 // Daily Orders Bar Chart
                 if (dailyStats.isNotEmpty) ...[
-                  Text('Daily Orders (Last 7 Days)', style: AppTextStyles.sectionHeading),
+                  Text('Daily Orders (Last 30 Days)', style: AppTextStyles.sectionHeading),
                   const SizedBox(height: 10),
                   Container(
                     height: 240,
@@ -824,14 +824,18 @@ class _MiniBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     const maxBarHeight = 40.0;
 
-    // Build 7 bars from dailyStats (last 7 days)
+    // Use the 7 most recent days from dailyStats
+    final recentStats = dailyStats.length > 7
+        ? dailyStats.sublist(dailyStats.length - 7)
+        : dailyStats;
+
     final List<double> barHeights = [];
-    if (dailyStats.isNotEmpty) {
-      final maxRevenue = dailyStats.fold<double>(0, (max, d) {
+    if (recentStats.isNotEmpty) {
+      final maxRevenue = recentStats.fold<double>(0, (max, d) {
         final rev = (d['revenue'] ?? 0).toDouble();
         return rev > max ? rev : max;
       });
-      for (final day in dailyStats) {
+      for (final day in recentStats) {
         final rev = (day['revenue'] ?? 0).toDouble();
         barHeights.add(maxRevenue > 0 ? rev / maxRevenue : 0.3);
       }
@@ -892,6 +896,9 @@ class _RevenueLineChart extends StatelessWidget {
 
     final double topMax = maxRevenue > 0 ? (maxRevenue * 1.25) : 100;
     final double horizontalStep = topMax / 4 > 0 ? topMax / 4 : 25;
+    final double xInterval = dailyStats.length > 14
+        ? (dailyStats.length / 5).ceilToDouble()
+        : 1.0;
 
     return LineChart(
       LineChartData(
@@ -914,11 +921,14 @@ class _RevenueLineChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 22,
-              interval: 1,
+              interval: xInterval,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (value != index.toDouble()) return const SizedBox.shrink();
                 if (index < 0 || index >= dailyStats.length) return const SizedBox.shrink();
+                if (xInterval > 1 && index % xInterval.toInt() != 0 && index != dailyStats.length - 1) {
+                  return const SizedBox.shrink();
+                }
                 final dateStr = dailyStats[index]['_id'] as String? ?? '';
                 final parts = dateStr.split('-');
                 final label = parts.length == 3 ? '${parts[1]}/${parts[2]}' : dateStr;
@@ -953,9 +963,9 @@ class _RevenueLineChart extends StatelessWidget {
             spots: spots,
             isCurved: true,
             color: AppColors.coral,
-            barWidth: 3,
+            barWidth: 2.5,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: true),
+            dotData: FlDotData(show: dailyStats.length <= 14),
             belowBarData: BarAreaData(
               show: true,
               color: AppColors.coralLight.withValues(alpha: 0.5),
@@ -981,6 +991,12 @@ class _DailyOrdersBarChart extends StatelessWidget {
 
     final barGroups = <BarChartGroupData>[];
     double maxCount = 0;
+    final double rodWidth = dailyStats.length > 20
+        ? 5.0
+        : (dailyStats.length > 10 ? 8.0 : 14.0);
+    final double xInterval = dailyStats.length > 14
+        ? (dailyStats.length / 5).ceilToDouble()
+        : 1.0;
 
     for (int i = 0; i < dailyStats.length; i++) {
       final stat = dailyStats[i];
@@ -996,8 +1012,8 @@ class _DailyOrdersBarChart extends StatelessWidget {
             BarChartRodData(
               toY: count,
               color: AppColors.blue,
-              width: 14,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              width: rodWidth,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
             ),
           ],
         ),
@@ -1027,11 +1043,14 @@ class _DailyOrdersBarChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
-              interval: 1,
+              interval: xInterval,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (value != index.toDouble()) return const SizedBox.shrink();
                 if (index < 0 || index >= dailyStats.length) return const SizedBox.shrink();
+                if (xInterval > 1 && index % xInterval.toInt() != 0 && index != dailyStats.length - 1) {
+                  return const SizedBox.shrink();
+                }
                 final dateStr = dailyStats[index]['_id'] as String? ?? '';
                 final parts = dateStr.split('-');
                 final label = parts.length == 3 ? '${parts[1]}/${parts[2]}' : dateStr;

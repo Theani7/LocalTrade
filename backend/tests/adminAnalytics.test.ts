@@ -117,7 +117,7 @@ describe('Admin and Vendor Analytics Revenue API', () => {
     // dailyStats should reflect the 2500 revenue on today's date
     const dailyStats = res.body.data.dailyStats;
     expect(Array.isArray(dailyStats)).toBe(true);
-    expect(dailyStats.length).toBe(7);
+    expect(dailyStats.length).toBe(30);
 
     const todayDateStr = new Date().toISOString().split('T')[0];
     const todayStat = dailyStats.find((d: any) => d._id === todayDateStr);
