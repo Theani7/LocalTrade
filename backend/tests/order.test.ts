@@ -92,6 +92,20 @@ describe('Orders API', () => {
     expect(res.body.success).toBe(true);
   });
 
+  test('Should reject fractional quantity (e.g. 1.5) with 400 error', async () => {
+    const res = await request(app)
+      .post('/api/v1/orders')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        items: [{ productId: productId, quantity: 1.5, vendorId: vendorId }],
+        shippingAddress: { fullName: 'Order Customer', phone: '9822222222', street: 'Street 2', city: 'New Road', state: 'Bagmati', zipCode: '44600' },
+        phone: '9822222222',
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toContain('must be a whole number');
+  });
+
   test('Should get my orders as customer', async () => {
     const res = await request(app)
       .get('/api/v1/orders/my-orders')

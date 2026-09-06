@@ -41,7 +41,7 @@ class CartItem {
 
   bool get isWeightUnit => priceUnit == 'kg' || priceUnit == '100g' || priceUnit == 'liter';
 
-  double get step => isWeightUnit ? 0.5 : 1;
+  double get step => 1.0;
 
   Map<String, dynamic> toJson() => {
     'id': id,

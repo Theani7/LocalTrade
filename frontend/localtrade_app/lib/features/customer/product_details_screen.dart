@@ -646,8 +646,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             children: [
                               GestureDetector(
                                 onTap: () {
-                                  final step =
-                                      _isWeightUnit(priceUnit) ? 0.5 : 1;
+                                  const step = 1.0;
                                   final newQty = _quantity - step;
                                   if (newQty >= _minOrder) {
                                     setState(() => _quantity = newQty);
@@ -667,18 +666,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               SizedBox(
                                 width: 40,
                                 child: Text(
-                                  _quantity % 1 == 0
-                                      ? '${_quantity.toInt()}'
-                                      : _quantity.toStringAsFixed(1),
+                                  '${_quantity.toInt()}',
                                   textAlign: TextAlign.center,
                                   style: AppTextStyles.cardTitle,
                                 ),
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  final step =
-                                      _isWeightUnit(priceUnit) ? 0.5 : 1;
-                                  if (_quantity < stock) {
+                                  const step = 1.0;
+                                  if (_quantity + step <= stock) {
                                     setState(() => _quantity += step);
                                   }
                                 },
@@ -2025,7 +2021,4 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         return '';
     }
   }
-
-  bool _isWeightUnit(String unit) =>
-      unit == 'kg' || unit == '100g' || unit == 'liter';
 }

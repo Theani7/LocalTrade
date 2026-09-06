@@ -64,12 +64,9 @@ export const createOrder = catchAsync(async (req: AuthRequest, res: Response, ne
     const productId = item.productId || item.product;
     const product = productsById.get(productId);
     const quantity = item.quantity;
-    const stepOk = WEIGHT_UNITS.includes(product.priceUnit)
-      ? Math.abs(quantity * 10 - Math.round(quantity * 10)) < 1e-9
-      : Number.isInteger(quantity);
-    if (!stepOk) {
+    if (!Number.isInteger(quantity) || quantity <= 0) {
       return next(new AppError(
-        `Quantity for "${product.title}" must be a ${WEIGHT_UNITS.includes(product.priceUnit) ? 'multiple of 0.1 (weight unit)' : 'whole number'}`,
+        `Quantity for "${product.title}" must be a whole number`,
         400
       ));
     }
