@@ -7,6 +7,7 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "render-build": "npm install --include=dev && npm run build",
     "typecheck": "tsc --noEmit",
     "seed:admin": "tsx seed-admin.ts",
     "seed:categories": "tsx seed-categories.ts",
