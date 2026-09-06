@@ -13,6 +13,7 @@ import {
 import {
   AreaChart,
   Area,
+  Line,
   BarChart,
   Bar,
   PieChart,
@@ -169,23 +170,45 @@ export function AnalyticsTab({ analytics }: AnalyticsTabProps) {
                   dy={10}
                 />
                 <YAxis
+                  yAxisId="left"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'var(--color-muted)', fontSize: 13 }}
                   dx={-10}
                   tickFormatter={val => `Rs.${val}`}
                 />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'var(--color-muted)', fontSize: 13 }}
+                  dx={10}
+                  allowDecimals={false}
+                />
                 <Tooltip
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
-                  itemStyle={{ color: 'var(--color-coral)', fontWeight: 600 }}
+                  itemStyle={{ fontWeight: 600 }}
                 />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }} />
                 <Area
+                  yAxisId="left"
                   type="monotone"
+                  name="Revenue (Rs.)"
                   dataKey="revenue"
                   stroke="var(--color-coral)"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorRev)"
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  name="Orders"
+                  dataKey="orders"
+                  stroke="#007AFF"
+                  strokeWidth={2}
+                  dot={{ r: 2.5, fill: '#007AFF' }}
                 />
               </AreaChart>
             </ResponsiveContainer>

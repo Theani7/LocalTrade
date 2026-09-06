@@ -1025,6 +1025,7 @@ class _DailyOrdersBarChart extends StatelessWidget {
 
     return BarChart(
       BarChartData(
+        barGroups: barGroups,
         alignment: BarChartAlignment.spaceAround,
         minY: 0,
         maxY: topMax,
