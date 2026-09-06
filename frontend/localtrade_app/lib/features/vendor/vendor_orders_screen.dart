@@ -136,46 +136,19 @@ class _VendorOrdersScreenState extends State<VendorOrdersScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // Header — "Orders" + count + Filter button
+  // Header — "Orders" + count
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildHeader(int totalCount) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Orders', style: AppTextStyles.screenTitle),
-                const SizedBox(height: 2),
-                Text(
-                  '$totalCount orders total',
-                  style: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              border: Border.all(color: AppColors.divider),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.tune_rounded, size: 18, color: AppColors.ink),
-                const SizedBox(width: 6),
-                Text(
-                  'Filter',
-                  style: AppTextStyles.label.copyWith(color: AppColors.ink),
-                ),
-              ],
-            ),
+          Text('Orders', style: AppTextStyles.screenTitle),
+          const SizedBox(height: 2),
+          Text(
+            '$totalCount orders total',
+            style: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
           ),
         ],
       ),
