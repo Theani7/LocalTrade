@@ -3,6 +3,7 @@
 *.docx
 .gemini/
 backend/.env
+localtrade-backend.env
 backend/node_modules/
 frontend/localtrade_app_old/
 frontend/localtrade_app/build/
