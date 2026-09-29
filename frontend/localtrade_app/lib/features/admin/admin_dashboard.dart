@@ -233,17 +233,19 @@ class AdminAnalyticsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AdminProvider>(
       builder: (context, admin, _) {
-        if (admin.isLoading && admin.analytics == null) {
-          return SingleChildScrollView(padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 80), child: const _AdminAnalyticsSkeleton());
-        }
-
         if (admin.analytics == null) {
-          return EmptyState(
-            icon: Icons.analytics_outlined,
-            title: 'No analytics yet',
-            message: 'Connect to the server to view live system analytics.',
-            onAction: admin.fetchAnalytics,
-            actionLabel: 'Retry',
+          if (admin.error != null) {
+            return EmptyState(
+              icon: Icons.analytics_outlined,
+              title: 'Failed to load analytics',
+              message: admin.error!,
+              onAction: admin.fetchAnalytics,
+              actionLabel: 'Retry',
+            );
+          }
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 80),
+            child: const _AdminAnalyticsSkeleton(),
           );
         }
 
@@ -759,42 +761,44 @@ class AdminAnalyticsTab extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           flex: 3,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: validCategories.map((cat) {
-              final index = validCategories.indexOf(cat);
-              final color = colors[index % colors.length];
-              final rawVal = cat['revenue'] ?? cat['total'] ?? 0;
-              final val = (rawVal is num)
-                  ? rawVal.toDouble()
-                  : (double.tryParse(rawVal.toString()) ?? 0.0);
-              final categoryName = cat['_id']?.toString() ?? 'Unknown';
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        '$categoryName (Rs. ${val.toInt()})',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.ink,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: validCategories.map((cat) {
+                final index = validCategories.indexOf(cat);
+                final color = colors[index % colors.length];
+                final rawVal = cat['revenue'] ?? cat['total'] ?? 0;
+                final val = (rawVal is num)
+                    ? rawVal.toDouble()
+                    : (double.tryParse(rawVal.toString()) ?? 0.0);
+                final categoryName = cat['_id']?.toString() ?? 'Unknown';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '$categoryName (Rs. ${val.toInt()})',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.ink,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ],
@@ -1113,27 +1117,29 @@ class _DoughnutChartBuilder extends StatelessWidget {
         ),
         Expanded(
           flex: 2,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: data.map((item) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(width: 10, height: 10, decoration: BoxDecoration(color: item['color'] as Color, shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        '${item['label']} (${(item['value'] as double).toInt()})',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink),
-                        overflow: TextOverflow.ellipsis,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: data.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(width: 10, height: 10, decoration: BoxDecoration(color: item['color'] as Color, shape: BoxShape.circle)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '${item['label']} (${(item['value'] as double).toInt()})',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.ink),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ],
